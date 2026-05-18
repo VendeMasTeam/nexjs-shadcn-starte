@@ -214,6 +214,11 @@ export const endpoints = {
       delete: (uid: string) => `/segments/${uid}`,
     },
   },
+  catalog: {
+    products: '/products',
+    product: (uid: string) => `/products/${uid}`,
+    dependencies: (uid: string) => `/products/${uid}/dependencies`,
+  },
   sales: {
     stages: '/opportunities/stages',
     board: '/opportunities/board',

@@ -70,6 +70,7 @@ const NAV_CONFIG: StaticSection[] = [
     order: 3,
     items: [
       { title: 'Pipeline', path: paths.sales.pipeline, icon: 'KanbanSquare' },
+      { title: 'Catálogo', path: paths.sales.catalog, icon: 'BookOpen' },
       { title: 'Dashboard Financiero', path: paths.sales.finance.root, icon: 'PieChart' },
       { title: 'Cotizaciones', path: paths.sales.finance.quotation, icon: 'FileText' },
       { title: 'Facturas', path: paths.sales.finance.invoice, icon: 'Receipt' },

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useProducts } from 'src/features/inventory/hooks/use-products';
+import { catalogService } from 'src/features/sales/services/catalog.service';
 import { quotationService } from 'src/features/sales/services/quotation.service';
 import type { Quotation, QuotationItem } from 'src/features/sales/types/sales.types';
 import { localizationService } from 'src/features/settings/services/localization.service';
@@ -105,7 +105,11 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
 
   const quotation = localQuotation;
 
-  const { items: products } = useProducts();
+  const { data: catalogProducts = [] } = useQuery({
+    queryKey: ['catalog', 'products'],
+    queryFn: () => catalogService.getList({ status: 'active' }),
+    staleTime: 0,
+  });
 
   const { data: currencyOptions = [] } = useQuery({
     queryKey: ['settings', 'localization', 'options', 'currencies'],
@@ -572,31 +576,26 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                           <SelectField
                             value={item.sku ?? ''}
                             onChange={(val) => {
-                              const product = (products ?? []).find(
-                                (p) => (p.sku ?? p.uid) === val
-                              );
+                              const product = catalogProducts.find((p) => p.sku === val);
                               if (product) {
                                 updateLine(item.uid, 'description', product.name);
-                                updateLine(item.uid, 'sku', product.sku ?? '');
-                                if (product.sale_price) {
-                                  updateLine(
-                                    item.uid,
-                                    'list_unit_price',
-                                    String(product.sale_price)
-                                  );
+                                updateLine(item.uid, 'sku', product.sku);
+                                const price =
+                                  product.default_price ?? product.inventory_product?.sale_price;
+                                const discount =
+                                  product.default_discount_percent ??
+                                  product.inventory_product?.discount_percent;
+                                if (price != null) {
+                                  updateLine(item.uid, 'list_unit_price', String(price));
                                 }
-                                if (product.discount_percent) {
-                                  updateLine(
-                                    item.uid,
-                                    'discount_percent',
-                                    String(product.discount_percent)
-                                  );
+                                if (discount != null) {
+                                  updateLine(item.uid, 'discount_percent', String(discount));
                                 }
                               }
                             }}
-                            options={(products ?? []).map((p) => ({
-                              value: p.sku ?? p.uid,
-                              label: `${p.name}${p.sku ? ` (${p.sku})` : ''}`,
+                            options={catalogProducts.map((p) => ({
+                              value: p.sku,
+                              label: `${p.name} (${p.sku})`,
                             }))}
                             placeholder="Seleccionar producto..."
                             searchable

@@ -50,7 +50,7 @@ export function ProductDrawer({
   const [description, setDescription] = useState(product?.description ?? '');
   const [categoryUid, setCategoryUid] = useState(product?.category_uid ?? '');
   const [reorderPoint, setReorderPoint] = useState(String(product?.reorder_point ?? 0));
-  const [costPrice, setCostPrice] = useState(String(product?.cost_price ?? ''));
+  const [costPrice, setCostPrice] = useState(String(product?.unit_cost ?? ''));
   const [salePrice, setSalePrice] = useState(String(product?.sale_price ?? ''));
   const [discountPercent, setDiscountPercent] = useState(String(product?.discount_percent ?? ''));
   const [active, setActive] = useState(product ? product.is_active : true);
@@ -66,7 +66,7 @@ export function ProductDrawer({
     setDescription(product?.description ?? '');
     setCategoryUid(product?.category_uid ?? '');
     setReorderPoint(String(product?.reorder_point ?? 0));
-    setCostPrice(String(product?.cost_price ?? ''));
+    setCostPrice(String(product?.unit_cost ?? ''));
     setSalePrice(String(product?.sale_price ?? ''));
     setDiscountPercent(String(product?.discount_percent ?? ''));
     setActive(product ? product.is_active : true);
@@ -93,7 +93,7 @@ export function ProductDrawer({
         category_uid: categoryUid || undefined,
         reorder_point: Number(reorderPoint),
         is_active: active,
-        cost_price: costPrice !== '' ? Number(costPrice) : undefined,
+        unit_cost: costPrice !== '' ? Number(costPrice) : undefined,
         sale_price: salePrice !== '' ? Number(salePrice) : undefined,
         discount_percent: discountPercent !== '' ? Number(discountPercent) : undefined,
       };

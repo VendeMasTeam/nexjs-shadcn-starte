@@ -60,6 +60,7 @@ export const paths = {
   sales: {
     root: ROOTS.SALES,
     pipeline: `${ROOTS.SALES}/pipeline`,
+    catalog: `${ROOTS.SALES}/catalog`,
     quotation: (id: string) => `${ROOTS.SALES}/quotation/${id}`,
     invoice: (id: string) => `${ROOTS.SALES}/invoice/${id}`,
     finance: {
