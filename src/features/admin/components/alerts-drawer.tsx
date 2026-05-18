@@ -38,7 +38,8 @@ const PERIODOS = [
   { value: '24h', label: 'Últimas 24 horas' },
   { value: '7d', label: 'Últimos 7 días' },
 ];
-const CANALES = ['EMAIL', 'SLACK', 'PUSH'] as const;
+//const CANALES = ['EMAIL', 'SLACK', 'PUSH'] as const;
+const CANALES = ['EMAIL'] as const;
 
 interface AlertsDrawerProps {
   alerta: Alerta | null;
