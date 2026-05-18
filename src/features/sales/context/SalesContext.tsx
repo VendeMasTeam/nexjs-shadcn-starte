@@ -214,7 +214,6 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         if (!quotation) throw new Error('Cotización no encontrada');
         const created = (await invoiceService.create({
           quotation_uid: quotationUid,
-          invoice_number: `INV-${quotation.quote_number}`,
           currency: quotation.currency,
         } as Partial<Invoice>)) as Invoice;
         await refreshInvoices();

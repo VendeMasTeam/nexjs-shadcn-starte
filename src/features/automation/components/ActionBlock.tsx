@@ -1,5 +1,6 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useFieldArray } from 'react-hook-form';
@@ -12,13 +13,8 @@ import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
 
 import { useUsers } from '../hooks/useUsers';
 import type { RuleFormData } from '../schemas/rule.schema';
+import { automationService } from '../services/automation.service';
 import type { ActionType, AssignmentRule } from '../types';
-import { ACTION_TYPE_LABELS } from '../types';
-
-const ACTION_OPTIONS = (Object.keys(ACTION_TYPE_LABELS) as ActionType[]).map((key) => ({
-  value: key,
-  label: ACTION_TYPE_LABELS[key],
-}));
 
 interface ActionBlockProps {
   form: UseFormReturn<RuleFormData>;
@@ -34,18 +30,19 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
   const { userOptions } = useUsers();
   const { activityTypes } = useTenantOptions();
 
+  const { data: actionOptions = [] } = useQuery({
+    queryKey: ['automation', 'actions'],
+    queryFn: () => automationService.getActions(),
+    staleTime: Infinity,
+  });
+
   const activityTypeOptions = useMemo(() => {
     const data = activityTypes.data as { uid: string; name: string }[] | undefined;
-    if (!data || data.length === 0) {
-      return [{ value: '', label: 'Cargando...' }];
-    }
+    if (!data || data.length === 0) return [{ value: '', label: 'Cargando...' }];
     return data.map((opt) => ({ value: opt.uid, label: opt.name }));
   }, [activityTypes.data]);
 
-  const ASSIGNMENT_RULE_OPTIONS = assignmentRules.map((r) => ({
-    value: r.uid,
-    label: r.name,
-  }));
+  const assignmentRuleOptions = assignmentRules.map((r) => ({ value: r.uid, label: r.name }));
 
   const handleAddAction = () => {
     append({
@@ -90,7 +87,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
 
               <SelectField
                 label="Tipo de acción"
-                options={ACTION_OPTIONS}
+                options={actionOptions}
                 value={actionType}
                 onChange={(v) => form.setValue(`actions.${index}.type`, v as ActionType)}
               />
@@ -98,8 +95,8 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
               {actionType === 'assign_owner' && (
                 <SelectField
                   label="Regla de asignación"
-                  options={ASSIGNMENT_RULE_OPTIONS}
-                  value={form.getValues(`actions.${index}.config.assignment_rule_id`) ?? ''}
+                  options={assignmentRuleOptions}
+                  value={form.watch(`actions.${index}.config.assignment_rule_id`) ?? ''}
                   onChange={(v) =>
                     form.setValue(`actions.${index}.config.assignment_rule_id`, v as string)
                   }
@@ -111,7 +108,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
                   <SelectField
                     label="Tipo de actividad"
                     options={activityTypeOptions}
-                    value={form.getValues(`actions.${index}.config.activity_type`) ?? ''}
+                    value={form.watch(`actions.${index}.config.activity_type`) ?? ''}
                     onChange={(v) =>
                       form.setValue(`actions.${index}.config.activity_type`, v as string)
                     }
@@ -119,7 +116,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
                   <Input
                     label="Notas"
                     placeholder="Descripción de la actividad..."
-                    value={String(form.getValues(`actions.${index}.config.activity_notes`) ?? '')}
+                    value={String(form.watch(`actions.${index}.config.activity_notes`) ?? '')}
                     onChange={(e) =>
                       form.setValue(`actions.${index}.config.activity_notes`, e.target.value)
                     }
@@ -131,7 +128,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
                 <Input
                   label="Etiqueta"
                   placeholder="Ej: linkedin-lead"
-                  value={String(form.getValues(`actions.${index}.config.tag`) ?? '')}
+                  value={String(form.watch(`actions.${index}.config.tag`) ?? '')}
                   onChange={(e) => form.setValue(`actions.${index}.config.tag`, e.target.value)}
                 />
               )}
@@ -141,7 +138,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
                   <SelectField
                     label="Notificar a"
                     options={userOptions ?? []}
-                    value={form.getValues(`actions.${index}.config.notify_user_id`) ?? ''}
+                    value={form.watch(`actions.${index}.config.notify_user_id`) ?? ''}
                     onChange={(v) =>
                       form.setValue(`actions.${index}.config.notify_user_id`, v as string)
                     }
@@ -149,9 +146,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
                   <Input
                     label="Mensaje"
                     placeholder="Ej: Nuevo lead asignado a tu equipo"
-                    value={String(
-                      form.getValues(`actions.${index}.config.notification_message`) ?? ''
-                    )}
+                    value={String(form.watch(`actions.${index}.config.notification_message`) ?? '')}
                     onChange={(e) =>
                       form.setValue(`actions.${index}.config.notification_message`, e.target.value)
                     }
@@ -166,7 +161,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
                     { value: '', label: 'Aleatorio / Regla de asignación' },
                     ...(userOptions ?? []),
                   ]}
-                  value={form.getValues(`actions.${index}.config.owner_uid`) ?? ''}
+                  value={form.watch(`actions.${index}.config.owner_uid`) ?? ''}
                   onChange={(v) => form.setValue(`actions.${index}.config.owner_uid`, v as string)}
                 />
               )}
@@ -176,13 +171,13 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
                   <Input
                     label="Destinatario"
                     placeholder="Email del destinatario"
-                    value={String(form.getValues(`actions.${index}.config.to`) ?? '')}
+                    value={String(form.watch(`actions.${index}.config.to`) ?? '')}
                     onChange={(e) => form.setValue(`actions.${index}.config.to`, e.target.value)}
                   />
                   <Input
                     label="Asunto"
                     placeholder="Asunto del email"
-                    value={String(form.getValues(`actions.${index}.config.subject`) ?? '')}
+                    value={String(form.watch(`actions.${index}.config.subject`) ?? '')}
                     onChange={(e) =>
                       form.setValue(`actions.${index}.config.subject`, e.target.value)
                     }
@@ -212,25 +207,21 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
               )}
 
               {actionType === 'create_task' && (
-                <div className="space-y-3">
-                  <Input
-                    label="Título de la tarea"
-                    placeholder="Ej: Dar seguimiento al lead"
-                    value={String(form.getValues(`actions.${index}.config.title`) ?? '')}
-                    onChange={(e) => form.setValue(`actions.${index}.config.title`, e.target.value)}
-                  />
-                </div>
+                <Input
+                  label="Título de la tarea"
+                  placeholder="Ej: Dar seguimiento al lead"
+                  value={String(form.watch(`actions.${index}.config.title`) ?? '')}
+                  onChange={(e) => form.setValue(`actions.${index}.config.title`, e.target.value)}
+                />
               )}
 
               {actionType === 'send_webhook' && (
-                <div className="space-y-3">
-                  <Input
-                    label="URL del webhook"
-                    placeholder="https://..."
-                    value={String(form.getValues(`actions.${index}.config.url`) ?? '')}
-                    onChange={(e) => form.setValue(`actions.${index}.config.url`, e.target.value)}
-                  />
-                </div>
+                <Input
+                  label="URL del webhook"
+                  placeholder="https://..."
+                  value={String(form.watch(`actions.${index}.config.url`) ?? '')}
+                  onChange={(e) => form.setValue(`actions.${index}.config.url`, e.target.value)}
+                />
               )}
             </div>
           );

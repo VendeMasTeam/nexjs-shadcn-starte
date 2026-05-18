@@ -259,6 +259,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
     if (!quotation?.uid) return;
     setIsApproving(true);
     try {
+      if (quotation.status === 'draft') {
+        await saveQuotation(quotation);
+      }
       const updated = await quotationService.update(quotation.uid, { status: 'approved' });
       setLocalQuotation(updated);
       saveQuotation(updated);
