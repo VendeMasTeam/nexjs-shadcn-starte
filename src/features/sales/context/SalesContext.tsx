@@ -131,7 +131,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   // ─── Refresh helpers ────────────────────────────────────────────────────────
 
   const refreshOpportunities = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.sales.opportunityList });
+    await queryClient.invalidateQueries({ queryKey: ['sales', 'opportunities'] });
     await queryClient.invalidateQueries({ queryKey: queryKeys.sales.board });
     await queryClient.invalidateQueries({ queryKey: queryKeys.sales.stages });
   }, [queryClient]);

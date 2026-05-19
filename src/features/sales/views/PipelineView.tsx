@@ -20,6 +20,7 @@ import { PipelineColumn } from '../components/PipelineColumn';
 import { useSalesContext } from '../context/SalesContext';
 import { useOpportunityPanel } from '../hooks/useOpportunityPanel';
 import { usePipeline } from '../hooks/usePipeline';
+import { opportunityService } from '../services/opportunity.service';
 
 export function PipelineView() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -29,7 +30,8 @@ export function PipelineView() {
 
   const { stages, opportunitiesByStage, scoredOpportunities, search, setSearch, refresh } =
     usePipeline();
-  const { addOpportunity, moveOpportunity, opportunities } = useSalesContext();
+  const { addOpportunity, moveOpportunity, refreshOpportunities, opportunities } =
+    useSalesContext();
   const { competitors = [] } = useIntelligence();
   const { selectedId, isOpen, openPanel, closePanel, daysInStage, agingLevel, opportunity } =
     useOpportunityPanel(scoredOpportunities);
@@ -51,16 +53,19 @@ export function PipelineView() {
 
   const handleOutcomeConfirm = async (
     outcome: 'ganado' | 'perdido',
-    _lostReason?: LostReasonInfo
+    lostReason?: LostReasonInfo
   ) => {
     if (!pendingMove) return;
-    // Find the appropriate terminal stage UID
-    const terminalStage = stages.find((s) => (outcome === 'ganado' ? s.is_won : s.is_lost));
-    const stageUid = terminalStage?.uid;
-    if (stageUid) {
-      await moveOpportunity(pendingMove.oppUid, stageUid);
+    try {
+      if (outcome === 'ganado') {
+        await opportunityService.markWon(pendingMove.oppUid);
+      } else {
+        await opportunityService.markLost(pendingMove.oppUid, lostReason ? [lostReason] : []);
+      }
+      await refreshOpportunities();
+    } catch {
+      // error handled by toast in service layer
     }
-    // TODO: persist lostReason via lost-opportunity API endpoint when available
     setOutcomeDialogOpen(false);
     setPendingMove(null);
   };

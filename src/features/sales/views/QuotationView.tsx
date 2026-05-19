@@ -173,32 +173,25 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
     });
   }, []);
 
-  const updateLine = useCallback((uid: string, field: keyof QuotationItem, rawValue: string) => {
+  const updateLine = useCallback((index: number, field: keyof QuotationItem, rawValue: string) => {
     setLocalQuotation((prev) => {
       if (!prev) return prev;
-      return {
-        ...prev,
-        items: prev.items.map((item) => {
-          if (item.uid !== uid) return item;
-          const numFields: (keyof QuotationItem)[] = [
-            'quantity',
-            'list_unit_price',
-            'discount_percent',
-          ];
-          const value = numFields.includes(field) ? Number(rawValue) : rawValue;
-          return { ...item, [field]: value };
-        }),
-      };
+      const items = [...prev.items];
+      const numFields: (keyof QuotationItem)[] = [
+        'quantity',
+        'list_unit_price',
+        'discount_percent',
+      ];
+      const value = numFields.includes(field) ? Number(rawValue) : rawValue;
+      items[index] = { ...items[index], [field]: value };
+      return { ...prev, items };
     });
   }, []);
 
-  const removeLine = useCallback((uid: string) => {
+  const removeLine = useCallback((index: number) => {
     setLocalQuotation((prev) => {
       if (!prev) return prev;
-      return {
-        ...prev,
-        items: prev.items.filter((item) => item.uid !== uid),
-      };
+      return { ...prev, items: prev.items.filter((_, i) => i !== index) };
     });
   }, []);
 
@@ -353,7 +346,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0">
+        <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0">
           <Button
             variant="ghost"
             className="text-muted-foreground mr-1 hover:bg-muted/10 transition-colors"
@@ -370,7 +363,20 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
             </Button>
           )}
 
-          {/* Draft: save + send + approve directo (aprobación verbal) */}
+          {/* Send — always available once saved */}
+          {quotation.uid && (
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              onClick={handleSend}
+              loading={isSending}
+              disabled={quotation.items.length === 0}
+            >
+              <Icon name="Send" size={16} />
+              Enviar al cliente
+            </Button>
+          )}
+
+          {/* Draft: save + approve */}
           {isDraft && (
             <>
               <Button variant="outline" onClick={handleSave} loading={isSaving}>
@@ -395,19 +401,10 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                 <Icon name="CheckCircle2" size={16} />
                 Aprobar
               </Button>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                onClick={handleSend}
-                loading={isSending}
-                disabled={quotation.items.length === 0}
-              >
-                <Icon name="Send" size={16} />
-                Enviar al cliente
-              </Button>
             </>
           )}
 
-          {/* Sent: esperando respuesta del cliente */}
+          {/* Sent: waiting for client response */}
           {isSent && (
             <>
               <Button
@@ -570,7 +567,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                   ) : (
                     quotation.items.map((item, i) => (
                       <tr
-                        key={item.uid}
+                        key={item.uid || i}
                         className={`group hover:bg-muted/10 transition-colors ${
                           i < quotation.items.length - 1 && 'border-b border-border/40'
                         }`}
@@ -581,30 +578,35 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                             onChange={(val) => {
                               const product = catalogProducts.find((p) => p.sku === val);
                               if (product) {
-                                updateLine(item.uid, 'description', product.name);
-                                updateLine(item.uid, 'sku', product.sku);
+                                updateLine(i, 'description', product.name);
+                                updateLine(i, 'sku', product.sku);
                                 const price =
                                   product.default_price ?? product.inventory_product?.sale_price;
                                 const discount =
                                   product.default_discount_percent ??
                                   product.inventory_product?.discount_percent;
                                 if (price != null) {
-                                  updateLine(item.uid, 'list_unit_price', String(price));
+                                  updateLine(i, 'list_unit_price', String(price));
                                 }
                                 if (discount != null) {
-                                  updateLine(item.uid, 'discount_percent', String(discount));
+                                  updateLine(i, 'discount_percent', String(discount));
                                 }
                               }
                             }}
                             options={catalogProducts.map((p) => {
                               const missingInventory =
                                 p.type === 'product' && !p.inventory_product_uid;
+                              const alreadyAdded = quotation.items.some(
+                                (it, idx) => idx !== i && it.sku === p.sku
+                              );
                               return {
                                 value: p.sku,
                                 label: missingInventory
                                   ? `${p.name} (${p.sku}) — Sin inventario vinculado`
-                                  : `${p.name} (${p.sku})`,
-                                disabled: missingInventory,
+                                  : alreadyAdded
+                                    ? `${p.name} (${p.sku}) — Ya agregado`
+                                    : `${p.name} (${p.sku})`,
+                                disabled: missingInventory || alreadyAdded,
                               };
                             })}
                             placeholder="Seleccionar producto..."
@@ -619,7 +621,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                               type="number"
                               min={1}
                               value={item.quantity}
-                              onChange={(e) => updateLine(item.uid, 'quantity', e.target.value)}
+                              onChange={(e) => updateLine(i, 'quantity', e.target.value)}
                             />
                           </div>
                         </td>
@@ -630,9 +632,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                             min={0}
                             step={0.01}
                             value={item.list_unit_price}
-                            onChange={(e) =>
-                              updateLine(item.uid, 'list_unit_price', e.target.value)
-                            }
+                            onChange={(e) => updateLine(i, 'list_unit_price', e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-4">
@@ -643,9 +643,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                               min={0}
                               max={100}
                               value={item.discount_percent}
-                              onChange={(e) =>
-                                updateLine(item.uid, 'discount_percent', e.target.value)
-                              }
+                              onChange={(e) => updateLine(i, 'discount_percent', e.target.value)}
                             />
                             <span className="text-muted-foreground text-xs">%</span>
                           </div>
@@ -659,7 +657,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                         </td>
                         <td className="px-4 py-4">
                           <button
-                            onClick={() => removeLine(item.uid)}
+                            onClick={() => removeLine(i)}
                             className="opacity-0 group-hover:opacity-100 p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all"
                           >
                             <Icon name="Trash2" size={16} />

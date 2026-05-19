@@ -162,7 +162,7 @@ export function TenantDetailDrawer({
       );
       setNewUserName('');
       setNewUserEmail('');
-      setUsuarios([]);
+      await cargarUsuarios(1);
     } catch {
     } finally {
       setCreatingUser(false);
