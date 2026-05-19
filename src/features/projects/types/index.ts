@@ -82,6 +82,7 @@ export interface Project {
   client_uid: string;
   client_name: string;
   opportunity_uid?: string;
+  invoice_uid?: string;
   status: ProjectStatus;
   start_date: string;
   end_date: string;
@@ -98,13 +99,14 @@ export interface Project {
 
 export interface ProjectPayload {
   name: string;
-  client_uid: string;
+  client_uid?: string;
   client_name?: string;
   opportunity_uid?: string;
+  invoice_uid?: string;
   status?: ProjectStatus;
   start_date: string;
   end_date: string;
-  manager: string;
+  manager?: string;
   description?: string;
 }
 

@@ -11,8 +11,8 @@ import type {
 } from '../types';
 
 export interface ListProjectsParams extends PaginationParams {
-  /** Backend-supported: filters by project status (pending, active, completed, etc.) */
   status?: string;
+  invoice_uid?: string;
 }
 
 export const projectsService = {
@@ -42,6 +42,15 @@ export const projectsService = {
   update: async (uid: string, payload: Partial<ProjectPayload>): Promise<Project> => {
     const res = await axiosInstance.put(endpoints.projects.update(uid), payload);
     return (res.data?.data ?? res.data) as Project;
+  },
+
+  /** Returns the project linked to a given invoice, or undefined if none */
+  getByInvoice: async (invoiceUid: string): Promise<Project | undefined> => {
+    const res = await axiosInstance.get(endpoints.projects.list, {
+      params: { invoice_uid: invoiceUid },
+    });
+    const items: Project[] = res.data?.data ?? [];
+    return items[0];
   },
 
   /** Deletes a project */

@@ -17,6 +17,7 @@ import { Button } from 'src/shared/components/ui/button';
 import { Card, CardContent } from 'src/shared/components/ui/card';
 import { Icon } from 'src/shared/components/ui/icon';
 
+import { ConvertToProjectDrawer } from '../components/ConvertToProjectDrawer';
 import { RegisterPaymentDrawer } from '../components/RegisterPaymentDrawer';
 import { useSalesContext } from '../context/SalesContext';
 import { invoiceService } from '../services/invoice.service';
@@ -51,6 +52,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   const queryClient = useQueryClient();
   const { quotations, registerPayment } = useSalesContext();
   const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
+  const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   // Fetch single invoice by ID — NOT from paginated list
@@ -546,6 +548,15 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                   </div>
                   {isSending ? 'Enviando...' : 'Enviar por Email'}
                 </button>
+                <button
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-sm font-medium text-foreground"
+                  onClick={() => setProjectDrawerOpen(true)}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-500 flex items-center justify-center shrink-0">
+                    <Icon name="FolderKanban" size={15} />
+                  </div>
+                  Convertir a Proyecto
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -596,6 +607,13 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
           </Card>
         </div>
       </div>
+
+      {/* Convert to Project Drawer */}
+      <ConvertToProjectDrawer
+        open={projectDrawerOpen}
+        onClose={() => setProjectDrawerOpen(false)}
+        invoice={invoice}
+      />
 
       {/* Payment Drawer */}
       <RegisterPaymentDrawer
