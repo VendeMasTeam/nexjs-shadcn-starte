@@ -1,6 +1,5 @@
 'use client';
 
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -16,13 +15,16 @@ import {
   TableRow,
   useTable,
 } from 'src/shared/components/table';
+import { EditButton, MoreActionsMenu } from 'src/shared/components/ui/action-buttons';
 import { Badge } from 'src/shared/components/ui/badge';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
+import { SelectField } from 'src/shared/components/ui/select-field';
 import { useDebounce } from 'use-debounce';
 
 import { CatalogProductDrawer } from '../components/CatalogProductDrawer';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import { catalogService } from '../services/catalog.service';
 import type { CatalogProduct, CreateCatalogProductPayload } from '../types/catalog.types';
 
@@ -38,19 +40,35 @@ const TYPE_LABELS: Record<string, string> = {
   service: 'Servicio',
 };
 
+const TYPE_OPTIONS = [
+  { value: '', label: 'Todos los tipos' },
+  { value: 'product', label: 'Producto' },
+  { value: 'service', label: 'Servicio' },
+];
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'Todos los estados' },
+  { value: 'active', label: 'Activo' },
+  { value: 'inactive', label: 'Inactivo' },
+];
+
 export function CatalogView() {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search, 400);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<CatalogProduct | null>(null);
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ['catalog', 'products', debouncedSearch],
-    queryFn: () =>
-      catalogService.getList(debouncedSearch ? { search: debouncedSearch } : undefined),
-    staleTime: 0,
-    placeholderData: keepPreviousData,
+  const {
+    items: products,
+    isLoading,
+    pagination,
+    refetch,
+  } = useCatalogProducts({
+    search: debouncedSearch || undefined,
+    type: (typeFilter as 'product' | 'service') || undefined,
+    status: (statusFilter as 'active' | 'inactive') || undefined,
   });
 
   const handleSave = async (payload: CreateCatalogProductPayload) => {
@@ -61,7 +79,17 @@ export function CatalogView() {
       await catalogService.create(payload);
       toast.success('Producto creado');
     }
-    queryClient.invalidateQueries({ queryKey: ['catalog', 'products'] });
+    refetch();
+  };
+
+  const handleDeactivate = async (product: CatalogProduct) => {
+    try {
+      await catalogService.deactivate(product.uid);
+      toast.success('Producto desactivado');
+      refetch();
+    } catch {
+      toast.error('Error al desactivar el producto');
+    }
   };
 
   const openCreate = () => {
@@ -114,7 +142,8 @@ export function CatalogView() {
         header: 'Stock',
         cell: ({ row }) => {
           const p = row.original;
-          if (p.type !== 'product' || !p.inventory_product) return <span className="text-muted-foreground">—</span>;
+          if (p.type !== 'product' || !p.inventory_product)
+            return <span className="text-muted-foreground">—</span>;
           const stock = p.inventory_product.stock_available_total;
           return (
             <span className={`font-semibold ${stock > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
@@ -141,34 +170,45 @@ export function CatalogView() {
       col.display({
         id: 'actions',
         header: '',
-        cell: ({ row }) => (
-          <div className="flex justify-end">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={(e) => {
-                e.stopPropagation();
-                openEdit(row.original);
-              }}
-            >
-              <Icon name="Pencil" size={15} />
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+              <EditButton onClick={() => openEdit(p)} />
+              <MoreActionsMenu
+                items={[
+                  {
+                    label: p.status === 'active' ? 'Desactivar' : 'Activar',
+                    icon: <Icon name={p.status === 'active' ? 'EyeOff' : 'Eye'} size={14} />,
+                    color: p.status === 'active' ? 'error' : 'primary',
+                    onClick: () => handleDeactivate(p),
+                  },
+                ]}
+              />
+            </div>
+          );
+        },
       }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
-  const { table, dense, onChangeDense } = useTable({ data: products, columns });
+  const { table, dense, onChangeDense } = useTable({
+    data: products,
+    columns,
+    total: pagination.total,
+    pageIndex: pagination.page - 1,
+    pageSize: pagination.rowsPerPage,
+    onPageChange: (pi) => pagination.onChangePage(pi + 1),
+    onPageSizeChange: pagination.onChangeRowsPerPage,
+  });
 
   return (
     <PageContainer>
       <PageHeader
         title="Catálogo Comercial"
-        subtitle="Productos y servicios disponibles para cotizar"
+        subtitle={`${pagination.total} producto${pagination.total !== 1 ? 's' : ''}`}
         action={
           <Button color="primary" onClick={openCreate}>
             <Icon name="Plus" size={16} />
@@ -177,12 +217,27 @@ export function CatalogView() {
         }
       />
 
-      <div className="mb-4 max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <Input
           placeholder="Buscar por nombre o SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           leftIcon={<Icon name="Search" size={15} />}
+          className="sm:max-w-xs"
+        />
+        <SelectField
+          label="Tipo"
+          value={typeFilter}
+          onChange={(v) => setTypeFilter(v as string)}
+          options={TYPE_OPTIONS}
+          className="sm:w-48"
+        />
+        <SelectField
+          label="Estado"
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as string)}
+          options={STATUS_OPTIONS}
+          className="sm:w-48"
         />
       </div>
 
@@ -202,11 +257,11 @@ export function CatalogView() {
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <Icon name="BookOpen" size={32} className="opacity-30" />
                         <span className="text-sm">
-                          {search
-                            ? 'Sin resultados para esa búsqueda'
+                          {search || typeFilter || statusFilter
+                            ? 'Sin resultados para los filtros aplicados'
                             : 'No hay productos en el catálogo'}
                         </span>
-                        {!search && (
+                        {!search && !typeFilter && !statusFilter && (
                           <Button variant="outline" size="sm" onClick={openCreate}>
                             Agregar el primero
                           </Button>
@@ -234,7 +289,12 @@ export function CatalogView() {
           )}
         </TableContainer>
         <div className="border-t border-border/40">
-          <TablePaginationCustom table={table} dense={dense} onChangeDense={onChangeDense} />
+          <TablePaginationCustom
+            table={table}
+            total={pagination.total}
+            dense={dense}
+            onChangeDense={onChangeDense}
+          />
         </div>
       </SectionCard>
 
