@@ -183,7 +183,8 @@ export function CatalogProductDrawer({
                   setName(inv.name);
                   setSku(inv.sku);
                   if (inv.sale_price != null) setDefaultPrice(String(inv.sale_price));
-                  if (inv.discount_percent != null) setDefaultDiscount(String(inv.discount_percent));
+                  if (inv.discount_percent != null)
+                    setDefaultDiscount(String(inv.discount_percent));
                 }
               }}
               options={inventoryOptions}
