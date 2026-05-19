@@ -3,7 +3,6 @@
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { formatDate } from 'src/lib/date';
-import { notify } from 'src/lib/notify';
 import {
   PageContainer,
   PageHeader,
@@ -124,7 +123,7 @@ export function PartnerOpportunitiesView() {
         id: 'actions',
         header: 'Acciones',
         cell: (info) => {
-          const { status, partner_name } = info.row.original;
+          const { status } = info.row.original;
           return (
             <div className="flex items-center gap-2">
               {status === 'pending' && (
@@ -134,16 +133,7 @@ export function PartnerOpportunitiesView() {
                     color="success"
                     variant="soft"
                     className="h-6 text-[11px] px-2"
-                    onClick={async () => {
-                      const ok = await approveOpportunity(info.row.original.uid);
-                      if (ok) {
-                        notify.success(
-                          `Oportunidad aprobada. ${partner_name} tiene exclusividad sobre este cliente.`
-                        );
-                      } else {
-                        notify.error('Error al aprobar la oportunidad');
-                      }
-                    }}
+                    onClick={() => approveOpportunity(info.row.original.uid)}
                   >
                     Aprobar
                   </Button>
@@ -152,14 +142,7 @@ export function PartnerOpportunitiesView() {
                     color="error"
                     variant="soft"
                     className="h-6 text-[11px] px-2"
-                    onClick={async () => {
-                      const ok = await rejectOpportunity(info.row.original.uid);
-                      if (ok) {
-                        notify.success('Oportunidad rechazada.');
-                      } else {
-                        notify.error('Error al rechazar la oportunidad');
-                      }
-                    }}
+                    onClick={() => rejectOpportunity(info.row.original.uid)}
                   >
                     Rechazar
                   </Button>
@@ -168,14 +151,7 @@ export function PartnerOpportunitiesView() {
                     color="info"
                     variant="soft"
                     className="h-6 text-[11px] px-2"
-                    onClick={async () => {
-                      try {
-                        await convertOpportunity(info.row.original.uid);
-                        notify.success('Oportunidad convertida a deal.');
-                      } catch {
-                        // error handled by mutation onError
-                      }
-                    }}
+                    onClick={() => convertOpportunity(info.row.original.uid)}
                   >
                     Convertir a Deal
                   </Button>

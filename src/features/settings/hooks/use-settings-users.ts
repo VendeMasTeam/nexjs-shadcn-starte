@@ -55,6 +55,7 @@ export function useSettingsUsers(filters: UserFilters = {}) {
     EMPTY_USERS) as SettingsUser[];
 
   const createMutation = useMutation({
+    meta: { successMessage: 'Usuario creado' },
     mutationFn: async (
       data: Omit<SettingsUser, 'uid' | 'created_at' | 'last_login_at'> & {
         password?: string;
@@ -79,6 +80,7 @@ export function useSettingsUsers(filters: UserFilters = {}) {
   });
 
   const updateMutation = useMutation({
+    meta: { successMessage: 'Usuario actualizado' },
     mutationFn: async ({
       id,
       data,
@@ -106,6 +108,7 @@ export function useSettingsUsers(filters: UserFilters = {}) {
   });
 
   const toggleStatusMutation = useMutation({
+    meta: { successMessage: 'Estado actualizado' },
     mutationFn: async (id: string) => {
       const user = users.find((u) => u.uid === id);
       if (!user) throw new Error('Usuario no encontrado');
@@ -116,6 +119,7 @@ export function useSettingsUsers(filters: UserFilters = {}) {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: 'Usuario eliminado' },
     mutationFn: (id: string) => usersService.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
   });

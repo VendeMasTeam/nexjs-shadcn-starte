@@ -25,6 +25,7 @@ export function useAssignmentRules() {
   const createMutation = useMutation({
     mutationFn: (data: Omit<AssignmentRule, 'uid' | 'created_at'>) =>
       assignmentService.create(data),
+    meta: { successMessage: 'Regla de asignación creada' },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.automation.assignmentRules }),
   });
@@ -32,12 +33,14 @@ export function useAssignmentRules() {
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<AssignmentRule> }) =>
       assignmentService.update(uid, data),
+    meta: { successMessage: 'Regla de asignación actualizada' },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.automation.assignmentRules }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => assignmentService.delete(uid),
+    meta: { successMessage: 'Regla de asignación eliminada' },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.automation.assignmentRules }),
   });

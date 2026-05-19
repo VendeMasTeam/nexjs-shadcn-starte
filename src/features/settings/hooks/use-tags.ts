@@ -31,17 +31,20 @@ export const useTags = (filters?: { search?: string }) => {
 
   const createMutation = useMutation({
     mutationFn: (form: TagForm) => tagsService.create(form),
+    meta: { successMessage: 'Etiqueta creada' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.tags }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, form }: { id: string; form: Partial<TagForm> }) =>
       tagsService.update(id, form),
+    meta: { successMessage: 'Etiqueta actualizada' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.tags }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => tagsService.delete(id),
+    meta: { successMessage: 'Etiqueta eliminada' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.tags }),
   });
 

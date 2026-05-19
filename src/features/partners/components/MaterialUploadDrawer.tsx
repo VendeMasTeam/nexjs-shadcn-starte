@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { notify } from 'src/lib/notify';
 import {
   Button,
   Icon,
@@ -72,7 +71,6 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
 
     const ok = await onUpload(formData);
     if (ok) {
-      notify.success(`"${title}" subido. Disponible para todos los partners.`);
       setTitle('');
       setDescription('');
       setType('sales');
@@ -81,8 +79,6 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
       setFile(null);
       setErrors({});
       onClose();
-    } else {
-      notify.error('Error al subir el material');
     }
 
     setLoading(false);

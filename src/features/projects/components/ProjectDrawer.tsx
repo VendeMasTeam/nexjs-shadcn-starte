@@ -4,7 +4,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { contactsService } from 'src/features/contacts/services/contacts.service';
 import axiosInstance, { endpoints } from 'src/lib/axios';
-import { notify } from 'src/lib/notify';
 import {
   Button,
   ConfirmDialog,
@@ -134,13 +133,9 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
     };
 
     if (isEdit && project) {
-      const ok = await onUpdate(project.uid, payload);
-      if (ok) notify.success('Proyecto actualizado');
-      else notify.error('Error al actualizar el proyecto');
+      await onUpdate(project.uid, payload);
     } else {
-      const ok = await onCreate(payload);
-      if (ok) notify.success('Proyecto creado');
-      else notify.error('Error al crear el proyecto');
+      await onCreate(payload);
     }
 
     setLoading(false);
@@ -262,7 +257,6 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
         onClose={() => setCancelDialogOpen(false)}
         onConfirm={() => {
           if (project) onCancel!(project.uid);
-          notify.success('Proyecto cancelado');
           setCancelDialogOpen(false);
           onClose();
         }}

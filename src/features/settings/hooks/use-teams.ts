@@ -31,29 +31,34 @@ export function useTeams(search = '') {
   const createMutation = useMutation({
     mutationFn: (data: Omit<Team, 'uid' | 'created_at' | 'members_count' | 'members'>) =>
       teamsService.create(data),
+    meta: { successMessage: 'Equipo creado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.teams }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<Team> }) =>
       teamsService.update(uid, data),
+    meta: { successMessage: 'Equipo actualizado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.teams }),
   });
 
   const addMemberMutation = useMutation({
     mutationFn: ({ uid, userUid }: { uid: string; userUid: string }) =>
       teamsService.addMember(uid, userUid),
+    meta: { successMessage: 'Miembro agregado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.teams }),
   });
 
   const removeMemberMutation = useMutation({
     mutationFn: ({ uid, userUid }: { uid: string; userUid: string }) =>
       teamsService.removeMember(uid, userUid),
+    meta: { successMessage: 'Miembro eliminado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.teams }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => teamsService.delete(uid),
+    meta: { successMessage: 'Equipo eliminado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.teams }),
   });
 

@@ -4,7 +4,6 @@ import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { endpoints } from 'src/lib/axios';
 import { downloadExport } from 'src/lib/export-service';
-import { notify } from 'src/lib/notify';
 import { cn } from 'src/lib/utils';
 import { ExportDropdown } from 'src/shared/components/export/ExportDropdown';
 import {
@@ -205,10 +204,8 @@ export function ProductsView() {
   const handleSave = async (payload: CreateProductPayload) => {
     if (drawerMode === 'create') {
       await createProduct(payload);
-      notify.success('Producto creado');
     } else if (selectedProduct) {
       await updateProduct(selectedProduct.uid, payload);
-      notify.success('Producto actualizado');
     }
   };
 

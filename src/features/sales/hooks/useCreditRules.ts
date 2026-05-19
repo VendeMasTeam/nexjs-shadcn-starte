@@ -27,6 +27,7 @@ export function useCreditRules() {
 
   const { mutateAsync: saveRulesMutation } = useMutation({
     mutationFn: (data: CreditRuleSettings) => financeService.saveCreditRules(data),
+    meta: { successMessage: 'Reglas de crédito guardadas' },
     onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditRules });
     },
@@ -38,6 +39,7 @@ export function useCreditRules() {
 
   const createExceptionMutation = useMutation({
     mutationFn: (data: CreateCreditExceptionPayload) => financeService.createCreditException(data),
+    meta: { successMessage: 'Excepción creada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditExceptions });
     },
@@ -46,6 +48,7 @@ export function useCreditRules() {
   const updateExceptionMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<CreateCreditExceptionPayload> }) =>
       financeService.updateCreditException(uid, data),
+    meta: { successMessage: 'Excepción actualizada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditExceptions });
     },
@@ -53,6 +56,7 @@ export function useCreditRules() {
 
   const deleteExceptionMutation = useMutation({
     mutationFn: (uid: string) => financeService.deleteCreditException(uid),
+    meta: { successMessage: 'Excepción eliminada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditExceptions });
     },

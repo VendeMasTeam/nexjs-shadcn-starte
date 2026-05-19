@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { localizationService } from 'src/features/settings/services/localization.service';
 import { usersService } from 'src/features/settings/services/users.service';
-import { notify } from 'src/lib/notify';
 import {
   Button,
   Input,
@@ -140,18 +139,12 @@ function OpportunityForm({
     if (isEdit && opportunity) {
       const ok = await onUpdate(opportunity.uid, data);
       if (ok) {
-        notify.success('Oportunidad actualizada');
         onClose();
-      } else {
-        notify.error('Error al actualizar la oportunidad');
       }
     } else {
       const ok = await onCreate(data);
       if (ok) {
-        notify.success('Oportunidad registrada');
         onClose();
-      } else {
-        notify.error('Error al registrar la oportunidad');
       }
     }
 

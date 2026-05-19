@@ -56,17 +56,20 @@ export function useCustomFields(filters: CustomFieldFilters = {}) {
 
   const createMutation = useMutation({
     mutationFn: (data: Omit<CustomField, 'uid' | 'created_at'>) => customFieldsService.create(data),
+    meta: { successMessage: 'Campo personalizado creado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<CustomField> }) =>
       customFieldsService.update(uid, data),
+    meta: { successMessage: 'Campo personalizado actualizado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => customFieldsService.delete(uid),
+    meta: { successMessage: 'Campo personalizado eliminado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
   });
 

@@ -30,6 +30,7 @@ export function useLocalization() {
   });
 
   const saveMutation = useMutation({
+    meta: { successMessage: 'Configuración guardada' },
     mutationFn: async (data: Partial<LocalizationConfig>) => {
       const res = await localizationService.update(data as Record<string, unknown>);
       const payload = (res as Record<string, unknown>)?.data ?? res;

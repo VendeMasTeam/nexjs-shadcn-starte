@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notify } from 'src/lib/notify';
 import {
   Button,
   Icon,
@@ -54,7 +53,7 @@ export function WarehouseDrawer({ open, warehouse, onClose, onSave }: WarehouseD
       await onSave({ name, code, location: location || undefined, is_active: active });
       onClose();
     } catch {
-      notify.error('Error al guardar la bodega');
+      // error handled by MutationCache
     } finally {
       setLoading(false);
     }

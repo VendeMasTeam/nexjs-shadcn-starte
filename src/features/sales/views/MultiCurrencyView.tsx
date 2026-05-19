@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useCallback, useMemo, useState } from 'react';
 import { localizationService } from 'src/features/settings/services/localization.service';
-import { formatMoney, getCurrencyPreferences } from 'src/lib/currency';
+import { formatMoney, getCurrencyPreferences, setCurrencyPreferences } from 'src/lib/currency';
 import { notify } from 'src/lib/notify';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import {
@@ -61,7 +61,10 @@ export function MultiCurrencyView() {
   // Save base currency preference
   const { mutate: guardarMonedaBase } = useMutation({
     mutationFn: (currency: string) => localizationService.update({ currency }),
-    onSuccess: () => notify.success('Moneda base actualizada'),
+    onSuccess: (_, currency) => {
+      setCurrencyPreferences({ currency }, 'tenant');
+      notify.success('Moneda base actualizada');
+    },
     onError: () => notify.error('Error al guardar la moneda base'),
   });
 
@@ -256,7 +259,7 @@ export function MultiCurrencyView() {
             <div>
               <p className="text-2xl font-bold text-foreground">
                 {formatMoney(1000, {
-                  scope: 'tenant',
+                  currency: baseCurrency,
                   currencyDisplay: 'code',
                   maximumFractionDigits: 2,
                   minimumFractionDigits: 2,
@@ -267,7 +270,7 @@ export function MultiCurrencyView() {
             <div className="pt-2 border-t border-border/40">
               <p className="text-lg font-semibold text-foreground">
                 {formatMoney(4000000, {
-                  scope: 'tenant',
+                  currency: baseCurrency,
                   currencyDisplay: 'code',
                   maximumFractionDigits: 2,
                   minimumFractionDigits: 2,

@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { usersService } from 'src/features/settings/services/users.service';
-import { notify } from 'src/lib/notify';
 import {
   Button,
   Input,
@@ -79,11 +78,9 @@ function MilestoneForm({ milestone, isEdit, onClose, onSave }: FormProps) {
     };
 
     const ok = await onSave(payload);
-    if (ok) notify.success(isEdit ? 'Hito actualizado' : 'Hito agregado');
-    else notify.error(isEdit ? 'Error al actualizar el hito' : 'Error al agregar el hito');
+    if (ok) onClose();
 
     setLoading(false);
-    onClose();
   };
 
   return (

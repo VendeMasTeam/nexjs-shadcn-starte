@@ -51,22 +51,26 @@ export function useAutomationRules() {
     mutationFn: (
       data: Omit<AutomationRule, 'uid' | 'created_at' | 'execution_count' | 'last_executed_at'>
     ) => automationService.create(data),
+    meta: { successMessage: 'Regla creada' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<AutomationRule> }) =>
       automationService.update(uid, data),
+    meta: { successMessage: 'Regla actualizada' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => automationService.delete(uid),
+    meta: { successMessage: 'Regla eliminada' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
   });
 
   const toggleMutation = useMutation({
     mutationFn: (uid: string) => automationService.toggleRule(uid),
+    meta: { successMessage: 'Estado actualizado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
   });
 
