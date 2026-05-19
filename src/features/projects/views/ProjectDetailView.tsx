@@ -334,7 +334,7 @@ export function ProjectDetailView({ projectId }: Props) {
             <EmptyState
               icon="Flag"
               title="Sin hitos definidos"
-              subtitle="Agregá los hitos del proyecto para hacer seguimiento del avance."
+              subtitle="Agrega los hitos del proyecto para hacer seguimiento del avance."
             />
           ) : (
             <SectionCard noPadding>

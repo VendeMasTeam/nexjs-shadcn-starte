@@ -53,12 +53,12 @@ export function TransferDrawer({ open, onClose, warehouses, onSuccess }: Transfe
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!productUid) newErrors.product = 'Seleccioná un producto';
-    if (!fromWarehouseUid) newErrors.from = 'Seleccioná la bodega origen';
-    if (!toWarehouseUid) newErrors.to = 'Seleccioná la bodega destino';
+    if (!productUid) newErrors.product = 'Selecciona un producto';
+    if (!fromWarehouseUid) newErrors.from = 'Selecciona la bodega origen';
+    if (!toWarehouseUid) newErrors.to = 'Selecciona la bodega destino';
     if (fromWarehouseUid && toWarehouseUid && fromWarehouseUid === toWarehouseUid)
       newErrors.to = 'Las bodegas deben ser distintas';
-    if (!quantity || qty <= 0) newErrors.quantity = 'Ingresá una cantidad válida';
+    if (!quantity || qty <= 0) newErrors.quantity = 'Ingresa una cantidad válida';
     else if (wouldGoNegative)
       newErrors.quantity = `Stock insuficiente (disponible: ${availableInOrigin} uds)`;
     setErrors(newErrors);

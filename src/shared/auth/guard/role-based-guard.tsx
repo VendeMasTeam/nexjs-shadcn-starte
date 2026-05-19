@@ -17,7 +17,7 @@ export function RoleBasedGuard({ hasContent, permissions, children }: Props) {
     return hasContent ? (
       <div className="flex flex-col justify-center items-center p-8 bg-background">
         <h3 className="text-xl font-bold mb-2">Acceso restringido</h3>
-        <p className="text-muted-foreground">No tenés permisos para acceder a esta sección.</p>
+        <p className="text-muted-foreground">No tienes permisos para acceder a esta sección.</p>
       </div>
     ) : null;
   }

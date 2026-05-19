@@ -72,14 +72,14 @@ export function StockAdjustmentDrawer({
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!selectedProductUid) newErrors.product = 'Seleccioná un producto';
-    if (!warehouseUid) newErrors.warehouse = 'Seleccioná una bodega';
+    if (!selectedProductUid) newErrors.product = 'Selecciona un producto';
+    if (!warehouseUid) newErrors.warehouse = 'Selecciona una bodega';
     if (operation === 'set') {
-      if (quantity === '' || qty < 0) newErrors.quantity = 'Ingresá una cantidad válida (mínimo 0)';
+      if (quantity === '' || qty < 0) newErrors.quantity = 'Ingresa una cantidad válida (mínimo 0)';
     } else {
-      if (!quantity || qty < 1) newErrors.quantity = 'Ingresá una cantidad válida (mínimo 1)';
+      if (!quantity || qty < 1) newErrors.quantity = 'Ingresa una cantidad válida (mínimo 1)';
       else if (wouldGoNegative)
-        newErrors.quantity = `No podés reducir más de lo disponible (${currentStock} uds)`;
+        newErrors.quantity = `No puedes reducir más de lo disponible (${currentStock} uds)`;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

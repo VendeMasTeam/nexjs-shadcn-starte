@@ -257,7 +257,7 @@ export function TasksView() {
                   >
                     {isLoading
                       ? 'Cargando...'
-                      : 'No hay tareas. Usá el botón "Nueva Tarea" para crear la primera.'}
+                      : 'No hay tareas. Usa el botón "Nueva Tarea" para crear la primera.'}
                   </TableCell>
                 </TableRow>
               ) : (

@@ -66,7 +66,7 @@ export function ImportLeadsDrawer({ open, onClose, onImported }: Props) {
         <SheetHeader>
           <SheetTitle>Importar leads</SheetTitle>
           <SheetDescription>
-            Descargá la plantilla, llenala con tus leads y subila.
+            Descarga la plantilla, llénala con tus leads y súbela.
           </SheetDescription>
         </SheetHeader>
 
@@ -77,7 +77,7 @@ export function ImportLeadsDrawer({ open, onClose, onImported }: Props) {
           </Button>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium">Seleccioná el archivo</p>
+            <p className="text-sm font-medium">Selecciona el archivo</p>
             <input
               type="file"
               accept=".xlsx,.xls,.csv"

@@ -119,7 +119,7 @@ export const TagDrawer: React.FC<TagDrawerProps> = ({ isOpen, onClose, tag, onSa
               ))}
             </div>
             {entities.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">Seleccioná al menos una entidad.</p>
+              <p className="text-xs text-red-500 mt-1">Selecciona al menos una entidad.</p>
             )}
           </div>
         </div>

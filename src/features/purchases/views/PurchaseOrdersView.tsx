@@ -215,7 +215,7 @@ export function PurchaseOrdersView() {
           setReceiveDialog({ open: false, uid: '' });
         }}
         title="Marcar como recibido"
-        description="¿Confirmás que la orden fue recibida completamente?"
+        description="¿Confirmas que la orden fue recibida completamente?"
         confirmLabel="Marcar como recibido"
         variant="default"
       />

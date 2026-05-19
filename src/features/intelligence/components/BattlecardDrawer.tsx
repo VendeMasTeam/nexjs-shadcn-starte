@@ -146,8 +146,8 @@ export function BattlecardDrawer({ open, item, competitors, onClose, onCreate, o
           <SheetTitle>{isEdit ? 'Editar battlecard' : 'Nueva battlecard'}</SheetTitle>
           <SheetDescription>
             {isEdit
-              ? 'Actualizá el posicionamiento y las respuestas frente a este competidor.'
-              : 'Creá una ficha táctica para que el equipo sepa cómo competir.'}
+              ? 'Actualiza el posicionamiento y las respuestas frente a este competidor.'
+              : 'Crea una ficha táctica para que el equipo sepa cómo competir.'}
           </SheetDescription>
         </SheetHeader>
 
@@ -173,7 +173,7 @@ export function BattlecardDrawer({ open, item, competitors, onClose, onCreate, o
                     options={COMPETITOR_OPTIONS_FROM(competitors)}
                     value={field.value}
                     onChange={(v) => field.onChange(v as string)}
-                    placeholder="Seleccioná el competidor"
+                    placeholder="Selecciona el competidor"
                     error={errors.competitorId?.message}
                   />
                 )}

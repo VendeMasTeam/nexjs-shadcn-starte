@@ -178,7 +178,7 @@ export function CategoriesView() {
                   >
                     {search
                       ? 'No se encontraron categorías con ese criterio.'
-                      : 'No hay categorías creadas. Usá el botón "Nueva Categoría" para crear la primera.'}
+                      : 'No hay categorías creadas. Usa el botón "Nueva Categoría" para crear la primera.'}
                   </TableCell>
                 </TableRow>
               ) : (

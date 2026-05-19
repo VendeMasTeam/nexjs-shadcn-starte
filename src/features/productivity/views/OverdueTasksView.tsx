@@ -210,7 +210,7 @@ export function OverdueTasksView() {
                   }`}
                   title={
                     isReadOnly
-                      ? 'Actualizá el estado en la fuente original'
+                      ? 'Actualiza el estado en la fuente original'
                       : activity.status === 'completed'
                         ? 'Marcar como pendiente'
                         : 'Completar'

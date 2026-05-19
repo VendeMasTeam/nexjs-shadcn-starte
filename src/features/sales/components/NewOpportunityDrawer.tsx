@@ -130,7 +130,7 @@ export function NewOpportunityDrawer({
           </SheetTitle>
           <SheetDescription>
             {isEditing
-              ? 'Actualizá la información del lead u oportunidad.'
+              ? 'Actualiza la información del lead u oportunidad.'
               : 'Registra una nueva posibilidad de venta en tu pipeline comercial.'}
           </SheetDescription>
         </SheetHeader>

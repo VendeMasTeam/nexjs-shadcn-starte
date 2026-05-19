@@ -83,7 +83,7 @@ export function OpportunityChecklist({ opportunity }: OpportunityChecklistProps)
       <div className="space-y-1">
         {tasks.length === 0 ? (
           <p className="text-caption text-muted-foreground text-center py-4">
-            No hay tareas. Agregá la primera.
+            No hay tareas. Agrega la primera.
           </p>
         ) : (
           tasks.map((task) => (

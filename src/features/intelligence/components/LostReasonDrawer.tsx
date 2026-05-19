@@ -231,7 +231,7 @@ export function LostReasonDrawer({ open, item, competitors, onClose, onCreate, o
               label="Detalle"
               required
               {...register('lostReasonDetail')}
-              placeholder="Contá qué pasó con el mayor detalle posible. Esto ayuda al equipo a aprender."
+              placeholder="Describe qué pasó con el mayor detalle posible. Esto ayuda al equipo a aprender."
               rows={4}
               error={errors.lostReasonDetail?.message}
             />

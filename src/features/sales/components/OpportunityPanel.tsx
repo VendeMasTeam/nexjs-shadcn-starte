@@ -98,7 +98,7 @@ function InvoiceTab({ opportunity, stages: _stages }: InvoiceTabProps) {
       <div className="flex flex-col items-center gap-2 py-8 text-center">
         <p className="text-body2 text-muted-foreground">Sin factura generada</p>
         <p className="text-caption text-muted-foreground/60">
-          Convertí una cotización aprobada para generar la factura.
+          Convierte una cotización aprobada para generar la factura.
         </p>
       </div>
     );
@@ -354,7 +354,7 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
       ) : !isTerminal ? (
         <div className="rounded-xl bg-muted/20 border border-dashed border-border/60 p-3 text-center">
           <p className="text-caption text-muted-foreground">
-            Sin cotización — creá una para avanzar en el cierre
+            Sin cotización — crea una para avanzar en el cierre
           </p>
         </div>
       ) : null}
@@ -567,7 +567,7 @@ export function OpportunityPanel({
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <p className="text-body2">Seleccioná un deal</p>
+            <p className="text-body2">Selecciona un deal</p>
           </div>
         )}
       </SheetContent>

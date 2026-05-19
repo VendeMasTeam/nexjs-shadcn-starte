@@ -330,7 +330,7 @@ export function FinanceCPQView() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async (status: 'approved' | 'rejected' | 'cancelled') => {
-      if (!quotationUid) throw new Error('Guardá el borrador primero');
+      if (!quotationUid) throw new Error('Guarda el borrador primero');
       return quotationService.update(quotationUid, { status } as Partial<
         import('../types/sales.types').Quotation
       >);

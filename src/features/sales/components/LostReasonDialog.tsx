@@ -58,7 +58,7 @@ export function LostReasonDialog({
 
   const handleConfirm = () => {
     if (!form.detail.trim()) {
-      setError('Agregá un detalle sobre lo que pasó.');
+      setError('Agrega un detalle sobre lo que pasó.');
       return;
     }
     const competitor = competitors.find((c) => c.uid === form.competitor_uid);
@@ -109,7 +109,7 @@ export function LostReasonDialog({
           <Textarea
             label="Detalle"
             required
-            placeholder="Contá qué pasó. Cuanto más detalle, mejor para el equipo."
+            placeholder="Describe qué pasó. Cuanto más detalle, mejor para el equipo."
             rows={3}
             value={form.detail}
             onChange={(e) => {

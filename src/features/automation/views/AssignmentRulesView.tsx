@@ -76,7 +76,7 @@ export function AssignmentRulesView() {
               {!isLoading && assignmentRules.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-5 py-12 text-center text-sm text-muted-foreground">
-                    Sin reglas de asignación. Creá una nueva.
+                    Sin reglas de asignación. Crea una nueva.
                   </td>
                 </tr>
               )}

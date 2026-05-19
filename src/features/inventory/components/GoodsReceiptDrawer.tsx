@@ -70,14 +70,14 @@ export function GoodsReceiptDrawer({
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!warehouseUid) newErrors.warehouse = 'Seleccioná una bodega';
-    if (items.length === 0) newErrors.items = 'Agregá al menos un producto';
+    if (!warehouseUid) newErrors.warehouse = 'Selecciona una bodega';
+    if (items.length === 0) newErrors.items = 'Agrega al menos un producto';
     const seenProducts = new Set<string>();
     items.forEach((item, i) => {
       if (!item.product_uid) {
-        newErrors[`item-${i}-product_uid`] = 'Seleccioná un producto';
+        newErrors[`item-${i}-product_uid`] = 'Selecciona un producto';
       } else if (seenProducts.has(item.product_uid)) {
-        newErrors[`item-${i}-dup`] = 'Producto duplicado, ajustá la cantidad';
+        newErrors[`item-${i}-dup`] = 'Producto duplicado, ajusta la cantidad';
       } else {
         seenProducts.add(item.product_uid);
       }

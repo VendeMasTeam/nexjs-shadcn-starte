@@ -52,7 +52,7 @@ export function JwtForgotPasswordView() {
             </div>
             <div>
               <h1 className="text-[24px] font-bold text-slate-800 tracking-tight">
-                Revisá tu correo
+                Revisa tu correo
               </h1>
               <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-[300px]">
                 Si el correo existe en nuestro sistema, recibirás un enlace para restablecer tu
@@ -77,7 +77,7 @@ export function JwtForgotPasswordView() {
                 ¿Olvidaste tu contraseña?
               </h1>
               <p className="text-sm text-slate-500 mt-1 text-center leading-relaxed max-w-[300px]">
-                Ingresá tu correo y te enviamos un enlace para recuperarla.
+                Ingresa tu correo y te enviamos un enlace para recuperarla.
               </p>
             </div>
 

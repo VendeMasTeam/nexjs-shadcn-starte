@@ -145,7 +145,7 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
               ))}
               <input
                 className="flex-1 min-w-[80px] border-none outline-none bg-transparent text-sm py-0.5"
-                placeholder={tags.length === 0 ? 'Escribí y presioná Enter...' : 'Agregar otro...'}
+                placeholder={tags.length === 0 ? 'Escribe y presiona Enter...' : 'Agregar otro...'}
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => {

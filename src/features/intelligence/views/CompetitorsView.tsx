@@ -166,7 +166,7 @@ export function CompetitorsView({ onClose }: { onClose?: () => void }) {
               ) : table.getRowModel().rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    Sin competidores. Creá el primero.
+                    Sin competidores. Crea el primero.
                   </TableCell>
                 </TableRow>
               ) : (

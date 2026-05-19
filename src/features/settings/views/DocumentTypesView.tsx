@@ -211,8 +211,8 @@ export function DocumentTypesView() {
                     {isLoading
                       ? 'Cargando...'
                       : isError
-                        ? 'Error al cargar los tipos de documento. Intentá recargar la página.'
-                        : 'No hay tipos de documento. Usá el botón "Nuevo Tipo" para crear el primero.'}
+                        ? 'Error al cargar los tipos de documento. Intenta recargar la página.'
+                        : 'No hay tipos de documento. Usa el botón "Nuevo Tipo" para crear el primero.'}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -243,8 +243,8 @@ export function DocumentTypesView() {
             </SheetTitle>
             <SheetDescription className="sr-only">
               {editing
-                ? 'Editá los datos del tipo de documento.'
-                : 'Completá el formulario para crear un nuevo tipo de documento.'}
+                ? 'Edita los datos del tipo de documento.'
+                : 'Completa el formulario para crear un nuevo tipo de documento.'}
             </SheetDescription>
           </SheetHeader>
           <div className="space-y-4 px-4 py-6 flex-1 overflow-y-auto">

@@ -108,11 +108,11 @@ function OpportunityForm({
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!partnerUid) errs.partnerUid = 'Seleccioná un partner';
+    if (!partnerUid) errs.partnerUid = 'Selecciona un partner';
     if (!clientName.trim()) errs.clientName = 'El nombre del cliente es requerido';
     if (!product.trim()) errs.product = 'El producto/servicio es requerido';
     if (!estimatedValue || Number(estimatedValue) <= 0)
-      errs.estimatedValue = 'Ingresá un valor mayor a 0';
+      errs.estimatedValue = 'Ingresa un valor mayor a 0';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -173,7 +173,7 @@ function OpportunityForm({
           options={activePartners.map((p) => ({ value: p.uid, label: p.name }))}
           value={partnerUid}
           onChange={(v) => setPartnerUid(v as string)}
-          placeholder="Seleccioná un partner"
+          placeholder="Selecciona un partner"
           error={errors.partnerUid}
         />
 

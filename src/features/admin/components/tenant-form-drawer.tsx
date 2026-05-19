@@ -133,7 +133,7 @@ export function TenantFormDrawer({
         toast.success('Tenant creado. Se envió el link de acceso al email del admin.');
       } else {
         toast.warning(
-          'Tenant creado, pero no se pudo enviar el email. Enviá el acceso manualmente.'
+          'Tenant creado, pero no se pudo enviar el email. Envía el acceso manualmente.'
         );
       }
       onClose();

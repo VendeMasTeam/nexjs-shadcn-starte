@@ -62,7 +62,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
       <div className="space-y-4">
         {fields.length === 0 && (
           <p className="text-xs text-muted-foreground text-center py-4">
-            Agregá al menos una acción para que la regla funcione.
+            Agrega al menos una acción para que la regla funcione.
           </p>
         )}
 

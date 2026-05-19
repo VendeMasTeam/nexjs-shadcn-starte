@@ -134,7 +134,7 @@ function CredentialsStep({
           Bienvenido de nuevo
         </h1>
         <p className="text-sm text-slate-500 mt-1 text-center">
-          Ingresá tus credenciales para continuar
+          Ingresa tus credenciales para continuar
         </p>
       </div>
 
@@ -266,8 +266,8 @@ function TwoFactorStep({
         </h1>
         <p className="text-sm text-slate-500 mt-2 text-center leading-relaxed max-w-[300px]">
           {useRecovery
-            ? 'Ingresá uno de tus códigos de recuperación de un solo uso'
-            : 'Ingresá el código de 6 dígitos de tu app de autenticación'}
+            ? 'Ingresa uno de tus códigos de recuperación de un solo uso'
+            : 'Ingresa el código de 6 dígitos de tu app de autenticación'}
         </p>
       </div>
 
@@ -386,7 +386,7 @@ function TwoFactorStep({
         <Icon name={useRecovery ? 'ShieldCheck' : 'Shield'} size={13} />
         {useRecovery
           ? 'Usar código de autenticación'
-          : '¿No podés acceder a tu app? Usá un código de recuperación'}
+          : '¿No puedes acceder a tu app? Usa un código de recuperación'}
       </button>
 
       <button
@@ -480,8 +480,8 @@ function TwoFactorSetupStep({
             2FA activado correctamente
           </h1>
           <p className="text-sm text-slate-500 mt-2 text-center leading-relaxed max-w-[320px]">
-            Guardá estos códigos de recuperación en un lugar seguro. Son de un solo uso y los
-            necesitarás si perdés acceso a tu app de autenticación.
+            Guarda estos códigos de recuperación en un lugar seguro. Son de un solo uso y los
+            necesitarás si pierdes acceso a tu app de autenticación.
           </p>
         </div>
 
@@ -500,7 +500,7 @@ function TwoFactorSetupStep({
 
         <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100 text-xs text-amber-700 flex items-start gap-2">
           <Icon name="AlertTriangle" size={14} className="shrink-0 mt-0.5" />
-          <span>No podrás ver estos códigos de nuevo. Guardálos ahora.</span>
+          <span>No podrás ver estos códigos de nuevo. Guárdalos ahora.</span>
         </div>
 
         <button
@@ -701,7 +701,7 @@ export function JwtSignInView() {
         {passwordReset && (
           <div className="mb-5 px-4 py-3 rounded-xl bg-green-50 border border-green-100 text-sm text-green-700 flex items-center gap-2">
             <Icon name="CheckCircle" size={15} className="shrink-0" />
-            Contraseña restablecida. Ya podés iniciar sesión.
+            Contraseña restablecida. Ya puedes iniciar sesión.
           </div>
         )}
 

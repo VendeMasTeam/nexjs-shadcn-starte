@@ -390,7 +390,7 @@ export function CreditRulesView() {
               placeholder="Buscar cliente o empresa..."
               searchable
               onSearch={setAccountSearch}
-              hint="Seleccioná la entidad a la que aplica la excepción"
+              hint="Selecciona la entidad a la que aplica la excepción"
             />
 
             <Input

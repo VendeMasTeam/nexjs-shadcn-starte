@@ -158,7 +158,7 @@ export function TenantDetailDrawer({
       setUserCreatedMsg(
         result.reset_email_sent
           ? 'Usuario creado. Se envió el link de acceso al email.'
-          : 'Usuario creado, pero no se pudo enviar el email. Enviá el acceso manualmente.'
+          : 'Usuario creado, pero no se pudo enviar el email. Envía el acceso manualmente.'
       );
       setNewUserName('');
       setNewUserEmail('');

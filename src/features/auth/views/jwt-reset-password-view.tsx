@@ -125,7 +125,7 @@ export function JwtResetPasswordView() {
                 Nueva contraseña
               </h1>
               <p className="text-sm text-slate-500 mt-1 text-center">
-                Elegí una contraseña segura de al menos 8 caracteres.
+                Elige una contraseña segura de al menos 8 caracteres.
               </p>
             </div>
 

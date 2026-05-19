@@ -69,7 +69,7 @@ export function OutcomeDialog({
 
   const handlePerdidoConfirm = () => {
     if (!reason.detail.trim()) {
-      setError('Agregá un detalle sobre lo que pasó.');
+      setError('Agrega un detalle sobre lo que pasó.');
       return;
     }
     const competitor = competitors.find((c) => c.uid === reason.competitor_uid);
@@ -149,7 +149,7 @@ export function OutcomeDialog({
               <Textarea
                 label="Detalle"
                 required
-                placeholder="Contá qué pasó. Cuanto más detalle, mejor para el equipo."
+                placeholder="Describe qué pasó. Cuanto más detalle, mejor para el equipo."
                 rows={3}
                 value={reason.detail}
                 onChange={(e) => {

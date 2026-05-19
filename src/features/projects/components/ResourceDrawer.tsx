@@ -73,7 +73,7 @@ export function ResourceDrawer({ open, onClose, onAssign }: Props) {
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!selectedConsultant) errs.consultant = 'Seleccioná un recurso';
+    if (!selectedConsultant) errs.consultant = 'Selecciona un recurso';
     if (!startDate) errs.startDate = 'La fecha de inicio es requerida';
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -115,7 +115,7 @@ export function ResourceDrawer({ open, onClose, onAssign }: Props) {
             options={userOptions}
             value={selectedConsultant}
             onChange={(v) => setSelectedConsultant(v as string)}
-            placeholder="Seleccioná un consultor/técnico"
+            placeholder="Selecciona un consultor/técnico"
             error={errors.consultant}
           />
 

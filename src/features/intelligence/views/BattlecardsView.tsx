@@ -110,7 +110,7 @@ export function BattlecardsView() {
           </div>
           <p className="text-subtitle2 font-semibold text-foreground">Sin resultados</p>
           <p className="text-caption text-muted-foreground mt-1">
-            Ajustá los filtros o creá una nueva battlecard.
+            Ajusta los filtros o crea una nueva battlecard.
           </p>
         </div>
       ) : (

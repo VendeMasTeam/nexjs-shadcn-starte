@@ -109,7 +109,7 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'El nombre es requerido';
     if (!clientId) errs.clientId = 'El cliente es requerido';
-    if (!manager) errs.manager = 'Seleccioná un manager';
+    if (!manager) errs.manager = 'Selecciona un manager';
     if (!startDate) errs.startDate = 'La fecha de inicio es requerida';
     if (!endDate) errs.endDate = 'La fecha de fin estimado es requerida';
     if (startDate && endDate && startDate > endDate)
@@ -197,7 +197,7 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
             setErrors((p) => ({ ...p, manager: '' }));
           }}
           onSearch={setManagerSearch}
-          placeholder="Seleccioná un manager"
+          placeholder="Selecciona un manager"
           error={errors.manager}
         />
 
