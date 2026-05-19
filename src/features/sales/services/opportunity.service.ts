@@ -68,16 +68,16 @@ export const opportunityService = {
 
   // ─── Won / Lost ──────────────────────────────────────────────────────────────
 
-  async markWon(uid: string, notes?: string): Promise<Opportunity> {
-    const res = await axiosInstance.post(endpoints.sales.opportunityWon(uid), { notes });
-    return res.data.data;
+  async markWon(uid: string, comment?: string): Promise<Opportunity> {
+    const res = await axiosInstance.post(endpoints.sales.opportunityWon(uid), { comment });
+    return res.data.data.opportunity;
   },
 
   async markLost(uid: string, reasons: LostReasonInfo[]): Promise<Opportunity> {
     const res = await axiosInstance.post(endpoints.sales.opportunityLost(uid), {
       lost_reasons: reasons,
     });
-    return res.data.data;
+    return res.data.data.opportunity;
   },
 
   // ─── Tasks ───────────────────────────────────────────────────────────────────

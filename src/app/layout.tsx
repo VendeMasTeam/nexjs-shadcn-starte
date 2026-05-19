@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   description: 'Sistema de gestión empresarial',
 };
 
-import { Toaster } from 'sonner'; // Toaster component — do NOT replace with notify
 import { QueryProvider } from 'src/lib/query-provider';
 import { I18nProvider } from 'src/locales/i18n-provider';
 import { detectLanguage } from 'src/locales/server';
 import { AuthProvider } from 'src/shared/auth/context/jwt';
 import { ProgressBar } from 'src/shared/components/ProgressBar';
 import { ThemeProvider } from 'src/shared/components/ThemeProvider';
+import { ToasterProvider } from 'src/shared/components/ToasterProvider';
 
 export default async function RootLayout({
   children,
@@ -69,7 +69,7 @@ export default async function RootLayout({
             </QueryProvider>
           </I18nProvider>
         </ThemeProvider>
-        <Toaster />
+        <ToasterProvider />
       </body>
     </html>
   );
