@@ -1,10 +1,11 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import type { PipelineStage } from 'src/features/sales/types/sales.types';
 import { formatMoney } from 'src/lib/currency';
 import { toDate } from 'src/lib/date';
@@ -16,25 +17,30 @@ import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Sheet, SheetContent, SheetTitle } from 'src/shared/components/ui/sheet';
 
+import { useIntelligence } from 'src/features/intelligence/hooks/useIntelligence';
 import { useSalesContext } from '../context/SalesContext';
 import type { AgingLevel } from '../hooks/useOpportunityPanel';
 import { invoiceService } from '../services/invoice.service';
+import { opportunityService } from '../services/opportunity.service';
 import { quotationService } from '../services/quotation.service';
-import type { Invoice, Opportunity, Quotation } from '../types/sales.types';
+import type { Invoice, LostReasonInfo, Opportunity, Quotation } from '../types/sales.types';
 import { STATUS_LABELS } from '../types/sales.types';
 import { DealAvatar } from './DealAvatar';
 import { NewOpportunityDrawer } from './NewOpportunityDrawer';
+import { OpportunityChecklist } from './OpportunityChecklist';
 import { OpportunityQuotationsTab } from './OpportunityQuotationsTab';
 import { OpportunityTimeline } from './OpportunityTimeline';
+import { OutcomeDialog } from './OutcomeDialog';
 import { StageProgressBar } from './StageProgressBar';
 
-type TabId = 'resumen' | 'actividades' | 'cotizaciones' | 'factura';
+type TabId = 'resumen' | 'actividades' | 'cotizaciones' | 'factura' | 'tareas';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'resumen', label: 'Resumen' },
   { id: 'actividades', label: 'Actividades' },
   { id: 'cotizaciones', label: 'Cotizaciones' },
   { id: 'factura', label: 'Factura' },
+  { id: 'tareas', label: 'Tareas' },
 ];
 
 const AGING_STYLES: Record<AgingLevel, { label: string; className: string }> = {
@@ -166,9 +172,10 @@ interface ResumenTabProps {
   opportunity: Opportunity;
   stages: PipelineStage[];
   onEdit: (opportunity: Opportunity) => void;
+  onOutcome: () => void;
 }
 
-function ResumenTab({ opportunity, stages, onEdit }: ResumenTabProps) {
+function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps) {
   const router = useRouter();
 
   // Fetch quotations linked to this opportunity
@@ -207,6 +214,7 @@ function ResumenTab({ opportunity, stages, onEdit }: ResumenTabProps) {
     approved: 'success',
     rejected: 'error',
     cancelled: 'error',
+    invoiced: 'success',
   };
 
   return (
@@ -391,7 +399,7 @@ function ResumenTab({ opportunity, stages, onEdit }: ResumenTabProps) {
 
       {/* CTA — route to existing quotation or create new one */}
       {!isTerminal && (
-        <div className="border-t border-border/40 pt-4">
+        <div className="border-t border-border/40 pt-4 space-y-2">
           {quotation ? (
             <Button
               color="primary"
@@ -411,19 +419,26 @@ function ResumenTab({ opportunity, stages, onEdit }: ResumenTabProps) {
               Crear cotización
             </Button>
           )}
-        </div>
-      )}
-
-      {isWon && quotation && !isTerminal && (
-        <div className="pt-2">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => router.push(paths.sales.quotation(quotation.uid))}
-          >
-            <Icon name="Eye" size={14} />
-            Ver cotización
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+              onClick={onOutcome}
+            >
+              <Icon name="Trophy" size={13} />
+              Ganado
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+              onClick={onOutcome}
+            >
+              <Icon name="XCircle" size={13} />
+              Perdido
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -451,10 +466,13 @@ export function OpportunityPanel({
   stages,
   opportunity,
 }: OpportunityPanelProps) {
-  const { updateOpportunity } = useSalesContext();
+  const { updateOpportunity, refreshOpportunities } = useSalesContext();
+  const queryClient = useQueryClient();
+  const { competitors = [] } = useIntelligence();
   const [activeTab, setActiveTab] = useState<TabId>('resumen');
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+  const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
 
   const agingStyle = AGING_STYLES[agingLevel];
   const currentStage = opportunity
@@ -536,6 +554,7 @@ export function OpportunityPanel({
                     setEditingOpportunity(opp);
                     setEditDrawerOpen(true);
                   }}
+                  onOutcome={() => setOutcomeDialogOpen(true)}
                 />
               )}
               {activeTab === 'actividades' && <OpportunityTimeline opportunity={opportunity} />}
@@ -543,6 +562,7 @@ export function OpportunityPanel({
                 <OpportunityQuotationsTab opportunity={opportunity} stages={stages} />
               )}
               {activeTab === 'factura' && <InvoiceTab opportunity={opportunity} stages={stages} />}
+              {activeTab === 'tareas' && <OpportunityChecklist opportunity={opportunity} />}
             </div>
           </>
         ) : (
@@ -582,6 +602,36 @@ export function OpportunityPanel({
             : null
         }
       />
+
+      {/* Outcome dialog — ganado / perdido */}
+      {opportunity && (
+        <OutcomeDialog
+          open={outcomeDialogOpen}
+          clientName={opportunity.title}
+          competitors={competitors}
+          onConfirm={async (outcome, lostReason) => {
+            try {
+              if (outcome === 'ganado') {
+                await opportunityService.markWon(opportunity.uid);
+                toast.success('Oportunidad marcada como ganada');
+              } else {
+                await opportunityService.markLost(
+                  opportunity.uid,
+                  lostReason ? [lostReason] : []
+                );
+                toast.success('Oportunidad marcada como perdida');
+              }
+              queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+              await refreshOpportunities();
+              setOutcomeDialogOpen(false);
+              onClose();
+            } catch {
+              toast.error('Error al registrar el resultado');
+            }
+          }}
+          onCancel={() => setOutcomeDialogOpen(false)}
+        />
+      )}
     </Sheet>
   );
 }

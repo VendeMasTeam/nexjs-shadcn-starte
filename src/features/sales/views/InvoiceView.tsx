@@ -550,27 +550,30 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
             </CardContent>
           </Card>
 
-          {/* Client card placeholder */}
+          {/* Client card */}
           <Card className="border-none shadow-card bg-slate-900 text-slate-100 dark:bg-slate-950">
             <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-900 flex items-center justify-center shrink-0">
                   <Icon name="User" size={24} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
                     Cliente
                   </p>
-                  <p className="font-semibold leading-tight font-mono text-xs">
-                    {invoice.invoiceable_uid}
+                  <p className="font-semibold leading-tight truncate">
+                    {invoice.client_name ?? invoice.entity_label ?? '—'}
                   </p>
+                  {invoice.client_email && (
+                    <p className="text-xs text-slate-400 truncate mt-0.5">{invoice.client_email}</p>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-3 text-sm mb-5">
                 <div className="flex justify-between items-center text-slate-300">
                   <span>Total factura:</span>
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-white tabular-nums">
                     {formatMoney(invoice.total, {
                       scope: 'tenant',
                       minimumFractionDigits: 2,
@@ -580,7 +583,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                 </div>
                 <div className="flex justify-between items-center text-slate-300">
                   <span>Saldo pendiente:</span>
-                  <span className="font-medium text-orange-400">
+                  <span className="font-medium text-orange-400 tabular-nums">
                     {formatMoney(pendingBalance, {
                       scope: 'tenant',
                       minimumFractionDigits: 2,

@@ -37,7 +37,7 @@ export interface Quotation {
   uid: string;
   quote_number: string;
   title: string;
-  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'cancelled';
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'cancelled' | 'invoiced';
   currency: string;
   exchange_rate?: number;
   local_currency?: string;
@@ -98,6 +98,8 @@ export interface Invoice {
   entity_type?: string;
   entity_label?: string;
   entity_uid?: string;
+  client_name?: string;
+  client_email?: string;
   created_at: string;
   updated_at: string;
 }
@@ -237,4 +239,6 @@ export const STATUS_LABELS: Record<string, string> = {
   partial: 'Parcial',
   paid: 'Pagada',
   overdue: 'Vencida',
+  // Quotation extra
+  invoiced: 'Facturada',
 };

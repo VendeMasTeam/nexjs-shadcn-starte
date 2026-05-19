@@ -228,6 +228,9 @@ export const endpoints = {
     opportunityActivities: (uid: string) => `/opportunities/${uid}/activities`,
     opportunityActivity: (uid: string, activityUid: string) =>
       `/opportunities/${uid}/activities/${activityUid}`,
+    opportunityWon: (uid: string) => `/opportunities/${uid}/won`,
+    opportunityLost: (uid: string) => `/opportunities/${uid}/lost`,
+    opportunityTasks: (uid: string) => `/opportunities/${uid}/tasks`,
     opportunitiesTemplate: '/opportunities/template',
     opportunitiesImport: '/opportunities/import',
     quotations: '/quotations',

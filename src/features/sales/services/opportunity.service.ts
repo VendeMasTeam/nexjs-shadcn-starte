@@ -1,6 +1,7 @@
 import axiosInstance, { endpoints } from 'src/lib/axios';
+import type { Task, TaskPayload } from 'src/features/tasks/types/task.types';
 
-import type { Activity, ActivityPayload, Opportunity } from '../types/sales.types';
+import type { Activity, ActivityPayload, LostReasonInfo, Opportunity } from '../types/sales.types';
 
 export const opportunityService = {
   async getStages() {
@@ -63,5 +64,31 @@ export const opportunityService = {
 
   async deleteActivity(uid: string, activityUid: string): Promise<void> {
     await axiosInstance.delete(endpoints.sales.opportunityActivity(uid, activityUid));
+  },
+
+  // ─── Won / Lost ──────────────────────────────────────────────────────────────
+
+  async markWon(uid: string, notes?: string): Promise<Opportunity> {
+    const res = await axiosInstance.post(endpoints.sales.opportunityWon(uid), { notes });
+    return res.data.data;
+  },
+
+  async markLost(uid: string, reasons: LostReasonInfo[]): Promise<Opportunity> {
+    const res = await axiosInstance.post(endpoints.sales.opportunityLost(uid), {
+      lost_reasons: reasons,
+    });
+    return res.data.data;
+  },
+
+  // ─── Tasks ───────────────────────────────────────────────────────────────────
+
+  async getTasks(uid: string): Promise<Task[]> {
+    const res = await axiosInstance.get(endpoints.sales.opportunityTasks(uid));
+    return res.data.data ?? [];
+  },
+
+  async createTask(uid: string, payload: Omit<TaskPayload, 'taskable_type' | 'taskable_uid'>): Promise<Task> {
+    const res = await axiosInstance.post(endpoints.sales.opportunityTasks(uid), payload);
+    return res.data.data;
   },
 };
