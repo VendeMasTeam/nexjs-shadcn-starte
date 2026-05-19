@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
@@ -47,6 +47,7 @@ interface InvoiceViewProps {
 
 export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { quotations, registerPayment } = useSalesContext();
   const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
 
@@ -94,8 +95,10 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
     className: 'bg-muted/10 text-muted-foreground',
   };
 
-  const handleRegisterPayment = (payment: Omit<Payment, 'uid'>) => {
-    registerPayment(invoiceId, payment);
+  const handleRegisterPayment = async (payment: Omit<Payment, 'uid'>) => {
+    await registerPayment(invoiceId, payment);
+    queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+    setPaymentDrawerOpen(false);
   };
 
   // Line item totals
@@ -209,7 +212,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                 <span className="font-semibold text-foreground text-sm">
                   {invoice.invoiceable_type}
                 </span>
-                <span className="text-xs text-muted-foreground font-mono">
+                <span className="text-xs text-muted-foreground font-mono truncate">
                   {invoice.invoiceable_uid}
                 </span>
               </div>
@@ -225,7 +228,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       Total Factura
                     </p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-lg font-bold text-foreground tabular-nums break-all">
                       {formatMoney(invoice.total, {
                         scope: 'tenant',
                         minimumFractionDigits: 2,
@@ -255,7 +258,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       Total Pagado
                     </p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-lg font-bold text-foreground tabular-nums break-all">
                       {formatMoney(invoice.paid_total, {
                         scope: 'tenant',
                         minimumFractionDigits: 2,
@@ -287,7 +290,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                       Saldo Pendiente
                     </p>
                     <p
-                      className={`text-2xl font-bold ${
+                      className={`text-lg font-bold tabular-nums break-all ${
                         pendingBalance > 0 ? 'text-orange-600' : 'text-foreground'
                       }`}
                     >

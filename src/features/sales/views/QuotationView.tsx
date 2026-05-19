@@ -464,7 +464,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
       {/* ── Two-column layout ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
         {/* LEFT — Main content */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* General Info */}
           <Card className="border-none shadow-card">
             <CardContent className="p-6">
@@ -474,7 +474,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                 </div>
                 <h2 className="text-sm font-bold text-foreground">Información General</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                 <Input
                   label="Título"
                   required
@@ -690,7 +690,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
         </div>
 
         {/* RIGHT — Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Summary */}
           <Card className="border-none shadow-card py-0">
             <CardContent className="p-6">
@@ -699,9 +699,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                 <h2 className="text-sm font-bold text-foreground">Resumen</h2>
               </div>
               <div className="space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold text-foreground">
+                <div className="flex justify-between items-center gap-3 text-sm">
+                  <span className="text-muted-foreground shrink-0">Subtotal</span>
+                  <span className="font-semibold text-foreground text-right tabular-nums">
                     {formatMoney(totals.subtotal, {
                       scope: 'tenant',
                       minimumFractionDigits: 2,
@@ -709,9 +709,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                     })}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Descuento Total</span>
-                  <span className="font-semibold text-emerald-500">
+                <div className="flex justify-between items-center gap-3 text-sm">
+                  <span className="text-muted-foreground shrink-0">Descuento Total</span>
+                  <span className="font-semibold text-emerald-500 text-right tabular-nums">
                     -
                     {formatMoney(totals.discount, {
                       scope: 'tenant',
@@ -720,9 +720,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                     })}
                   </span>
                 </div>
-                <div className="border-t border-border/40 pt-4 mt-2 flex justify-between items-center">
-                  <span className="font-bold text-foreground">Total Final</span>
-                  <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                <div className="border-t border-border/40 pt-4 mt-2 flex justify-between items-center gap-3">
+                  <span className="font-bold text-foreground shrink-0">Total Final</span>
+                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400 text-right tabular-nums">
                     {formatMoney(totals.total, {
                       scope: 'tenant',
                       minimumFractionDigits: 2,

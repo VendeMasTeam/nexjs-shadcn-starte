@@ -219,6 +219,7 @@ export function CatalogView() {
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <Input
+          label="Buscar"
           placeholder="Buscar por nombre o SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
