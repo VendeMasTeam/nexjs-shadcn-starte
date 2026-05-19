@@ -30,7 +30,7 @@ import { NewOpportunityDrawer } from './NewOpportunityDrawer';
 import { OpportunityChecklist } from './OpportunityChecklist';
 import { OpportunityQuotationsTab } from './OpportunityQuotationsTab';
 import { OpportunityTimeline } from './OpportunityTimeline';
-import { OutcomeDialog } from './OutcomeDialog';
+import { OutcomeSheet } from './OutcomeSheet';
 import { StageProgressBar } from './StageProgressBar';
 
 type TabId = 'resumen' | 'actividades' | 'cotizaciones' | 'factura' | 'tareas';
@@ -186,8 +186,8 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
   });
 
   const currentStage = stages.find((s) => s.uid === opportunity.stage_uid);
-  const isWon = currentStage?.is_won ?? false;
-  const isLost = currentStage?.is_lost ?? false;
+  const isWon = !!opportunity.won_at;
+  const isLost = !!opportunity.lost_at;
   const isTerminal = isWon || isLost;
   const probability = currentStage?.probability_percent ?? 0;
   const weightedAmount = opportunity.amount * (probability / 100);
@@ -603,9 +603,9 @@ export function OpportunityPanel({
         }
       />
 
-      {/* Outcome dialog — ganado / perdido */}
+      {/* Outcome sheet — ganado / perdido */}
       {opportunity && (
-        <OutcomeDialog
+        <OutcomeSheet
           open={outcomeDialogOpen}
           clientName={opportunity.title}
           competitors={competitors}

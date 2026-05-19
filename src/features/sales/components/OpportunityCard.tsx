@@ -54,8 +54,8 @@ export function OpportunityCard({
   onOpenPanel,
 }: OpportunityCardProps) {
   const currentStage = stages.find((s) => s.uid === opportunity.stage_uid);
-  const isWon = currentStage?.is_won ?? false;
-  const isLost = currentStage?.is_lost ?? false;
+  const isWon = !!opportunity.won_at;
+  const isLost = !!opportunity.lost_at;
   const isTerminal = isWon || isLost;
   const probability = currentStage?.probability_percent ?? 0;
 
