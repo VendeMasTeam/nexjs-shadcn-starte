@@ -29,7 +29,11 @@ export function OpportunityChecklist({ opportunity }: OpportunityChecklistProps)
 
   const createMutation = useMutation({
     mutationFn: (title: string) =>
-      opportunityService.createTask(opportunity.uid, { title, status: 'pending', priority: 'medium' }),
+      opportunityService.createTask(opportunity.uid, {
+        title,
+        status: 'pending',
+        priority: 'medium',
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
@@ -132,7 +136,11 @@ export function OpportunityChecklist({ opportunity }: OpportunityChecklistProps)
           onClick={handleAdd}
           disabled={!newText.trim() || createMutation.isPending}
         >
-          <Icon name={createMutation.isPending ? 'Loader2' : 'Plus'} size={14} className={createMutation.isPending ? 'animate-spin' : ''} />
+          <Icon
+            name={createMutation.isPending ? 'Loader2' : 'Plus'}
+            size={14}
+            className={createMutation.isPending ? 'animate-spin' : ''}
+          />
         </Button>
       </div>
     </div>

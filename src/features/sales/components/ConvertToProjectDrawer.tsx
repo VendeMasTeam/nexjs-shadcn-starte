@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { projectsService } from 'src/features/projects/services/projects.service';
 import { paths } from 'src/routes/paths';
@@ -31,18 +31,9 @@ export function ConvertToProjectDrawer({ open, onClose, invoice }: ConvertToProj
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [name, setName] = useState('');
-  const [startDate, setStartDate] = useState(today);
+  const [name, setName] = useState(`Proyecto - ${invoice.client_name ?? invoice.invoice_number}`);
+  const [startDate, setStartDate] = useState(invoice.issued_at?.slice(0, 10) ?? today);
   const [endDate, setEndDate] = useState('');
-
-  // Reset form when drawer opens
-  useEffect(() => {
-    if (open) {
-      setName(`Proyecto - ${invoice.client_name ?? invoice.invoice_number}`);
-      setStartDate(invoice.issued_at?.slice(0, 10) ?? today);
-      setEndDate('');
-    }
-  }, [open, invoice, today]);
 
   // Check if a project already exists for this invoice
   const { data: existingProject, isLoading: checking } = useQuery({

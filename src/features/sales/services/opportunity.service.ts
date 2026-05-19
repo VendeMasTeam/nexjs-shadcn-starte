@@ -1,5 +1,5 @@
-import axiosInstance, { endpoints } from 'src/lib/axios';
 import type { Task, TaskPayload } from 'src/features/tasks/types/task.types';
+import axiosInstance, { endpoints } from 'src/lib/axios';
 
 import type { Activity, ActivityPayload, LostReasonInfo, Opportunity } from '../types/sales.types';
 
@@ -87,7 +87,10 @@ export const opportunityService = {
     return res.data.data ?? [];
   },
 
-  async createTask(uid: string, payload: Omit<TaskPayload, 'taskable_type' | 'taskable_uid'>): Promise<Task> {
+  async createTask(
+    uid: string,
+    payload: Omit<TaskPayload, 'taskable_type' | 'taskable_uid'>
+  ): Promise<Task> {
     const res = await axiosInstance.post(endpoints.sales.opportunityTasks(uid), payload);
     return res.data.data;
   },

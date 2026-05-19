@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useIntelligence } from 'src/features/intelligence/hooks/useIntelligence';
 import type { PipelineStage } from 'src/features/sales/types/sales.types';
 import { formatMoney } from 'src/lib/currency';
 import { toDate } from 'src/lib/date';
@@ -17,13 +18,12 @@ import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Sheet, SheetContent, SheetTitle } from 'src/shared/components/ui/sheet';
 
-import { useIntelligence } from 'src/features/intelligence/hooks/useIntelligence';
 import { useSalesContext } from '../context/SalesContext';
 import type { AgingLevel } from '../hooks/useOpportunityPanel';
 import { invoiceService } from '../services/invoice.service';
 import { opportunityService } from '../services/opportunity.service';
 import { quotationService } from '../services/quotation.service';
-import type { Invoice, LostReasonInfo, Opportunity, Quotation } from '../types/sales.types';
+import type { Invoice, Opportunity, Quotation } from '../types/sales.types';
 import { STATUS_LABELS } from '../types/sales.types';
 import { DealAvatar } from './DealAvatar';
 import { NewOpportunityDrawer } from './NewOpportunityDrawer';
@@ -615,10 +615,7 @@ export function OpportunityPanel({
                 await opportunityService.markWon(opportunity.uid);
                 toast.success('Oportunidad marcada como ganada');
               } else {
-                await opportunityService.markLost(
-                  opportunity.uid,
-                  lostReason ? [lostReason] : []
-                );
+                await opportunityService.markLost(opportunity.uid, lostReason ? [lostReason] : []);
                 toast.success('Oportunidad marcada como perdida');
               }
               queryClient.invalidateQueries({ queryKey: ['opportunities'] });

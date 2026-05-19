@@ -610,6 +610,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
 
       {/* Convert to Project Drawer */}
       <ConvertToProjectDrawer
+        key={projectDrawerOpen ? invoice.uid : 'closed'}
         open={projectDrawerOpen}
         onClose={() => setProjectDrawerOpen(false)}
         invoice={invoice}
