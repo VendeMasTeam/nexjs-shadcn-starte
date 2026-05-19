@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Icon,
@@ -16,7 +16,7 @@ import {
 import { Textarea } from 'src/shared/components/ui';
 
 import { partnersService } from '../services/partners.service';
-import type { MaterialType } from '../types';
+import type { MaterialType, PortalMaterial } from '../types';
 
 const TYPE_OPTIONS: { value: MaterialType; label: string }[] = [
   { value: 'sales', label: 'Ventas' },
@@ -27,9 +27,12 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onUpload: (formData: FormData) => Promise<boolean>;
+  material?: PortalMaterial | null;
+  onUpdate?: (uid: string, data: { title?: string; description?: string; type?: string; is_active?: boolean }) => Promise<void>;
 }
 
-export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
+export function MaterialUploadDrawer({ open, onClose, onUpload, material, onUpdate }: Props) {
+  const isEdit = !!material;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<MaterialType>('sales');
@@ -39,6 +42,23 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && material) {
+      setTitle(material.title);
+      setDescription(material.description ?? '');
+      setType(material.type);
+      setTags(material.tags ?? []);
+    } else if (!open) {
+      setTitle('');
+      setDescription('');
+      setType('sales');
+      setTags([]);
+      setTagInput('');
+      setFile(null);
+      setErrors({});
+    }
+  }, [open, material]);
 
   const { data: typeOptionsData } = useQuery({
     queryKey: ['partner-resources', 'types'],
@@ -53,42 +73,42 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = 'El título es requerido';
-    if (!file) errs.file = 'Debés seleccionar un archivo';
+    if (!isEdit && !file) errs.file = 'Debés seleccionar un archivo';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleUpload = async () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
-
-    const formData = new FormData();
-    formData.append('file', file!);
-    formData.append('title', title.trim());
-    formData.append('description', description.trim());
-    formData.append('type', type);
-    tags.forEach((tag) => formData.append('tags[]', tag));
-
-    const ok = await onUpload(formData);
-    if (ok) {
-      setTitle('');
-      setDescription('');
-      setType('sales');
-      setTags([]);
-      setTagInput('');
-      setFile(null);
-      setErrors({});
-      onClose();
+    try {
+      if (isEdit && onUpdate) {
+        await onUpdate(material!.uid, {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          type,
+        });
+        onClose();
+      } else {
+        const formData = new FormData();
+        formData.append('file', file!);
+        formData.append('title', title.trim());
+        formData.append('description', description.trim());
+        formData.append('type', type);
+        tags.forEach((tag) => formData.append('tags[]', tag));
+        const ok = await onUpload(formData);
+        if (ok) onClose();
+      }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent className="w-full sm:max-w-sm flex flex-col overflow-y-auto">
         <SheetHeader className="border-b border-border/60 pb-4">
-          <SheetTitle>Subir material</SheetTitle>
+          <SheetTitle>{isEdit ? 'Editar material' : 'Subir material'}</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
@@ -158,67 +178,71 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
             </div>
           </div>
 
-          {/* File input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.pptx,.xlsx,.docx,.jpg,.png"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0] ?? null;
-              setFile(f);
-              setErrors((prev) => {
-                const next = { ...prev };
-                delete next.file;
-                return next;
-              });
-            }}
-          />
-
-          {file ? (
-            <div className="rounded-xl border border-border/60 p-4 flex items-center gap-3">
-              <Icon name="FileText" size={22} className="text-primary shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-body2 font-medium truncate">{file.name}</p>
-                <p className="text-caption text-muted-foreground">
-                  {(file.size / 1024 / 1024).toFixed(1)} MB
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-error"
-                onClick={() => {
-                  setFile(null);
-                  if (fileInputRef.current) fileInputRef.current.value = '';
+          {/* File input — solo en modo creación */}
+          {!isEdit && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.pptx,.xlsx,.docx,.jpg,.png"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setFile(f);
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.file;
+                    return next;
+                  });
                 }}
-              >
-                <Icon name="X" size={16} />
-              </Button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="rounded-xl border border-dashed border-border/60 p-8 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:bg-muted/20 transition-colors w-full"
-            >
-              <Icon name="Upload" size={28} className="text-muted-foreground" />
-              <p className="text-body2 text-muted-foreground font-medium">Seleccionar archivo</p>
-              <p className="text-caption text-muted-foreground">
-                PDF, PPTX, XLSX, imágenes — máx. 50 MB
-              </p>
-            </button>
-          )}
+              />
 
-          {errors.file && <p className="text-caption text-error -mt-3">{errors.file}</p>}
+              {file ? (
+                <div className="rounded-xl border border-border/60 p-4 flex items-center gap-3">
+                  <Icon name="FileText" size={22} className="text-primary shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-body2 font-medium truncate">{file.name}</p>
+                    <p className="text-caption text-muted-foreground">
+                      {(file.size / 1024 / 1024).toFixed(1)} MB
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-error"
+                    onClick={() => {
+                      setFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                  >
+                    <Icon name="X" size={16} />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-xl border border-dashed border-border/60 p-8 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:bg-muted/20 transition-colors w-full"
+                >
+                  <Icon name="Upload" size={28} className="text-muted-foreground" />
+                  <p className="text-body2 text-muted-foreground font-medium">Seleccionar archivo</p>
+                  <p className="text-caption text-muted-foreground">
+                    PDF, PPTX, XLSX, imágenes — máx. 50 MB
+                  </p>
+                </button>
+              )}
+
+              {errors.file && <p className="text-caption text-error -mt-3">{errors.file}</p>}
+            </>
+          )}
         </div>
 
         <SheetFooter className="border-t border-border/60 pt-4 px-4 pb-4">
           <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
-          <Button color="primary" onClick={handleUpload} disabled={loading}>
-            {loading ? 'Subiendo...' : 'Subir'}
+          <Button color="primary" onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Subir'}
           </Button>
         </SheetFooter>
       </SheetContent>

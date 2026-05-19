@@ -17,10 +17,11 @@ const MATERIAL_ICON_BG: Record<string, string> = {
 
 interface Props {
   material: PortalMaterial;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export function MaterialCard({ material, onDelete }: Props) {
+export function MaterialCard({ material, onEdit, onDelete }: Props) {
   const typeConfig = MATERIAL_TYPE_CONFIG[material.type] ?? {
     label: material.type,
     icon: 'File' as const,
@@ -81,6 +82,17 @@ export function MaterialCard({ material, onDelete }: Props) {
         <Icon name="Download" size={14} />
         Descargar
       </Button>
+      {onEdit && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-1"
+          onClick={onEdit}
+        >
+          <Icon name="Pencil" size={14} />
+          Editar
+        </Button>
+      )}
       {onDelete && (
         <Button
           variant="outline"

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { tenantsService } from 'src/features/admin/services/tenants.service';
 import { Tenant } from 'src/features/admin/types/admin.types';
+import { extractApiError } from 'src/lib/api-errors';
+import { notify } from 'src/lib/notify';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
@@ -74,32 +76,52 @@ export function useTenants(filters: TenantFilters = {}) {
 
   const suspendTenant = useCallback(
     async (uid: string) => {
-      await tenantsService.suspend(uid);
-      await fetchTenants();
+      try {
+        await tenantsService.suspend(uid);
+        notify.success('Tenant suspendido.');
+        await fetchTenants();
+      } catch (error) {
+        notify.error(extractApiError(error));
+      }
     },
     [fetchTenants]
   );
 
   const activateTenant = useCallback(
     async (uid: string) => {
-      await tenantsService.activate(uid);
-      await fetchTenants();
+      try {
+        await tenantsService.activate(uid);
+        notify.success('Tenant activado.');
+        await fetchTenants();
+      } catch (error) {
+        notify.error(extractApiError(error));
+      }
     },
     [fetchTenants]
   );
 
   const archiveTenant = useCallback(
     async (uid: string) => {
-      await tenantsService.archive(uid);
-      await fetchTenants();
+      try {
+        await tenantsService.archive(uid);
+        notify.success('Tenant archivado.');
+        await fetchTenants();
+      } catch (error) {
+        notify.error(extractApiError(error));
+      }
     },
     [fetchTenants]
   );
 
   const restoreTenant = useCallback(
     async (uid: string) => {
-      await tenantsService.restore(uid);
-      await fetchTenants();
+      try {
+        await tenantsService.restore(uid);
+        notify.success('Tenant restaurado.');
+        await fetchTenants();
+      } catch (error) {
+        notify.error(extractApiError(error));
+      }
     },
     [fetchTenants]
   );

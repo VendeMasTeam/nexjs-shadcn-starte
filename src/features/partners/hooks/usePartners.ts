@@ -254,6 +254,15 @@ export function usePartners(filters: PartnersFilters = {}) {
 
   // ── Materials mutations ─────────────────────────────────────────────────
 
+  const updateMaterialMutation = useMutation({
+    mutationFn: ({ uid, data }: { uid: string; data: { title?: string; description?: string; type?: string; is_active?: boolean } }) =>
+      partnersService.materials.update(uid, data),
+    meta: { successMessage: 'Material actualizado correctamente' },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.partners.materials.list });
+    },
+  });
+
   const createMaterialMutation = useMutation({
     mutationFn: (data: FormData) => partnersService.materials.create(data),
     meta: { successMessage: 'Material creado correctamente' },
@@ -269,6 +278,13 @@ export function usePartners(filters: PartnersFilters = {}) {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.materials.list });
     },
   });
+
+  const updateMaterial = async (
+    uid: string,
+    data: { title?: string; description?: string; type?: string; is_active?: boolean }
+  ): Promise<void> => {
+    await updateMaterialMutation.mutateAsync({ uid, data });
+  };
 
   const createMaterial = async (data: FormData): Promise<boolean> => {
     await createMaterialMutation.mutateAsync(data);
@@ -302,6 +318,7 @@ export function usePartners(filters: PartnersFilters = {}) {
     convertOpportunity,
     removeOpportunity,
     createMaterial,
+    updateMaterial,
     removeMaterial,
     pagination: {
       page: pagination.page,

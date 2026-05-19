@@ -20,11 +20,12 @@ import { MATERIAL_TYPE_CONFIG } from '../types';
 // ─── Main View ────────────────────────────────────────────────────────────────
 
 export function PartnerPortalView() {
-  const { materials, materialStats, materialPagination, createMaterial, removeMaterial } =
+  const { materials, materialStats, materialPagination, createMaterial, updateMaterial, removeMaterial } =
     usePartners();
 
   const [filterType, setFilterType] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<PortalMaterial | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PortalMaterial | null>(null);
 
   // Only type filter remains client-side (backend doesn't support ?type= yet)
@@ -68,7 +69,7 @@ export function PartnerPortalView() {
         title="Portal de Partners"
         subtitle="Materiales de venta, capacitación y recursos para aliados comerciales"
         action={
-          <Button color="primary" size="sm" onClick={() => setDrawerOpen(true)}>
+          <Button color="primary" size="sm" onClick={() => { setEditTarget(null); setDrawerOpen(true); }}>
             <Icon name="Upload" size={16} />
             Subir material
           </Button>
@@ -133,6 +134,10 @@ export function PartnerPortalView() {
               <MaterialCard
                 key={material.uid}
                 material={material}
+                onEdit={() => {
+                  setEditTarget(material);
+                  setDrawerOpen(true);
+                }}
                 onDelete={() => setDeleteTarget(material)}
               />
             ))}
@@ -142,8 +147,13 @@ export function PartnerPortalView() {
 
       <MaterialUploadDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        material={editTarget}
+        onClose={() => {
+          setDrawerOpen(false);
+          setEditTarget(null);
+        }}
         onUpload={createMaterial}
+        onUpdate={updateMaterial}
       />
 
       <ConfirmDialog

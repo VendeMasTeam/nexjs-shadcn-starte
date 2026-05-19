@@ -132,6 +132,14 @@ export const partnersService = {
       return (res.data?.data ?? res.data) as PortalMaterial;
     },
 
+    update: async (
+      uid: string,
+      data: { title?: string; description?: string; type?: string; is_active?: boolean; partner_uids?: string[] }
+    ): Promise<PortalMaterial> => {
+      const res = await axiosInstance.put(endpoints.partners.materials.update(uid), data);
+      return (res.data?.data ?? res.data) as PortalMaterial;
+    },
+
     remove: async (uid: string): Promise<void> => {
       await axiosInstance.delete(endpoints.partners.materials.delete(uid));
     },
