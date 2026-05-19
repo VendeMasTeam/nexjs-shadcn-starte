@@ -152,6 +152,52 @@ export interface TenantErrorByTenant {
   estado: string;
 }
 
+// --- Platform Users & Roles ---
+
+export interface PlatformPermission {
+  uid: string;
+  name: string;
+  description: string;
+  group: string;
+}
+
+export type PlatformUserStatus = 'ACTIVO' | 'INACTIVO' | 'BLOQUEADO';
+
+export interface PlatformUser {
+  uid: string;
+  name: string;
+  email: string;
+  role: string;
+  role_uid: string;
+  status: PlatformUserStatus;
+  last_login_at: string | null;
+  created_at: string;
+}
+
+export interface PlatformRole {
+  uid: string;
+  name: string;
+  description: string;
+  is_system: boolean;
+  permissions: string[];
+  user_count: number;
+  created_at: string;
+}
+
+export type PlatformUserPayload = {
+  name: string;
+  email: string;
+  password?: string;
+  role_uid: string;
+  status?: PlatformUserStatus;
+};
+
+export type PlatformRolePayload = {
+  name: string;
+  description: string;
+  permissions: string[];
+};
+
 // --- Payload types ---
 
 export type PlanPayload = Omit<PlanSaaS, 'uid' | 'created_at' | 'total_tenants'>;

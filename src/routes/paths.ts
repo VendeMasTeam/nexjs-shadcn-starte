@@ -87,6 +87,8 @@ export const paths = {
     plans: `${ROOTS.ADMIN}/plans`,
     billing: `${ROOTS.ADMIN}/billing`,
     telemetry: `${ROOTS.ADMIN}/telemetry`,
+    users: `${ROOTS.ADMIN}/users`,
+    roles: `${ROOTS.ADMIN}/roles`,
   },
 
   // CONTACTS

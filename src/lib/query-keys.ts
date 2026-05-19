@@ -97,6 +97,11 @@ export const queryKeys = {
       ['reports', 'inventory', tab, ...(filters ? [JSON.stringify(filters)] : [])] as const,
     filters: ['reports', 'filters'] as const,
   },
+  admin: {
+    platformUsers: ['admin', 'platform-users'] as const,
+    platformRoles: ['admin', 'platform-roles'] as const,
+    platformPermissions: ['admin', 'platform-permissions'] as const,
+  },
   rbac: {
     permissions: ['rbac', 'permissions'] as const,
   },

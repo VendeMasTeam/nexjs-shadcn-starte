@@ -13,7 +13,6 @@ import {
 
 export interface CompetitorFormData {
   name: string;
-  key: string;
   website?: string;
   strengths: string[];
   weaknesses: string[];
@@ -30,7 +29,6 @@ interface Props {
 export function CompetitorDrawer({ open, competitor, onClose, onSave }: Props) {
   const isEdit = !!competitor;
   const [name, setName] = useState(competitor?.name ?? '');
-  const [key, setKey] = useState(competitor?.key ?? '');
   const [website, setWebsite] = useState(competitor?.website ?? '');
   const [strengths, setStrengths] = useState((competitor?.strengths ?? []).join('\n'));
   const [weaknesses, setWeaknesses] = useState((competitor?.weaknesses ?? []).join('\n'));
@@ -38,12 +36,11 @@ export function CompetitorDrawer({ open, competitor, onClose, onSave }: Props) {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim() || !key.trim()) return;
+    if (!name.trim()) return;
     setSaving(true);
     try {
       await onSave({
         name: name.trim(),
-        key: key.trim(),
         website: website.trim() || undefined,
         strengths: strengths.split('\n').filter(Boolean),
         weaknesses: weaknesses.split('\n').filter(Boolean),
@@ -68,13 +65,6 @@ export function CompetitorDrawer({ open, competitor, onClose, onSave }: Props) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ej: Competidor XYZ"
-          />
-          <Input
-            label="Clave"
-            required
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="Ej: competidor-xyz"
           />
           <Input
             label="Web"

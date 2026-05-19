@@ -122,6 +122,26 @@ export const endpoints = {
   admin: {
     dashboard: '/admin/dashboard',
     planModules: '/admin/plan-modules',
+    platform: {
+      users: {
+        list: '/admin/platform/users',
+        create: '/admin/platform/users',
+        show: (uid: string) => `/admin/platform/users/${uid}`,
+        update: (uid: string) => `/admin/platform/users/${uid}`,
+        delete: (uid: string) => `/admin/platform/users/${uid}`,
+        lock: (uid: string) => `/admin/platform/users/${uid}/lock`,
+        unlock: (uid: string) => `/admin/platform/users/${uid}/unlock`,
+      },
+      roles: {
+        list: '/admin/platform/roles',
+        create: '/admin/platform/roles',
+        show: (uid: string) => `/admin/platform/roles/${uid}`,
+        update: (uid: string) => `/admin/platform/roles/${uid}`,
+        delete: (uid: string) => `/admin/platform/roles/${uid}`,
+        syncPermissions: (uid: string) => `/admin/platform/roles/${uid}/permissions`,
+      },
+      permissions: '/admin/platform/permissions',
+    },
     tenants: {
       list: '/admin/tenants',
       create: '/admin/tenants',

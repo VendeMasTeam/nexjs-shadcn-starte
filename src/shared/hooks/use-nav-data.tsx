@@ -191,6 +191,8 @@ const ADMIN_NAV: StaticSection[] = [
       { title: 'Planes', path: paths.admin.plans, icon: 'CreditCard' },
       { title: 'Facturación', path: paths.admin.billing, icon: 'Receipt' },
       { title: 'Telemetría', path: paths.admin.telemetry, icon: 'Activity' },
+      { title: 'Usuarios Plataforma', path: paths.admin.users, icon: 'Users' },
+      { title: 'Roles Plataforma', path: paths.admin.roles, icon: 'ShieldCheck' },
     ],
   },
 ];

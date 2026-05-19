@@ -1,0 +1,349 @@
+'use client';
+
+import { createColumnHelper, flexRender } from '@tanstack/react-table';
+import { useMemo, useState } from 'react';
+import { formatDate } from 'src/lib/date';
+import {
+  PageContainer,
+  PageHeader,
+  SectionCard,
+  StatsCard,
+} from 'src/shared/components/layouts/page';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHeadCustom,
+  TablePaginationCustom,
+  TableRow,
+  useTable,
+} from 'src/shared/components/table';
+import {
+  Badge,
+  Button,
+  DeleteButton,
+  EditButton,
+  Icon,
+  Input,
+  SelectField,
+} from 'src/shared/components/ui';
+import { ConfirmDialog } from 'src/shared/components/ui/confirm-dialog';
+
+import { PlatformUserFormDrawer } from '../components/platform-user-form-drawer';
+import { usePlatformRoles } from '../hooks/use-platform-roles';
+import { usePlatformUsers } from '../hooks/use-platform-users';
+import type { PlatformUser, PlatformUserPayload, PlatformUserStatus } from '../types/admin.types';
+
+// ─── Status badge ─────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<
+  PlatformUserStatus,
+  { label: string; color: 'success' | 'error' | 'warning' | 'default' }
+> = {
+  ACTIVO: { label: 'Activo', color: 'success' },
+  INACTIVO: { label: 'Inactivo', color: 'default' },
+  BLOQUEADO: { label: 'Bloqueado', color: 'error' },
+};
+
+// ─── Column helper ────────────────────────────────────────────────────────────
+
+const columnHelper = createColumnHelper<PlatformUser>();
+
+interface UserColumnHandlers {
+  onEdit: (user: PlatformUser) => void;
+  onDelete: (user: PlatformUser) => void;
+  onLock: (user: PlatformUser) => void;
+}
+
+function buildUserColumns({ onEdit, onDelete, onLock }: UserColumnHandlers) {
+  return [
+    columnHelper.accessor('name', {
+      header: 'Usuario',
+      cell: (info) => (
+        <div>
+          <p className="text-body2 font-medium text-foreground">{info.getValue()}</p>
+          <p className="text-caption text-muted-foreground">{info.row.original.email}</p>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('role', {
+      header: 'Rol',
+      cell: (info) => (
+        <Badge variant="outline" className="text-xs">
+          {info.getValue()}
+        </Badge>
+      ),
+    }),
+    columnHelper.accessor('status', {
+      header: 'Estado',
+      cell: (info) => {
+        const cfg = STATUS_CONFIG[info.getValue()] ?? {
+          label: info.getValue(),
+          color: 'default' as const,
+        };
+        return (
+          <Badge variant="soft" color={cfg.color}>
+            {cfg.label}
+          </Badge>
+        );
+      },
+    }),
+    columnHelper.accessor('last_login_at', {
+      header: 'Último acceso',
+      cell: (info) => (
+        <span className="text-body2 text-muted-foreground">
+          {info.getValue() ? formatDate(info.getValue()!) : '—'}
+        </span>
+      ),
+    }),
+    columnHelper.accessor('created_at', {
+      header: 'Creado',
+      cell: (info) => (
+        <span className="text-body2 text-muted-foreground">{formatDate(info.getValue())}</span>
+      ),
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: 'Acciones',
+      cell: (info) => {
+        const user = info.row.original;
+        const isBlocked = user.status === 'BLOQUEADO';
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              color={isBlocked ? 'success' : 'warning'}
+              variant="soft"
+              className="h-6 text-[11px] px-2"
+              onClick={() => onLock(user)}
+              title={isBlocked ? 'Desbloquear' : 'Bloquear'}
+            >
+              <Icon name={isBlocked ? 'UserCheck' : 'UserX'} size={12} />
+            </Button>
+            <EditButton onClick={() => onEdit(user)} />
+            <DeleteButton onClick={() => onDelete(user)} />
+          </div>
+        );
+      },
+    }),
+  ];
+}
+
+// ─── View ─────────────────────────────────────────────────────────────────────
+
+export function PlatformUsersView() {
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  const { users, isLoading, createUser, updateUser, deleteUser, lockUser, unlockUser, pagination } =
+    usePlatformUsers({
+      role_uid: filterRole !== 'all' ? filterRole : undefined,
+      status: filterStatus !== 'all' ? filterStatus : undefined,
+    });
+
+  const { roles } = usePlatformRoles();
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PlatformUser | null>(null);
+
+  const COLUMNS = useMemo(
+    () =>
+      buildUserColumns({
+        onEdit: (user) => {
+          setSelectedUser(user);
+          setDrawerOpen(true);
+        },
+        onDelete: (user) => setDeleteTarget(user),
+        onLock: (user) => {
+          if (user.status === 'BLOQUEADO') {
+            unlockUser(user.uid);
+          } else {
+            lockUser(user.uid);
+          }
+        },
+      }),
+    [lockUser, unlockUser]
+  );
+
+  const { table, dense, onChangeDense } = useTable({
+    data: users,
+    columns: COLUMNS,
+    total: pagination.total,
+    pageIndex: pagination.page - 1,
+    pageSize: pagination.rowsPerPage,
+    onPageChange: (pi) => pagination.onChangePage(pi + 1),
+    onPageSizeChange: pagination.onChangeRowsPerPage,
+  });
+
+  const activeCount = users.filter((u) => u.status === 'ACTIVO').length;
+  const blockedCount = users.filter((u) => u.status === 'BLOQUEADO').length;
+
+  const statsCards = [
+    {
+      title: 'Total Usuarios',
+      value: pagination.total,
+      icon: <Icon name="Users" size={18} />,
+      iconClassName: 'bg-primary/10 text-primary',
+      trend: 'en la plataforma',
+      trendUp: true,
+    },
+    {
+      title: 'Activos',
+      value: activeCount,
+      icon: <Icon name="UserCheck" size={18} />,
+      iconClassName: 'bg-success/10 text-success',
+      trend: 'usuarios activos',
+      trendUp: true,
+    },
+    {
+      title: 'Bloqueados',
+      value: blockedCount,
+      icon: <Icon name="UserX" size={18} />,
+      iconClassName: 'bg-error/10 text-error',
+      trend: 'acceso suspendido',
+      trendUp: false,
+    },
+    {
+      title: 'Roles activos',
+      value: roles.length,
+      icon: <Icon name="ShieldCheck" size={18} />,
+      iconClassName: 'bg-info/10 text-info',
+      trend: 'roles disponibles',
+      trendUp: true,
+    },
+  ];
+
+  const roleFilterOptions = [
+    { value: 'all', label: 'Todos los roles' },
+    ...roles.map((r) => ({ value: r.uid, label: r.name })),
+  ];
+
+  const statusFilterOptions = [
+    { value: 'all', label: 'Todos los estados' },
+    { value: 'ACTIVO', label: 'Activo' },
+    { value: 'INACTIVO', label: 'Inactivo' },
+    { value: 'BLOQUEADO', label: 'Bloqueado' },
+  ];
+
+  return (
+    <PageContainer>
+      <PageHeader
+        title="Usuarios de Plataforma"
+        subtitle="Gestioná los usuarios con acceso al panel administrador"
+        action={
+          <Button
+            color="primary"
+            size="sm"
+            onClick={() => {
+              setSelectedUser(null);
+              setDrawerOpen(true);
+            }}
+          >
+            <Icon name="Plus" size={16} />
+            Nuevo usuario
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {statsCards.map((card) => (
+          <StatsCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+            iconClassName={card.iconClassName}
+            trend={card.trend}
+            trendUp={card.trendUp}
+          />
+        ))}
+      </div>
+
+      <SectionCard noPadding>
+        <div className="flex flex-wrap items-end gap-3 px-5 py-4">
+          <div className="flex-1 min-w-48">
+            <Input
+              label="Buscar"
+              placeholder="Buscar por nombre o email..."
+              value={pagination.search ?? ''}
+              onChange={(e) => pagination.onChangeSearch(e.target.value)}
+              leftIcon={<Icon name="Search" size={15} />}
+            />
+          </div>
+          <SelectField
+            label="Rol"
+            options={roleFilterOptions}
+            value={filterRole}
+            onChange={(v) => setFilterRole(v as string)}
+          />
+          <SelectField
+            label="Estado"
+            options={statusFilterOptions}
+            value={filterStatus}
+            onChange={(v) => setFilterStatus(v as string)}
+          />
+        </div>
+
+        <TableContainer>
+          <Table>
+            <TableHeadCustom table={table} />
+            <TableBody dense={dense}>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                    Cargando...
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="px-5">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <div className="border-t border-border/40">
+          <TablePaginationCustom table={table} dense={dense} onChangeDense={onChangeDense} />
+        </div>
+      </SectionCard>
+
+      <PlatformUserFormDrawer
+        open={drawerOpen}
+        user={selectedUser}
+        roles={roles}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedUser(null);
+        }}
+        onCreate={(data: PlatformUserPayload) => createUser(data)}
+        onUpdate={(uid, data) => updateUser(uid, data)}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) await deleteUser(deleteTarget.uid);
+          setDeleteTarget(null);
+        }}
+        title="¿Eliminar usuario?"
+        description={
+          <>
+            Vas a eliminar a <strong>{deleteTarget?.name}</strong> ({deleteTarget?.email}). Esta
+            acción no se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar"
+        variant="error"
+      />
+    </PageContainer>
+  );
+}

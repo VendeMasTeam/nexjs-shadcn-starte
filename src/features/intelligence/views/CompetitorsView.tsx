@@ -191,7 +191,6 @@ export function CompetitorsView({ onClose }: { onClose?: () => void }) {
           editing
             ? {
                 name: editing.name,
-                key: editing.key ?? '',
                 website: editing.website,
                 strengths: editing.strengths ?? [],
                 weaknesses: editing.weaknesses ?? [],

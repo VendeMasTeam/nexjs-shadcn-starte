@@ -5,7 +5,6 @@ import type { Battlecard, Competitor, LostReason } from '../types';
 
 export interface CreateCompetitorPayload {
   name: string;
-  key: string;
   website?: string;
   strengths?: string[];
   weaknesses?: string[];
