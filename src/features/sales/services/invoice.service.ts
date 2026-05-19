@@ -36,4 +36,11 @@ export const invoiceService = {
     const res = await axiosInstance.get(endpoints.sales.paymentHistory(invoiceUid));
     return res.data.data;
   },
+
+  async send(
+    invoiceUid: string,
+    data?: { recipient_email?: string; subject?: string; message?: string }
+  ): Promise<void> {
+    await axiosInstance.post(endpoints.sales.invoiceSend(invoiceUid), data ?? {});
+  },
 };

@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import type { Payment } from 'src/features/sales/types/sales.types';
 import { endpoints } from 'src/lib/axios';
 import { formatMoney } from 'src/lib/currency';
@@ -50,6 +51,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   const queryClient = useQueryClient();
   const { quotations, registerPayment } = useSalesContext();
   const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   // Fetch single invoice by ID — NOT from paginated list
   const { data: invoice, isLoading } = useQuery({
@@ -93,6 +95,18 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   const statusConfig = STATUS_CONFIG[invoice.status] ?? {
     label: STATUS_LABELS[invoice.status] ?? invoice.status,
     className: 'bg-muted/10 text-muted-foreground',
+  };
+
+  const handleSendInvoice = async () => {
+    setIsSending(true);
+    try {
+      await invoiceService.send(invoiceId);
+      toast.success('Factura enviada al cliente');
+    } catch {
+      toast.error('Error al enviar la factura');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleRegisterPayment = async (payment: Omit<Payment, 'uid'>) => {
@@ -210,10 +224,10 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                   Entidad
                 </span>
                 <span className="font-semibold text-foreground text-sm">
-                  {invoice.invoiceable_type}
+                  {invoice.entity_label ?? invoice.invoiceable_type}
                 </span>
                 <span className="text-xs text-muted-foreground font-mono truncate">
-                  {invoice.invoiceable_uid}
+                  {invoice.entity_uid ?? invoice.invoiceable_uid}
                 </span>
               </div>
             </div>
@@ -518,11 +532,19 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
                   </div>
                   Exportar Excel
                 </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-sm font-medium text-foreground">
+                <button
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-sm font-medium text-foreground disabled:opacity-50"
+                  onClick={handleSendInvoice}
+                  disabled={isSending}
+                >
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
-                    <Icon name="Mail" size={15} />
+                    <Icon
+                      name={isSending ? 'Loader2' : 'Mail'}
+                      size={15}
+                      className={isSending ? 'animate-spin' : ''}
+                    />
                   </div>
-                  Enviar por Email
+                  {isSending ? 'Enviando...' : 'Enviar por Email'}
                 </button>
               </div>
             </CardContent>

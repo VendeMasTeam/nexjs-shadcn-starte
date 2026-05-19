@@ -242,6 +242,7 @@ export const endpoints = {
     quote: (uid: string) => `/quotes/${uid}`,
     financeDashboard: '/finance/dashboard',
     financeInvoices: '/finance/invoices',
+    invoiceSend: (uid: string) => `/finance/invoices/${uid}/send`,
     invoicesByQuotation: (uid: string) => `/invoices?quotation_uid=${uid}`,
     financePayments: '/finance/payments',
     financeAlerts: '/finance/alerts',

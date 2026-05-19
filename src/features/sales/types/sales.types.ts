@@ -95,6 +95,9 @@ export interface Invoice {
   meta?: Record<string, unknown>;
   invoiceable_type: string;
   invoiceable_uid: string;
+  entity_type?: string;
+  entity_label?: string;
+  entity_uid?: string;
   created_at: string;
   updated_at: string;
 }
