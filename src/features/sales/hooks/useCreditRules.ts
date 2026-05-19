@@ -1,8 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 
 import type { CreateCreditExceptionPayload } from '../services/finance.service';
@@ -32,7 +30,6 @@ export function useCreditRules() {
     onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditRules });
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const saveRules = async (data: CreditRuleSettings) => {
@@ -44,7 +41,6 @@ export function useCreditRules() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditExceptions });
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateExceptionMutation = useMutation({
@@ -53,7 +49,6 @@ export function useCreditRules() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditExceptions });
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteExceptionMutation = useMutation({
@@ -61,7 +56,6 @@ export function useCreditRules() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.creditExceptions });
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const createException = async (data: CreateCreditExceptionPayload) => {

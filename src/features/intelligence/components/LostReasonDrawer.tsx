@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { useUsers } from 'src/features/automation/hooks/useUsers';
 import { localizationService } from 'src/features/settings/services/localization.service';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Input,
@@ -135,10 +135,10 @@ export function LostReasonDrawer({ open, item, competitors, onClose, onCreate, o
     let success: boolean;
     if (isEdit && item) {
       success = await onUpdate(item.uid, payload);
-      if (success) toast.success('Deal actualizado');
+      if (success) notify.success('Deal actualizado');
     } else {
       success = await onCreate(payload);
-      if (success) toast.success('Pérdida registrada');
+      if (success) notify.success('Pérdida registrada');
     }
     if (success) onClose();
   };

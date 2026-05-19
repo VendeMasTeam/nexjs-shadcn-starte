@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   SelectField,
@@ -131,10 +131,10 @@ export function BattlecardDrawer({ open, item, competitors, onClose, onCreate, o
     let success: boolean;
     if (isEdit && item) {
       success = await onUpdate(item.uid, payload);
-      if (success) toast.success('Battlecard actualizada');
+      if (success) notify.success('Battlecard actualizada');
     } else {
       success = await onCreate(payload);
-      if (success) toast.success('Battlecard creada');
+      if (success) notify.success('Battlecard creada');
     }
     if (success) onClose();
   };

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { extractApiError } from 'src/lib/api-errors';
 import axiosInstance, { endpoints } from 'src/lib/axios';
+import { notify } from 'src/lib/notify';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
 import {
@@ -37,7 +37,7 @@ export function ImportLeadsDrawer({ open, onClose, onImported }: Props) {
       link.click();
       window.URL.revokeObjectURL(url);
     } catch {
-      toast.error('Error al descargar la plantilla');
+      notify.error('Error al descargar la plantilla');
     }
   };
 
@@ -50,11 +50,11 @@ export function ImportLeadsDrawer({ open, onClose, onImported }: Props) {
       await axiosInstance.post(endpoints.sales.opportunitiesImport, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      toast.success('Leads importados correctamente');
+      notify.success('Leads importados correctamente');
       onImported();
       onClose();
     } catch (error) {
-      toast.error(extractApiError(error));
+      notify.error(extractApiError(error));
     } finally {
       setUploading(false);
     }

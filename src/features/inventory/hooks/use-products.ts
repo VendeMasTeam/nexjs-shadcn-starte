@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { inventoryProductService } from 'src/features/inventory/services/inventory-product.service';
 import type {
   CreateProductPayload,
@@ -9,7 +8,6 @@ import type {
   InventoryMasterResponse,
   InventoryMasterSummary,
 } from 'src/features/inventory/types/inventory.types';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -52,30 +50,27 @@ export function useProducts(filters?: ProductFilters) {
 
   const createProduct = useMutation({
     mutationFn: (payload: CreateProductPayload) => inventoryProductService.create(payload),
+    meta: { successMessage: 'Producto creado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.products });
-      toast.success('Producto creado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateProduct = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<CreateProductPayload> }) =>
       inventoryProductService.update(uid, payload),
+    meta: { successMessage: 'Producto actualizado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.products });
-      toast.success('Producto actualizado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const removeProduct = useMutation({
     mutationFn: (uid: string) => inventoryProductService.remove(uid),
+    meta: { successMessage: 'Producto eliminado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.products });
-      toast.success('Producto eliminado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

@@ -1,14 +1,12 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { inventoryWarehouseService } from 'src/features/inventory/services/inventory-warehouse.service';
 import type {
   CreateWarehousePayload,
   Warehouse,
   WarehouseListSummary,
 } from 'src/features/inventory/types/inventory.types';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -38,30 +36,27 @@ export function useWarehouses(filters?: { search?: string; has_stock?: boolean }
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateWarehousePayload) => inventoryWarehouseService.create(payload),
+    meta: { successMessage: 'Bodega creada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.warehouses });
-      toast.success('Bodega creada');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<CreateWarehousePayload> }) =>
       inventoryWarehouseService.update(uid, payload),
+    meta: { successMessage: 'Bodega actualizada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.warehouses });
-      toast.success('Bodega actualizada');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const removeMutation = useMutation({
     mutationFn: (uid: string) => inventoryWarehouseService.remove(uid),
+    meta: { successMessage: 'Bodega eliminada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.warehouses });
-      toast.success('Bodega eliminada');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { extractApiError } from 'src/lib/api-errors';
 import axiosInstance from 'src/lib/axios';
+import { notify } from 'src/lib/notify';
 import { PageContainer, PageHeader } from 'src/shared/components/layouts/page';
 import { Button, Input } from 'src/shared/components/ui';
 import { Card, CardContent } from 'src/shared/components/ui/card';
@@ -44,9 +44,9 @@ export function ProfileView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
-      toast.success('Perfil actualizado');
+      notify.success('Perfil actualizado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
+    onError: (error) => notify.error(extractApiError(error)),
   });
 
   const handleSave = () => {

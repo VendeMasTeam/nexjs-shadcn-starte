@@ -4,11 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
 import { PlanFormData, planSchema } from 'src/features/admin/schemas/plan.schema';
 import { plansService } from 'src/features/admin/services/plans.service';
 import { PlanSaaS } from 'src/features/admin/types/admin.types';
 import { getCurrencyPreferences } from 'src/lib/currency';
+import { notify } from 'src/lib/notify';
 import { Button } from 'src/shared/components/ui/button';
 import { Checkbox } from 'src/shared/components/ui/checkbox';
 import { FormInput } from 'src/shared/components/ui/form-input';
@@ -147,10 +147,10 @@ export function PlanFormDrawer({ plan, isOpen, onClose, onSave }: PlanFormDrawer
           advanced_reports: data.advanced_reports,
         },
       });
-      toast.success('Plan guardado.');
+      notify.success('Plan guardado.');
       onClose();
     } catch {
-      toast.error('Error al guardar.');
+      notify.error('Error al guardar.');
     }
   };
 

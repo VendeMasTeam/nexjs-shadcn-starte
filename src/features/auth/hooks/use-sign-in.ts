@@ -73,8 +73,16 @@ export function useSignIn() {
 
       // Backend signals 2FA required via errors.two_factor_code in error response body
       if (body?.errors?.two_factor_code) {
-        setNeedsTwoFactor(true);
-        form.clearErrors();
+        if (!needsTwoFactor) {
+          setNeedsTwoFactor(true);
+          form.clearErrors();
+          return;
+        }
+        // Already in 2FA mode — code was wrong
+        form.setError('twoFactorCode', {
+          type: 'manual',
+          message: body.errors.two_factor_code[0],
+        });
         return;
       }
 

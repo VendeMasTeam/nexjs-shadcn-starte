@@ -1,8 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 
 import { invoiceService } from '../services/invoice.service';
@@ -42,7 +40,6 @@ export function useInvoice(invoiceUid: string) {
         queryKey: [...queryKeys.sales.invoices, invoiceUid, 'payments'],
       });
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

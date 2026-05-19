@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import { Button } from 'src/shared/components/ui/button';
 import { Checkbox } from 'src/shared/components/ui/checkbox';
 import { Icon } from 'src/shared/components/ui/icon';
@@ -114,10 +114,10 @@ export const BulkAssignmentDrawer: React.FC<Props> = ({ isOpen, onClose, planesD
         starts_at: fechaInicio,
         ends_at: fechaFin || undefined,
       });
-      toast.success(`Plan asignado a ${selectedVendedores.length} vendedor(es).`);
+      notify.success(`Plan asignado a ${selectedVendedores.length} vendedor(es).`);
       handleClose();
     } catch {
-      toast.error('Error al realizar la asignación masiva');
+      notify.error('Error al realizar la asignación masiva');
     }
     setGuardando(false);
   };

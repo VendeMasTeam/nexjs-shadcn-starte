@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -36,30 +35,27 @@ export const useRules = () => {
 
   const createMutation = useMutation({
     mutationFn: (data: CreateRulePayload) => commissionService.rules.create(data),
+    meta: { successMessage: 'Regla creada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.rules });
-      toast.success('Regla creada correctamente');
     },
-    onError: () => toast.error('Error al crear la regla'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: UpdateRulePayload }) =>
       commissionService.rules.update(uid, data),
+    meta: { successMessage: 'Regla actualizada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.rules });
-      toast.success('Regla actualizada correctamente');
     },
-    onError: () => toast.error('Error al actualizar la regla'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => commissionService.rules.remove(uid),
+    meta: { successMessage: 'Regla eliminada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.rules });
-      toast.success('Regla eliminada correctamente');
     },
-    onError: () => toast.error('Error al eliminar la regla'),
   });
 
   return {

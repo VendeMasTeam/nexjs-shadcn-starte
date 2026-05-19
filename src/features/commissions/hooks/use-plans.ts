@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -40,30 +39,27 @@ export const usePlans = (filters: { search?: string } = {}) => {
 
   const createMutation = useMutation({
     mutationFn: (data: CreatePlanPayload) => plansService.createPlan(data),
+    meta: { successMessage: 'Plan creado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.plans });
-      toast.success('Plan creado correctamente');
     },
-    onError: () => toast.error('Error al crear el plan'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: UpdatePlanPayload }) =>
       plansService.updatePlan(uid, data),
+    meta: { successMessage: 'Plan actualizado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.plans });
-      toast.success('Plan actualizado correctamente');
     },
-    onError: () => toast.error('Error al actualizar el plan'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => plansService.deletePlan(uid),
+    meta: { successMessage: 'Plan eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.plans });
-      toast.success('Plan eliminado correctamente');
     },
-    onError: () => toast.error('Error al eliminar el plan'),
   });
 
   return {

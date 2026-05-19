@@ -2,8 +2,8 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
-import { toast } from 'sonner';
 import { extractApiError } from 'src/lib/api-errors';
+import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
@@ -102,15 +102,15 @@ export function useIntelligence(filters: IntelligenceFilters = {}) {
   // ─── Error toasts (React Query v5: no onError on useQuery) ─────────────────
 
   useEffect(() => {
-    if (battlecardsError) toast.error(extractApiError(battlecardsError));
+    if (battlecardsError) notify.error(extractApiError(battlecardsError));
   }, [battlecardsError]);
 
   useEffect(() => {
-    if (lostReasonsError) toast.error(extractApiError(lostReasonsError));
+    if (lostReasonsError) notify.error(extractApiError(lostReasonsError));
   }, [lostReasonsError]);
 
   useEffect(() => {
-    if (competitorsError) toast.error(extractApiError(competitorsError));
+    if (competitorsError) notify.error(extractApiError(competitorsError));
   }, [competitorsError]);
 
   // ─── Stats ─────────────────────────────────────────────────────────────────

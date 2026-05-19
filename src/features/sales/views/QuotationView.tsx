@@ -3,13 +3,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { catalogService } from 'src/features/sales/services/catalog.service';
 import { quotationService } from 'src/features/sales/services/quotation.service';
 import type { Quotation, QuotationItem } from 'src/features/sales/types/sales.types';
 import { localizationService } from 'src/features/settings/services/localization.service';
 import { formatMoney, getCurrencyPreferences } from 'src/lib/currency';
 import { toDate } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
 import { paths } from 'src/routes/paths';
 import { PageContainer } from 'src/shared/components/layouts/page';
 import { Badge } from 'src/shared/components/ui/badge';
@@ -207,7 +207,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
   const handleSave = async () => {
     if (!quotation) return;
     if (!quotation.title?.trim()) {
-      toast.error('El título es requerido');
+      notify.error('El título es requerido');
       return;
     }
     setIsSaving(true);
@@ -223,9 +223,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
         setLocalQuotation(fresh);
         setSavedDraft(fresh);
       }
-      toast.success('Cotización guardada como borrador');
+      notify.success('Cotización guardada como borrador');
     } catch {
-      toast.error('Error al guardar la cotización');
+      notify.error('Error al guardar la cotización');
     } finally {
       setIsSaving(false);
     }
@@ -239,9 +239,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
       const updated = { ...quotation, status: 'sent' as const };
       setLocalQuotation(updated);
       saveQuotation(updated);
-      toast.success('Cotización enviada al cliente');
+      notify.success('Cotización enviada al cliente');
     } catch {
-      toast.error('Error al enviar la cotización');
+      notify.error('Error al enviar la cotización');
     } finally {
       setIsSending(false);
     }
@@ -252,7 +252,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
     const updated = { ...quotation, status: 'rejected' as const };
     setLocalQuotation(updated);
     saveQuotation(updated);
-    toast.info('Cotización marcada como rechazada');
+    notify.info('Cotización marcada como rechazada');
   };
 
   const handleApprove = async () => {
@@ -265,9 +265,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
       const updated = await quotationService.update(quotation.uid, { status: 'approved' });
       setLocalQuotation(updated);
       saveQuotation(updated);
-      toast.success('Cotización aprobada');
+      notify.success('Cotización aprobada');
     } catch {
-      toast.error('Error al aprobar la cotización');
+      notify.error('Error al aprobar la cotización');
     } finally {
       setIsApproving(false);
     }
@@ -284,7 +284,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      toast.error('Error al descargar el PDF');
+      notify.error('Error al descargar el PDF');
     }
   };
 

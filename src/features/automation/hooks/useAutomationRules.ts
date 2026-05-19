@@ -2,8 +2,6 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -54,26 +52,22 @@ export function useAutomationRules() {
       data: Omit<AutomationRule, 'uid' | 'created_at' | 'execution_count' | 'last_executed_at'>
     ) => automationService.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<AutomationRule> }) =>
       automationService.update(uid, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => automationService.delete(uid),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const toggleMutation = useMutation({
     mutationFn: (uid: string) => automationService.toggleRule(uid),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.automation.rules }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

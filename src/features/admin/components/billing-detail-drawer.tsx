@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { BillingStatusBadge } from 'src/features/admin/components/billing-status-badge';
 import { Factura } from 'src/features/admin/types/admin.types';
 import { formatMoney } from 'src/lib/currency';
 import { formatDate } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
 import { Avatar, AvatarFallback } from 'src/shared/components/ui/avatar';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
@@ -53,10 +53,10 @@ export function BillingDetailDrawer({
     try {
       await delay(800);
       await onMarcarPagada(factura.uid);
-      toast.success('Factura marcada como pagada.');
+      notify.success('Factura marcada como pagada.');
       onClose();
     } catch {
-      toast.error('Error al procesar. Intenta nuevamente.');
+      notify.error('Error al procesar. Intenta nuevamente.');
     } finally {
       setIsPaying(false);
     }
@@ -203,7 +203,7 @@ export function BillingDetailDrawer({
           </Button>
           <Button
             variant="outline"
-            onClick={() => toast.success('Exportación lista. Descargando...')}
+            onClick={() => notify.success('Exportación lista. Descargando...')}
           >
             Descargar PDF
           </Button>

@@ -1,10 +1,8 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { inventoryStockService } from 'src/features/inventory/services/inventory-stock.service';
 import type { InventoryCategory } from 'src/features/inventory/types/inventory.types';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -35,11 +33,10 @@ export function useCategories(filters?: { search?: string; per_page?: number }) 
   const createCategory = useMutation({
     mutationFn: (payload: { name: string; key: string; description?: string }) =>
       inventoryStockService.createCategory(payload),
+    meta: { successMessage: 'Categoría creada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.categories });
-      toast.success('Categoría creada');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateCategory = useMutation({
@@ -50,20 +47,18 @@ export function useCategories(filters?: { search?: string; per_page?: number }) 
       uid: string;
       payload: { name?: string; key?: string; description?: string };
     }) => inventoryStockService.updateCategory(uid, payload),
+    meta: { successMessage: 'Categoría actualizada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.categories });
-      toast.success('Categoría actualizada');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteCategory = useMutation({
     mutationFn: (uid: string) => inventoryStockService.deleteCategory(uid),
+    meta: { successMessage: 'Categoría eliminada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.categories });
-      toast.success('Categoría eliminada');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

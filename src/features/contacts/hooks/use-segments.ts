@@ -1,8 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -47,30 +45,27 @@ export function useSegments() {
 
   const createMutation = useMutation({
     mutationFn: (payload: SegmentPayload) => segmentsService.create(payload),
+    meta: { successMessage: 'Segmento creado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.segments.list });
-      toast.success('Segmento creado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<SegmentPayload> }) =>
       segmentsService.update(uid, payload),
+    meta: { successMessage: 'Segmento actualizado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.segments.list });
-      toast.success('Segmento actualizado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => segmentsService.remove(uid),
+    meta: { successMessage: 'Segmento eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.segments.list });
-      toast.success('Segmento eliminado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const createSegment = async (payload: SegmentPayload): Promise<boolean> => {

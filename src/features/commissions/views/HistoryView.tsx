@@ -3,11 +3,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import React, { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { useHistory } from 'src/features/commissions/hooks/use-history';
 import { commissionService } from 'src/features/commissions/services/commission.service';
 import type { CommissionRun } from 'src/features/commissions/types/commissions.types';
 import axiosInstance, { endpoints } from 'src/lib/axios';
+import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
 import { cn } from 'src/lib/utils';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
@@ -137,11 +137,11 @@ export const HistoryView = () => {
       document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-      toast.success('Reporte PDF descargado');
+      notify.success('Reporte PDF descargado');
       setPdfModalOpen(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al generar el PDF';
-      toast.error(message);
+      notify.error(message);
     } finally {
       setPdfGenerando(false);
     }

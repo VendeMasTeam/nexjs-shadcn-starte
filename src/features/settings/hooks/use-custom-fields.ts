@@ -2,8 +2,6 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -59,20 +57,17 @@ export function useCustomFields(filters: CustomFieldFilters = {}) {
   const createMutation = useMutation({
     mutationFn: (data: Omit<CustomField, 'uid' | 'created_at'>) => customFieldsService.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<CustomField> }) =>
       customFieldsService.update(uid, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => customFieldsService.delete(uid),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

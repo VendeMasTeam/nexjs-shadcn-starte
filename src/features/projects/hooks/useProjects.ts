@@ -2,8 +2,6 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -86,30 +84,27 @@ export function useProjects(params?: UseProjectsParams) {
 
   const createProjectMutation = useMutation({
     mutationFn: (payload: ProjectPayload) => projectsService.create(payload),
+    meta: { successMessage: 'Proyecto creado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Proyecto creado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateProjectMutation = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<ProjectPayload> }) =>
       projectsService.update(uid, payload),
+    meta: { successMessage: 'Proyecto actualizado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Proyecto actualizado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteProjectMutation = useMutation({
     mutationFn: (uid: string) => projectsService.remove(uid),
+    meta: { successMessage: 'Proyecto eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Proyecto eliminado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const createProject = async (payload: ProjectPayload): Promise<boolean> => {
@@ -131,11 +126,10 @@ export function useProjects(params?: UseProjectsParams) {
   const addMilestoneMutation = useMutation({
     mutationFn: ({ projectUid, payload }: { projectUid: string; payload: MilestonePayload }) =>
       projectsService.addMilestone(projectUid, payload),
+    meta: { successMessage: 'Hito agregado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Hito agregado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMilestoneMutation = useMutation({
@@ -148,21 +142,19 @@ export function useProjects(params?: UseProjectsParams) {
       milestoneUid: string;
       payload: Partial<MilestonePayload>;
     }) => projectsService.updateMilestone(projectUid, milestoneUid, payload),
+    meta: { successMessage: 'Hito actualizado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Hito actualizado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteMilestoneMutation = useMutation({
     mutationFn: ({ projectUid, milestoneUid }: { projectUid: string; milestoneUid: string }) =>
       projectsService.removeMilestone(projectUid, milestoneUid),
+    meta: { successMessage: 'Hito eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Hito eliminado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const addMilestone = async (projectUid: string, payload: MilestonePayload): Promise<boolean> => {
@@ -193,21 +185,19 @@ export function useProjects(params?: UseProjectsParams) {
       projectUid: string;
       payload: ProjectResourcePayload;
     }) => projectsService.addResource(projectUid, payload),
+    meta: { successMessage: 'Recurso agregado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Recurso agregado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const removeResourceMutation = useMutation({
     mutationFn: ({ projectUid, resourceUid }: { projectUid: string; resourceUid: string }) =>
       projectsService.removeResource(projectUid, resourceUid),
+    meta: { successMessage: 'Recurso eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list });
-      toast.success('Recurso eliminado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const addResource = async (

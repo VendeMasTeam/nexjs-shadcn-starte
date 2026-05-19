@@ -2,8 +2,8 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { formatMoney } from 'src/lib/currency';
+import { notify } from 'src/lib/notify';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import {
   Table,
@@ -74,10 +74,10 @@ export function CatalogView() {
   const handleSave = async (payload: CreateCatalogProductPayload) => {
     if (selected) {
       await catalogService.update(selected.uid, payload);
-      toast.success('Producto actualizado');
+      notify.success('Producto actualizado');
     } else {
       await catalogService.create(payload);
-      toast.success('Producto creado');
+      notify.success('Producto creado');
     }
     refetch();
   };
@@ -85,10 +85,10 @@ export function CatalogView() {
   const handleDeactivate = async (product: CatalogProduct) => {
     try {
       await catalogService.deactivate(product.uid);
-      toast.success('Producto desactivado');
+      notify.success('Producto desactivado');
       refetch();
     } catch {
-      toast.error('Error al desactivar el producto');
+      notify.error('Error al desactivar el producto');
     }
   };
 

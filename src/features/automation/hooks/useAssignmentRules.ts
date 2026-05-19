@@ -1,8 +1,6 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -29,7 +27,6 @@ export function useAssignmentRules() {
       assignmentService.create(data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.automation.assignmentRules }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMutation = useMutation({
@@ -37,14 +34,12 @@ export function useAssignmentRules() {
       assignmentService.update(uid, data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.automation.assignmentRules }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => assignmentService.delete(uid),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.automation.assignmentRules }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

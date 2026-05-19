@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -32,11 +31,10 @@ export const useEntries = () => {
 
   const payMutation = useMutation({
     mutationFn: (uid: string) => commissionService.entries.pay(uid),
+    meta: { successMessage: 'Entrada marcada como pagada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.entries });
-      toast.success('Entrada marcada como pagada');
     },
-    onError: () => toast.error('Error al marcar como pagada'),
   });
 
   return {

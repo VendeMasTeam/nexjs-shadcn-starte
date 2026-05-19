@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
@@ -44,36 +43,32 @@ export function usePurchaseOrders(params?: UsePurchaseOrdersParams) {
   });
   const create = useMutation({
     mutationFn: (p: PurchaseOrderPayload) => purchaseOrderService.create(p),
+    meta: { successMessage: 'OC creada' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('OC creada');
     },
-    onError: () => toast.error('Error al crear OC'),
   });
   const update = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<PurchaseOrderPayload> }) =>
       purchaseOrderService.update(uid, payload),
+    meta: { successMessage: 'OC actualizada' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('OC actualizada');
     },
-    onError: () => toast.error('Error al actualizar'),
   });
   const approve = useMutation({
     mutationFn: (uid: string) => purchaseOrderService.approve(uid),
+    meta: { successMessage: 'OC aprobada' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('OC aprobada');
     },
-    onError: () => toast.error('Error al aprobar'),
   });
   const receive = useMutation({
     mutationFn: (uid: string) => purchaseOrderService.markReceived(uid),
+    meta: { successMessage: 'OC recibida' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('OC recibida');
     },
-    onError: () => toast.error('Error al recibir'),
   });
   return {
     orders: data,

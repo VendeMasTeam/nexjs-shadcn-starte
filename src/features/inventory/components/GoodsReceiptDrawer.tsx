@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import { cn } from 'src/lib/utils';
 import {
   Button,
@@ -106,11 +106,11 @@ export function GoodsReceiptDrawer({
             })
           )
       );
-      toast.success('Entrada registrada correctamente');
+      notify.success('Entrada registrada correctamente');
       onSuccess?.();
       handleClose();
     } catch {
-      toast.error('Error al registrar la entrada');
+      notify.error('Error al registrar la entrada');
     } finally {
       setLoading(false);
     }

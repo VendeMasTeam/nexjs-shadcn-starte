@@ -5,11 +5,11 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { useIntelligence } from 'src/features/intelligence/hooks/useIntelligence';
 import type { PipelineStage } from 'src/features/sales/types/sales.types';
 import { formatMoney } from 'src/lib/currency';
 import { toDate } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
 import { cn } from 'src/lib/utils';
 import { paths } from 'src/routes/paths';
@@ -613,17 +613,17 @@ export function OpportunityPanel({
             try {
               if (outcome === 'ganado') {
                 await opportunityService.markWon(opportunity.uid);
-                toast.success('Oportunidad marcada como ganada');
+                notify.success('Oportunidad marcada como ganada');
               } else {
                 await opportunityService.markLost(opportunity.uid, lostReason ? [lostReason] : []);
-                toast.success('Oportunidad marcada como perdida');
+                notify.success('Oportunidad marcada como perdida');
               }
               queryClient.invalidateQueries({ queryKey: ['opportunities'] });
               await refreshOpportunities();
               setOutcomeDialogOpen(false);
               onClose();
             } catch {
-              toast.error('Error al registrar el resultado');
+              notify.error('Error al registrar el resultado');
             }
           }}
           onCancel={() => setOutcomeDialogOpen(false)}

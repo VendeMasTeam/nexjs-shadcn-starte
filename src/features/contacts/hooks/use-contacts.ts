@@ -1,8 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import axiosInstance, { endpoints } from 'src/lib/axios';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
@@ -225,11 +223,10 @@ export function useContacts(filters?: {
       const payload = buildPayload(form);
       return contactsService[api].create(payload) as Promise<Contact>;
     },
+    meta: { successMessage: 'Contacto creado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.list });
-      toast.success('Contacto creado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   // ── Update ───────────────────────────────────────────────────────────────
@@ -240,11 +237,10 @@ export function useContacts(filters?: {
       const payload = buildPayload(form as ContactPayload);
       return contactsService[api].update(uid, payload) as Promise<Contact>;
     },
+    meta: { successMessage: 'Contacto actualizado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.list });
-      toast.success('Contacto actualizado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   // ── Delete — resolves type from cached data ────────────────────────────
@@ -259,11 +255,10 @@ export function useContacts(filters?: {
       // from the caller if this becomes an issue.
       await contactsService[api].delete(uid);
     },
+    meta: { successMessage: 'Contacto eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.list });
-      toast.success('Contacto eliminado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   // ── Relations — add (already thin) ──────────────────────────────────────
@@ -274,7 +269,6 @@ export function useContacts(filters?: {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.list });
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   // ── Relations — remove (POST /relations/remove) ───────────────────────
@@ -289,7 +283,6 @@ export function useContacts(filters?: {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contacts.list });
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   // ── Public API wrappers ─────────────────────────────────────────────────

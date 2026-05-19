@@ -2,10 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import type { Opportunity } from 'src/features/sales/types/sales.types';
 import { extractApiError } from 'src/lib/api-errors';
 import { formatDateTime } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
 import { cn } from 'src/lib/utils';
 import { Button } from 'src/shared/components/ui/button';
@@ -82,7 +82,7 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.opportunityActivities(uid) });
     },
     onError: (error) => {
-      toast.error(extractApiError(error));
+      notify.error(extractApiError(error));
     },
   });
 
@@ -97,7 +97,7 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.opportunityActivities(uid) });
     },
     onError: (error) => {
-      toast.error(extractApiError(error));
+      notify.error(extractApiError(error));
     },
   });
 
@@ -109,7 +109,7 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.opportunityActivities(uid) });
     },
     onError: (error) => {
-      toast.error(extractApiError(error));
+      notify.error(extractApiError(error));
     },
   });
 

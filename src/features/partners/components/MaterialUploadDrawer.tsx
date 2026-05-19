@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Icon,
@@ -72,7 +72,7 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
 
     const ok = await onUpload(formData);
     if (ok) {
-      toast.success(`"${title}" subido. Disponible para todos los partners.`);
+      notify.success(`"${title}" subido. Disponible para todos los partners.`);
       setTitle('');
       setDescription('');
       setType('sales');
@@ -82,7 +82,7 @@ export function MaterialUploadDrawer({ open, onClose, onUpload }: Props) {
       setErrors({});
       onClose();
     } else {
-      toast.error('Error al subir el material');
+      notify.error('Error al subir el material');
     }
 
     setLoading(false);

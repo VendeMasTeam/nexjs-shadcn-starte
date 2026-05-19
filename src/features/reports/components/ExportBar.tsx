@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import { Button, Icon } from 'src/shared/components/ui';
 
 import { ExportColumn, FieldSelector } from './FieldSelector';
@@ -29,7 +29,7 @@ export function ExportBar({
       next.add(id);
     } else {
       if (next.size === 1) {
-        toast.error('Debes exportar al menos un campo.');
+        notify.error('Debes exportar al menos un campo.');
         return;
       }
       next.delete(id);
@@ -48,7 +48,7 @@ export function ExportBar({
           selectedFields={selectedFields}
           onToggleField={toggleField}
           disabled={!hasData || loading !== null}
-          onApply={() => toast.success('Campos aplicados')}
+          onApply={() => notify.success('Campos aplicados')}
         />
       </div>
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { taskService } from 'src/features/tasks/services/task.service';
 import type { Task, TaskPayload } from 'src/features/tasks/types/task.types';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
@@ -31,30 +30,27 @@ export function useTasks(filters?: { search?: string; status?: string }) {
 
   const createTask = useMutation({
     mutationFn: (payload: TaskPayload) => taskService.create(payload),
+    meta: { successMessage: 'Tarea creada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('Tarea creada');
     },
-    onError: () => toast.error('Error al crear tarea'),
   });
 
   const updateTask = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<TaskPayload> }) =>
       taskService.update(uid, payload),
+    meta: { successMessage: 'Tarea actualizada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('Tarea actualizada');
     },
-    onError: () => toast.error('Error al actualizar tarea'),
   });
 
   const deleteTask = useMutation({
     mutationFn: (uid: string) => taskService.delete(uid),
+    meta: { successMessage: 'Tarea eliminada' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('Tarea eliminada');
     },
-    onError: () => toast.error('Error al eliminar tarea'),
   });
 
   return {

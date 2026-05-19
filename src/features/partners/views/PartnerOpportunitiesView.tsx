@@ -2,8 +2,8 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { formatDate } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
 import {
   PageContainer,
   PageHeader,
@@ -137,11 +137,11 @@ export function PartnerOpportunitiesView() {
                     onClick={async () => {
                       const ok = await approveOpportunity(info.row.original.uid);
                       if (ok) {
-                        toast.success(
+                        notify.success(
                           `Oportunidad aprobada. ${partner_name} tiene exclusividad sobre este cliente.`
                         );
                       } else {
-                        toast.error('Error al aprobar la oportunidad');
+                        notify.error('Error al aprobar la oportunidad');
                       }
                     }}
                   >
@@ -155,9 +155,9 @@ export function PartnerOpportunitiesView() {
                     onClick={async () => {
                       const ok = await rejectOpportunity(info.row.original.uid);
                       if (ok) {
-                        toast.success('Oportunidad rechazada.');
+                        notify.success('Oportunidad rechazada.');
                       } else {
-                        toast.error('Error al rechazar la oportunidad');
+                        notify.error('Error al rechazar la oportunidad');
                       }
                     }}
                   >
@@ -171,7 +171,7 @@ export function PartnerOpportunitiesView() {
                     onClick={async () => {
                       try {
                         await convertOpportunity(info.row.original.uid);
-                        toast.success('Oportunidad convertida a deal.');
+                        notify.success('Oportunidad convertida a deal.');
                       } catch {
                         // error handled by mutation onError
                       }

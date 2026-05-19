@@ -2,8 +2,8 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, type ReactNode, useCallback, useContext, useState } from 'react';
-import { toast } from 'sonner';
 import { extractApiError } from 'src/lib/api-errors';
+import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -152,7 +152,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         await refreshOpportunities();
         return created;
       } catch (error) {
-        toast.error(extractApiError(error));
+        notify.error(extractApiError(error));
         throw error;
       }
     },
@@ -166,7 +166,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         await refreshOpportunities();
         return updated;
       } catch (error) {
-        toast.error(extractApiError(error));
+        notify.error(extractApiError(error));
         throw error;
       }
     },
@@ -179,7 +179,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         await opportunityService.update(uid, { stage_uid: stageUid });
         await refreshOpportunities();
       } catch (error) {
-        toast.error(extractApiError(error));
+        notify.error(extractApiError(error));
         throw error;
       }
     },
@@ -200,7 +200,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         await refreshQuotations();
         return result;
       } catch (error) {
-        toast.error(extractApiError(error));
+        notify.error(extractApiError(error));
         throw error;
       }
     },
@@ -220,7 +220,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         await refreshOpportunities();
         return created;
       } catch (error) {
-        toast.error(extractApiError(error));
+        notify.error(extractApiError(error));
         throw error;
       }
     },
@@ -235,7 +235,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         await invoiceService.registerPayment(invoiceUid, data);
         await refreshInvoices();
       } catch (error) {
-        toast.error(extractApiError(error));
+        notify.error(extractApiError(error));
         throw error;
       }
     },

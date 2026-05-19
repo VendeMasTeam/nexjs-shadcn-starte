@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
@@ -39,30 +38,27 @@ export function useExpenseCategories(search?: string) {
       expensesService.createCategory(p) as Promise<
         import('../types/expenses.types').ExpenseCategory
       >,
+    meta: { successMessage: 'Categoría creada' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.categories });
-      toast.success('Categoría creada');
     },
-    onError: () => toast.error('Error al crear categoría'),
   });
   const update = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<CategoryPayload> }) =>
       expensesService.updateCategory(uid, payload) as Promise<
         import('../types/expenses.types').ExpenseCategory
       >,
+    meta: { successMessage: 'Categoría actualizada' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.categories });
-      toast.success('Categoría actualizada');
     },
-    onError: () => toast.error('Error al actualizar'),
   });
   const remove = useMutation({
     mutationFn: (uid: string) => expensesService.deleteCategory(uid),
+    meta: { successMessage: 'Categoría eliminada' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.categories });
-      toast.success('Categoría eliminada');
     },
-    onError: () => toast.error('Error al eliminar'),
   });
   return {
     categories: data,
@@ -90,30 +86,27 @@ export function useSuppliers(search?: string) {
   const create = useMutation({
     mutationFn: (p: SupplierPayload) =>
       expensesService.createSupplier(p) as Promise<import('../types/expenses.types').Supplier>,
+    meta: { successMessage: 'Proveedor creado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.suppliers });
-      toast.success('Proveedor creado');
     },
-    onError: () => toast.error('Error al crear proveedor'),
   });
   const update = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<SupplierPayload> }) =>
       expensesService.updateSupplier(uid, payload) as Promise<
         import('../types/expenses.types').Supplier
       >,
+    meta: { successMessage: 'Proveedor actualizado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.suppliers });
-      toast.success('Proveedor actualizado');
     },
-    onError: () => toast.error('Error al actualizar'),
   });
   const remove = useMutation({
     mutationFn: (uid: string) => expensesService.deleteSupplier(uid),
+    meta: { successMessage: 'Proveedor eliminado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.suppliers });
-      toast.success('Proveedor eliminado');
     },
-    onError: () => toast.error('Error al eliminar'),
   });
   return {
     suppliers: data,
@@ -141,30 +134,27 @@ export function useCostCenters(search?: string) {
   const create = useMutation({
     mutationFn: (p: CostCenterPayload) =>
       expensesService.createCostCenter(p) as Promise<import('../types/expenses.types').CostCenter>,
+    meta: { successMessage: 'Centro de costo creado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.costCenters });
-      toast.success('Centro de costo creado');
     },
-    onError: () => toast.error('Error al crear'),
   });
   const update = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<CostCenterPayload> }) =>
       expensesService.updateCostCenter(uid, payload) as Promise<
         import('../types/expenses.types').CostCenter
       >,
+    meta: { successMessage: 'Centro de costo actualizado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.costCenters });
-      toast.success('Centro de costo actualizado');
     },
-    onError: () => toast.error('Error al actualizar'),
   });
   const remove = useMutation({
     mutationFn: (uid: string) => expensesService.deleteCostCenter(uid),
+    meta: { successMessage: 'Centro de costo eliminado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.costCenters });
-      toast.success('Centro de costo eliminado');
     },
-    onError: () => toast.error('Error al eliminar'),
   });
   return {
     costCenters: data,
@@ -211,28 +201,25 @@ export function useExpenses(
   const create = useMutation({
     mutationFn: (p: ExpensePayload) =>
       expensesService.create(p) as Promise<import('../types/expenses.types').Expense>,
+    meta: { successMessage: 'Gasto registrado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.expenses });
-      toast.success('Gasto registrado');
     },
-    onError: () => toast.error('Error al registrar gasto'),
   });
   const update = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<ExpensePayload> }) =>
       expensesService.update(uid, payload) as Promise<import('../types/expenses.types').Expense>,
+    meta: { successMessage: 'Gasto actualizado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.expenses });
-      toast.success('Gasto actualizado');
     },
-    onError: () => toast.error('Error al actualizar'),
   });
   const remove = useMutation({
     mutationFn: (uid: string) => expensesService.delete(uid),
+    meta: { successMessage: 'Gasto eliminado' },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.expenses });
-      toast.success('Gasto eliminado');
     },
-    onError: () => toast.error('Error al eliminar'),
   });
   return {
     expenses: data,

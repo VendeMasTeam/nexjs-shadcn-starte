@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -41,21 +40,19 @@ export const useAssignment = (filters: { search?: string; team_uid?: string } = 
 
   const createMutation = useMutation({
     mutationFn: (data: CreateAssignmentPayload) => assignmentService.createAssignment(data),
+    meta: { successMessage: 'Asignación creada exitosamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.assignments });
-      toast.success('Asignación creada exitosamente');
     },
-    onError: () => toast.error('Error al crear la asignación'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: UpdateAssignmentPayload }) =>
       assignmentService.updateAssignment(uid, data),
+    meta: { successMessage: 'Asignación actualizada exitosamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.assignments });
-      toast.success('Asignación actualizada exitosamente');
     },
-    onError: () => toast.error('Error al actualizar la asignación'),
   });
 
   return {

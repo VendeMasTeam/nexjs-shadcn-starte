@@ -2,9 +2,9 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { contactsService } from 'src/features/contacts/services/contacts.service';
 import axiosInstance, { endpoints } from 'src/lib/axios';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   ConfirmDialog,
@@ -135,12 +135,12 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
 
     if (isEdit && project) {
       const ok = await onUpdate(project.uid, payload);
-      if (ok) toast.success('Proyecto actualizado');
-      else toast.error('Error al actualizar el proyecto');
+      if (ok) notify.success('Proyecto actualizado');
+      else notify.error('Error al actualizar el proyecto');
     } else {
       const ok = await onCreate(payload);
-      if (ok) toast.success('Proyecto creado');
-      else toast.error('Error al crear el proyecto');
+      if (ok) notify.success('Proyecto creado');
+      else notify.error('Error al crear el proyecto');
     }
 
     setLoading(false);
@@ -262,7 +262,7 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
         onClose={() => setCancelDialogOpen(false)}
         onConfirm={() => {
           if (project) onCancel!(project.uid);
-          toast.success('Proyecto cancelado');
+          notify.success('Proyecto cancelado');
           setCancelDialogOpen(false);
           onClose();
         }}

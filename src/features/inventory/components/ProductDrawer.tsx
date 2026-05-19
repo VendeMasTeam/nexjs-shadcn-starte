@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Icon,
@@ -105,7 +105,7 @@ export function ProductDrawer({
       await onSave(payload);
       onClose();
     } catch {
-      toast.error('Error al guardar el producto');
+      notify.error('Error al guardar el producto');
     } finally {
       setLoading(false);
     }

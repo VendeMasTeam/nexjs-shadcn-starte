@@ -2,8 +2,6 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -126,30 +124,27 @@ export function usePartners(filters: PartnersFilters = {}) {
 
   const createPartnerMutation = useMutation({
     mutationFn: (data: PartnerPayload) => partnersService.partners.create(data),
+    meta: { successMessage: 'Partner creado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Partner creado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updatePartnerMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<PartnerPayload> }) =>
       partnersService.partners.update(uid, data),
+    meta: { successMessage: 'Partner actualizado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Partner actualizado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const removePartnerMutation = useMutation({
     mutationFn: (uid: string) => partnersService.partners.remove(uid),
+    meta: { successMessage: 'Partner eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Partner eliminado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const createPartner = async (data: PartnerPayload): Promise<boolean> => {
@@ -171,63 +166,57 @@ export function usePartners(filters: PartnersFilters = {}) {
 
   const createOpportunityMutation = useMutation({
     mutationFn: (data: PartnerOpportunityPayload) => partnersService.opportunities.create(data),
+    meta: { successMessage: 'Oportunidad creada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.opportunities.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Oportunidad creada correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateOpportunityMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<PartnerOpportunityPayload> }) =>
       partnersService.opportunities.update(uid, data),
+    meta: { successMessage: 'Oportunidad actualizada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.opportunities.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Oportunidad actualizada correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const approveOpportunityMutation = useMutation({
     mutationFn: (uid: string) => partnersService.opportunities.approve(uid),
+    meta: { successMessage: 'Oportunidad aprobada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.opportunities.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Oportunidad aprobada correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const rejectOpportunityMutation = useMutation({
     mutationFn: (uid: string) => partnersService.opportunities.reject(uid),
+    meta: { successMessage: 'Oportunidad rechazada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.opportunities.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Oportunidad rechazada correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const convertOpportunityMutation = useMutation({
     mutationFn: (uid: string) => partnersService.opportunities.convert(uid),
+    meta: { successMessage: 'Oportunidad convertida correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.opportunities.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Oportunidad convertida correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const removeOpportunityMutation = useMutation({
     mutationFn: (uid: string) => partnersService.opportunities.remove(uid),
+    meta: { successMessage: 'Oportunidad eliminada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.opportunities.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.partners.list });
-      toast.success('Oportunidad eliminada correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const createOpportunity = async (data: PartnerOpportunityPayload): Promise<boolean> => {
@@ -267,20 +256,18 @@ export function usePartners(filters: PartnersFilters = {}) {
 
   const createMaterialMutation = useMutation({
     mutationFn: (data: FormData) => partnersService.materials.create(data),
+    meta: { successMessage: 'Material creado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.materials.list });
-      toast.success('Material creado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const removeMaterialMutation = useMutation({
     mutationFn: (uid: string) => partnersService.materials.remove(uid),
+    meta: { successMessage: 'Material eliminado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.materials.list });
-      toast.success('Material eliminado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const createMaterial = async (data: FormData): Promise<boolean> => {

@@ -1,8 +1,6 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { setCurrencyPreferences } from 'src/lib/currency';
 import { queryKeys } from 'src/lib/query-keys';
 
@@ -46,7 +44,6 @@ export function useLocalization() {
       return payload as LocalizationConfig;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.localization }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

@@ -3,10 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
 import { TenantFormData, tenantSchema } from 'src/features/admin/schemas/tenant.schema';
 import { PlanSaaS, Tenant } from 'src/features/admin/types/admin.types';
+import { extractApiError } from 'src/lib/api-errors';
 import { formatMoney } from 'src/lib/currency';
+import { notify } from 'src/lib/notify';
 import { Button } from 'src/shared/components/ui/button';
 import { FormInput } from 'src/shared/components/ui/form-input';
 import { FormSelectField } from 'src/shared/components/ui/form-select-field';
@@ -126,19 +127,19 @@ export function TenantFormDrawer({
         hasAdmin ? { name: data.admin_nombre, email: data.admin_email } : undefined
       );
       if (isEditing) {
-        toast.success('Tenant actualizado.');
+        notify.success('Tenant actualizado.');
       } else if (!hasAdmin) {
-        toast.success('Tenant creado.');
+        notify.success('Tenant creado.');
       } else if (result.reset_email_sent) {
-        toast.success('Tenant creado. Se envió el link de acceso al email del admin.');
+        notify.success('Tenant creado. Se envió el link de acceso al email del admin.');
       } else {
-        toast.warning(
+        notify.warning(
           'Tenant creado, pero no se pudo enviar el email. Envía el acceso manualmente.'
         );
       }
       onClose();
-    } catch {
-      toast.error('Error al procesar.');
+    } catch (error) {
+      notify.error(extractApiError(error));
     }
   };
 

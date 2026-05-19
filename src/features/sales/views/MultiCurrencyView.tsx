@@ -3,9 +3,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { localizationService } from 'src/features/settings/services/localization.service';
 import { formatMoney, getCurrencyPreferences } from 'src/lib/currency';
+import { notify } from 'src/lib/notify';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import {
   Table,
@@ -61,8 +61,8 @@ export function MultiCurrencyView() {
   // Save base currency preference
   const { mutate: guardarMonedaBase } = useMutation({
     mutationFn: (currency: string) => localizationService.update({ currency }),
-    onSuccess: () => toast.success('Moneda base actualizada'),
-    onError: () => toast.error('Error al guardar la moneda base'),
+    onSuccess: () => notify.success('Moneda base actualizada'),
+    onError: () => notify.error('Error al guardar la moneda base'),
   });
 
   const hasOutdated = rates.some((r) => r.status === 'outdated');

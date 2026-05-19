@@ -1,13 +1,11 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { documentTypeService } from 'src/features/settings/services/document-type.service';
 import type {
   DocumentType,
   DocumentTypePayload,
 } from 'src/features/settings/types/document-type.types';
-import { extractApiError } from 'src/lib/api-errors';
 
 const BASE_KEY = ['settings', 'document-types'] as const;
 
@@ -32,30 +30,27 @@ export function useDocumentTypes(filters?: { search?: string }) {
 
   const createDocumentType = useMutation({
     mutationFn: (payload: DocumentTypePayload) => documentTypeService.create(payload),
+    meta: { successMessage: 'Tipo de documento creado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BASE_KEY });
-      toast.success('Tipo de documento creado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateDocumentType = useMutation({
     mutationFn: ({ uid, payload }: { uid: string; payload: Partial<DocumentTypePayload> }) =>
       documentTypeService.update(uid, payload),
+    meta: { successMessage: 'Tipo de documento actualizado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BASE_KEY });
-      toast.success('Tipo de documento actualizado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteDocumentType = useMutation({
     mutationFn: (uid: string) => documentTypeService.delete(uid),
+    meta: { successMessage: 'Tipo de documento eliminado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BASE_KEY });
-      toast.success('Tipo de documento eliminado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

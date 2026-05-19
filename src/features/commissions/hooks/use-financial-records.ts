@@ -1,8 +1,6 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 
 import { commissionService } from '../services/commission.service';
@@ -14,11 +12,10 @@ export const useFinancialRecords = () => {
   const createMutation = useMutation({
     mutationFn: (data: CreateFinancialRecordPayload) =>
       commissionService.financialRecords.create(data),
+    meta: { successMessage: 'Registro financiero creado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.entries });
-      toast.success('Registro financiero creado correctamente');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

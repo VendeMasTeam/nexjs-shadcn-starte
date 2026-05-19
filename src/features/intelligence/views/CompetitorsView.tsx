@@ -4,8 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { extractApiError } from 'src/lib/api-errors';
+import { notify } from 'src/lib/notify';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import {
   Table,
@@ -55,9 +55,9 @@ export function CompetitorsView({ onClose }: { onClose?: () => void }) {
     mutationFn: (data: CreateCompetitorPayload) => intelligenceService.competitors.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['competitors'] });
-      toast.success('Competidor creado');
+      notify.success('Competidor creado');
     },
-    onError: (e) => toast.error(extractApiError(e)),
+    onError: (e) => notify.error(extractApiError(e)),
   });
 
   const updateMutation = useMutation({
@@ -65,18 +65,18 @@ export function CompetitorsView({ onClose }: { onClose?: () => void }) {
       intelligenceService.competitors.update(uid, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['competitors'] });
-      toast.success('Competidor actualizado');
+      notify.success('Competidor actualizado');
     },
-    onError: (e) => toast.error(extractApiError(e)),
+    onError: (e) => notify.error(extractApiError(e)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => intelligenceService.competitors.delete(uid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['competitors'] });
-      toast.success('Competidor eliminado');
+      notify.success('Competidor eliminado');
     },
-    onError: (e) => toast.error(extractApiError(e)),
+    onError: (e) => notify.error(extractApiError(e)),
   });
 
   const columns = [

@@ -1,8 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -75,11 +73,10 @@ export function useRoles(filters?: { search?: string }) {
       description: string;
       permission_uids: string[];
     }) => rolesService.create(data),
+    meta: { successMessage: 'Rol creado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.roles });
-      toast.success('Rol creado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMutation = useMutation({
@@ -90,20 +87,18 @@ export function useRoles(filters?: { search?: string }) {
       id: string;
       data: { name: string; key: string; description: string; permission_uids: string[] };
     }) => rolesService.update(id, data),
+    meta: { successMessage: 'Rol actualizado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.roles });
-      toast.success('Rol actualizado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => rolesService.delete(id),
+    meta: { successMessage: 'Rol eliminado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.roles });
-      toast.success('Rol eliminado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

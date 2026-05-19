@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { usersService } from 'src/features/settings/services/users.service';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Input,
@@ -93,8 +93,8 @@ export function ResourceDrawer({ open, onClose, onAssign }: Props) {
     };
 
     const ok = await onAssign(payload);
-    if (ok) toast.success('Recurso asignado al proyecto');
-    else toast.error('Error al asignar el recurso');
+    if (ok) notify.success('Recurso asignado al proyecto');
+    else notify.error('Error al asignar el recurso');
 
     setLoading(false);
     handleClose();

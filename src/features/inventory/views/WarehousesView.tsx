@@ -2,7 +2,7 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import { cn } from 'src/lib/utils';
 import {
   PageContainer,
@@ -235,10 +235,10 @@ export function WarehousesView() {
   const handleWarehouseSave = async (payload: CreateWarehousePayload) => {
     if (selectedWarehouse) {
       await updateWarehouse(selectedWarehouse.uid, payload);
-      toast.success('Bodega actualizada');
+      notify.success('Bodega actualizada');
     } else {
       await createWarehouse(payload);
-      toast.success('Bodega creada');
+      notify.success('Bodega creada');
     }
   };
 

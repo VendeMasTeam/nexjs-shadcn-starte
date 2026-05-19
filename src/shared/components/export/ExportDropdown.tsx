@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import { cn } from 'src/lib/utils';
 import { Button } from 'src/shared/components/ui/button';
 import {
@@ -28,7 +28,7 @@ export function ExportDropdown({ onExport, disabled = false, className }: Export
     try {
       await onExport(format);
     } catch (error) {
-      toast.error((error as Error).message || 'Error al generar la descarga');
+      notify.error((error as Error).message || 'Error al generar la descarga');
     } finally {
       setLoading(false);
     }

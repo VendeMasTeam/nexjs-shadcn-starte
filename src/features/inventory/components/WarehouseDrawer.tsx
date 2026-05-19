@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Icon,
@@ -54,7 +54,7 @@ export function WarehouseDrawer({ open, warehouse, onClose, onSave }: WarehouseD
       await onSave({ name, code, location: location || undefined, is_active: active });
       onClose();
     } catch {
-      toast.error('Error al guardar la bodega');
+      notify.error('Error al guardar la bodega');
     } finally {
       setLoading(false);
     }

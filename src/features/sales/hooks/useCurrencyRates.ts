@@ -2,8 +2,6 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -47,12 +45,11 @@ export function useCurrencyRates() {
   const saveMutation = useMutation({
     mutationFn: async (rate: { from_currency: string; to_currency: string; rate: number }) =>
       currencyService.upsertRate(rate),
+    meta: { successMessage: 'Tasas guardadas' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.currencyRates });
       setIsDirty(false);
-      toast.success('Tasas guardadas');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const saveRate = useCallback(

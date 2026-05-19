@@ -5,11 +5,11 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import type { Payment } from 'src/features/sales/types/sales.types';
 import { endpoints } from 'src/lib/axios';
 import { formatMoney } from 'src/lib/currency';
 import { downloadExport } from 'src/lib/export-service';
+import { notify } from 'src/lib/notify';
 import { paths } from 'src/routes/paths';
 import { PageContainer, SectionCard } from 'src/shared/components/layouts/page';
 import { Badge } from 'src/shared/components/ui/badge';
@@ -103,9 +103,9 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
     setIsSending(true);
     try {
       await invoiceService.send(invoiceId);
-      toast.success('Factura enviada al cliente');
+      notify.success('Factura enviada al cliente');
     } catch {
-      toast.error('Error al enviar la factura');
+      notify.error('Error al enviar la factura');
     } finally {
       setIsSending(false);
     }

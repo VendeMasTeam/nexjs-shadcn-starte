@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { useProducts } from 'src/features/inventory/hooks/use-products';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Icon,
@@ -98,7 +98,7 @@ export function CatalogProductDrawer({
       await onSave(payload);
       onClose();
     } catch {
-      toast.error('Error al guardar el producto');
+      notify.error('Error al guardar el producto');
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Input,
@@ -101,18 +101,18 @@ function PartnerForm({ partner, isEdit, onClose, onCreate, onUpdate }: FormProps
     if (isEdit && partner) {
       const ok = await onUpdate(partner.uid, data);
       if (ok) {
-        toast.success('Partner actualizado');
+        notify.success('Partner actualizado');
         onClose();
       } else {
-        toast.error('Error al actualizar el partner');
+        notify.error('Error al actualizar el partner');
       }
     } else {
       const ok = await onCreate(data);
       if (ok) {
-        toast.success('Partner creado');
+        notify.success('Partner creado');
         onClose();
       } else {
-        toast.error('Error al crear el partner');
+        notify.error('Error al crear el partner');
       }
     }
 

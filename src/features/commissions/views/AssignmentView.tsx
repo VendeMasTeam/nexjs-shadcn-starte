@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { toast } from 'sonner';
 import { AssignmentDrawer } from 'src/features/commissions/components/assignment/assignment-drawer';
 import { AssignmentsTable } from 'src/features/commissions/components/assignment/assignments-table';
 import { BulkAssignmentDrawer } from 'src/features/commissions/components/assignment/bulk-assignment-drawer';
@@ -9,6 +8,7 @@ import { useAssignment } from 'src/features/commissions/hooks/use-assignment';
 import { usePlans } from 'src/features/commissions/hooks/use-plans';
 import type { AssignmentForm } from 'src/features/commissions/schemas/assignment.schema';
 import type { CommissionAssignment } from 'src/features/commissions/types/commissions.types';
+import { notify } from 'src/lib/notify';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import { Button } from 'src/shared/components/ui/button';
 import { ConfirmDialog } from 'src/shared/components/ui/confirm-dialog';
@@ -71,7 +71,7 @@ export const AssignmentView = () => {
       }
       return true;
     } catch {
-      toast.error('Error al guardar la asignación');
+      notify.error('Error al guardar la asignación');
       return false;
     }
   };

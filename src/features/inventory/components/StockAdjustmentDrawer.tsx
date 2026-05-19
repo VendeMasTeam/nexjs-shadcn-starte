@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import { cn } from 'src/lib/utils';
 import {
   Button,
@@ -98,11 +98,11 @@ export function StockAdjustmentDrawer({
       });
       const label =
         operation === 'in' ? 'positivo' : operation === 'out' ? 'negativo' : 'de balance';
-      toast.success(`Ajuste ${label} registrado`);
+      notify.success(`Ajuste ${label} registrado`);
       onSuccess?.();
       handleClose();
     } catch {
-      toast.error('Error al registrar el ajuste');
+      notify.error('Error al registrar el ajuste');
     } finally {
       setLoading(false);
     }

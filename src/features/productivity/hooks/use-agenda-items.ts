@@ -2,7 +2,7 @@
 
 import { isPast, isToday } from 'date-fns';
 import { useMemo } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 
 import { useProjects } from '../../projects/hooks/useProjects';
 import type { Activity, ActivitySource, ActivityStatus } from '../types/productivity.types';
@@ -86,14 +86,14 @@ export function useAgendaItems(filters?: { status?: string; source?: string }) {
   // ─── Update status (only manual items) ──────────────────────────────────
   const updateStatus = async (uid: string, status: ActivityStatus) => {
     if (uid.startsWith('pipeline-') || uid.startsWith('project-')) {
-      toast.info('Para actualizar este item, andá a la fuente original.');
+      notify.info('Para actualizar este item, andá a la fuente original.');
       return;
     }
     try {
       await updateManualStatus(uid, status);
-      toast.success('Estado actualizado');
+      notify.success('Estado actualizado');
     } catch {
-      toast.error('Error actualizando estado');
+      notify.error('Error actualizando estado');
     }
   };
 

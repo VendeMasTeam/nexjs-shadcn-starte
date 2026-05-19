@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import {
   Button,
   Icon,
@@ -76,11 +76,11 @@ export function TransferDrawer({ open, onClose, warehouses, onSuccess }: Transfe
         quantity: qty,
         comment: comment.trim() || undefined,
       });
-      toast.success('Traslado registrado correctamente');
+      notify.success('Traslado registrado correctamente');
       onSuccess?.();
       handleClose();
     } catch {
-      toast.error('Error al registrar el traslado');
+      notify.error('Error al registrar el traslado');
     } finally {
       setLoading(false);
     }

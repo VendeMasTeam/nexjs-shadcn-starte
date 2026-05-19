@@ -1,7 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -34,30 +33,27 @@ export const useTargets = () => {
 
   const createMutation = useMutation({
     mutationFn: (data: CreateTargetPayload) => commissionService.targets.create(data),
+    meta: { successMessage: 'Meta creada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.targets });
-      toast.success('Meta creada correctamente');
     },
-    onError: () => toast.error('Error al crear la meta'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: UpdateTargetPayload }) =>
       commissionService.targets.update(uid, data),
+    meta: { successMessage: 'Meta actualizada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.targets });
-      toast.success('Meta actualizada correctamente');
     },
-    onError: () => toast.error('Error al actualizar la meta'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (uid: string) => commissionService.targets.remove(uid),
+    meta: { successMessage: 'Meta eliminada correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.targets });
-      toast.success('Meta eliminada correctamente');
     },
-    onError: () => toast.error('Error al eliminar la meta'),
   });
 
   return {

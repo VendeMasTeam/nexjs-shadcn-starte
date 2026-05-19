@@ -4,7 +4,6 @@ import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import type ApexCharts from 'apexcharts';
 import { useRouter } from 'next/navigation';
 import React, { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { TenantDetailDrawer } from 'src/features/admin/components/tenant-detail-drawer';
 import { TenantStatusBadge } from 'src/features/admin/components/tenant-status-badge';
 import { useDashboard } from 'src/features/admin/hooks/use-dashboard';
@@ -12,6 +11,7 @@ import { useTenants } from 'src/features/admin/hooks/use-tenants';
 import { Tenant } from 'src/features/admin/types/admin.types';
 import { formatCompact, formatMoney } from 'src/lib/currency';
 import { formatRelative } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
 import { Chart } from 'src/shared/components/chart';
 import {
   PageContainer,
@@ -259,7 +259,7 @@ export const DashboardAdminView = () => {
                 setIsRefetching(true);
                 await refetch();
                 setIsRefetching(false);
-                toast.success('Dashboard actualizado');
+                notify.success('Dashboard actualizado');
               }}
               className="gap-2"
             >

@@ -3,8 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { projectsService } from 'src/features/projects/services/projects.service';
+import { notify } from 'src/lib/notify';
 import { paths } from 'src/routes/paths';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
@@ -53,12 +53,12 @@ export function ConvertToProjectDrawer({ open, onClose, invoice }: ConvertToProj
         end_date: endDate,
       }),
     onSuccess: (project) => {
-      toast.success('Proyecto creado correctamente');
+      notify.success('Proyecto creado correctamente');
       queryClient.invalidateQueries({ queryKey: ['project-by-invoice', invoice.uid] });
       onClose();
       router.push(paths.projects.detail(project.uid));
     },
-    onError: () => toast.error('Error al crear el proyecto'),
+    onError: () => notify.error('Error al crear el proyecto'),
   });
 
   const handleSubmit = () => {

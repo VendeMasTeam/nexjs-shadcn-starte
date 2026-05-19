@@ -1,7 +1,7 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -47,7 +47,6 @@ export const useHistory = (filters: HistoryFilters = {}) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.runs });
     },
-    onError: () => toast.error('Error al aprobar'),
   });
 
   const payMutation = useMutation({
@@ -56,24 +55,23 @@ export const useHistory = (filters: HistoryFilters = {}) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.commissions.runs });
     },
-    onError: () => toast.error('Error al marcar como pagado'),
   });
 
   const bulkApprove = async (uids: string[]) => {
     try {
       await Promise.all(uids.map((uid) => approveMutation.mutateAsync(uid)));
-      toast.success(`${uids.length} registro(s) aprobado(s)`);
+      notify.success(`${uids.length} registro(s) aprobado(s)`);
     } catch {
-      toast.error('Error al aprobar algunos registros');
+      notify.error('Error al aprobar algunos registros');
     }
   };
 
   const bulkPay = async (uids: string[]) => {
     try {
       await Promise.all(uids.map((uid) => payMutation.mutateAsync(uid)));
-      toast.success(`${uids.length} registro(s) marcado(s) como pagado(s)`);
+      notify.success(`${uids.length} registro(s) marcado(s) como pagado(s)`);
     } catch {
-      toast.error('Error al pagar algunos registros');
+      notify.error('Error al pagar algunos registros');
     }
   };
 

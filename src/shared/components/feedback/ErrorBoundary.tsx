@@ -1,7 +1,7 @@
 'use client';
 
 import { Component, type ReactNode } from 'react';
-import { toast } from 'sonner';
+import { notify } from 'src/lib/notify';
 
 interface Props {
   children: ReactNode;
@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidUpdate(_prevProps: Props, prevState: State) {
     // Cuando se detecta un error, mostrar toast y resetear
     if (this.state.hasError && !prevState.hasError) {
-      toast.error('Ocurrió un error en esta sección', {
+      notify.error('Ocurrió un error en esta sección', {
         description: this.state.errorMessage,
         duration: 5000,
       });

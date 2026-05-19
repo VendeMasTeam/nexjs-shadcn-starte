@@ -1,14 +1,12 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { inventoryStockService } from 'src/features/inventory/services/inventory-stock.service';
 import type {
   AdjustStockPayload,
   InventoryMovement,
   TransferStockPayload,
 } from 'src/features/inventory/types/inventory.types';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -43,22 +41,20 @@ export function useMovements(filters?: {
 
   const adjustMutation = useMutation({
     mutationFn: (payload: AdjustStockPayload) => inventoryStockService.adjust(payload),
+    meta: { successMessage: 'Stock ajustado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.movements });
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.movementsSummary });
-      toast.success('Stock ajustado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const transferMutation = useMutation({
     mutationFn: (payload: TransferStockPayload) => inventoryStockService.transfer(payload),
+    meta: { successMessage: 'Traslado realizado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.movements });
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.movementsSummary });
-      toast.success('Traslado realizado');
     },
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

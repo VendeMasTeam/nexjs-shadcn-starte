@@ -1,8 +1,6 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { extractApiError } from 'src/lib/api-errors';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
@@ -78,7 +76,6 @@ export function useSettingsUsers(filters: UserFilters = {}) {
       return newUser;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const updateMutation = useMutation({
@@ -106,7 +103,6 @@ export function useSettingsUsers(filters: UserFilters = {}) {
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const toggleStatusMutation = useMutation({
@@ -117,13 +113,11 @@ export function useSettingsUsers(filters: UserFilters = {}) {
       await usersService.toggleStatus(id, isActive);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => usersService.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
-    onError: (error) => toast.error(extractApiError(error)),
   });
 
   return {

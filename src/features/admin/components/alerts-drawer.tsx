@@ -3,9 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
 import { AlertaFormData, alertaSchema } from 'src/features/admin/schemas/alerta.schema';
 import { Alerta } from 'src/features/admin/types/admin.types';
+import { notify } from 'src/lib/notify';
 import { Button } from 'src/shared/components/ui/button';
 import { Checkbox } from 'src/shared/components/ui/checkbox';
 import { FormInput } from 'src/shared/components/ui/form-input';
@@ -107,10 +107,10 @@ export function AlertsDrawer({ alerta, isOpen, onClose, onSave }: AlertsDrawerPr
         estado: data.estado,
         last_triggered_at: alerta?.last_triggered_at ?? null,
       });
-      toast.success(isEditing ? 'Alerta actualizada.' : 'Alerta creada.');
+      notify.success(isEditing ? 'Alerta actualizada.' : 'Alerta creada.');
       onClose();
     } catch {
-      toast.error('Error al procesar.');
+      notify.error('Error al procesar.');
     }
   };
 

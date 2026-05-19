@@ -1,5 +1,5 @@
-import { toast } from 'sonner';
 import { formatDate } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
 import { cn } from 'src/lib/utils';
 import { SectionCard } from 'src/shared/components/layouts/page';
 import { Badge, Button, Icon } from 'src/shared/components/ui';
@@ -37,7 +37,7 @@ export function MaterialCard({ material, onDelete }: Props) {
       link.click();
       window.URL.revokeObjectURL(url);
     } catch {
-      toast.error('Error al descargar el archivo');
+      notify.error('Error al descargar el archivo');
     }
   };
 
