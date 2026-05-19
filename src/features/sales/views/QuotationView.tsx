@@ -596,10 +596,17 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                                 }
                               }
                             }}
-                            options={catalogProducts.map((p) => ({
-                              value: p.sku,
-                              label: `${p.name} (${p.sku})`,
-                            }))}
+                            options={catalogProducts.map((p) => {
+                              const missingInventory =
+                                p.type === 'product' && !p.inventory_product_uid;
+                              return {
+                                value: p.sku,
+                                label: missingInventory
+                                  ? `${p.name} (${p.sku}) — Sin inventario vinculado`
+                                  : `${p.name} (${p.sku})`,
+                                disabled: missingInventory,
+                              };
+                            })}
                             placeholder="Seleccionar producto..."
                             searchable
                             disabled={!isEditable}

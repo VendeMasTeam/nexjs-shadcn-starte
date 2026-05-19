@@ -176,7 +176,16 @@ export function CatalogProductDrawer({
             <SelectField
               label="Producto de inventario vinculado"
               value={inventoryProductUid}
-              onChange={(v) => setInventoryProductUid(v as string)}
+              onChange={(v) => {
+                setInventoryProductUid(v as string);
+                const inv = (inventoryProducts ?? []).find((p) => p.uid === v);
+                if (inv) {
+                  setName(inv.name);
+                  setSku(inv.sku);
+                  if (inv.sale_price != null) setDefaultPrice(String(inv.sale_price));
+                  if (inv.discount_percent != null) setDefaultDiscount(String(inv.discount_percent));
+                }
+              }}
               options={inventoryOptions}
               searchable
               onSearch={setInventorySearch}
