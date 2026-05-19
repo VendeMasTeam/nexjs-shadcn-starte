@@ -1,13 +1,23 @@
 'use client';
 
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { createColumnHelper, flexRender } from '@tanstack/react-table';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { formatMoney } from 'src/lib/currency';
-import { PageContainer, PageHeader } from 'src/shared/components/layouts/page';
+import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHeadCustom,
+  TablePaginationCustom,
+  TableRow,
+  useTable,
+} from 'src/shared/components/table';
 import { Badge } from 'src/shared/components/ui/badge';
 import { Button } from 'src/shared/components/ui/button';
-import { Card, CardContent } from 'src/shared/components/ui/card';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
 import { useDebounce } from 'use-debounce';
@@ -16,14 +26,16 @@ import { CatalogProductDrawer } from '../components/CatalogProductDrawer';
 import { catalogService } from '../services/catalog.service';
 import type { CatalogProduct, CreateCatalogProductPayload } from '../types/catalog.types';
 
-const TYPE_LABELS: Record<string, string> = {
-  product: 'Producto',
-  service: 'Servicio',
-};
+const col = createColumnHelper<CatalogProduct>();
 
 const TYPE_COLORS: Record<string, string> = {
   product: 'bg-blue-500/10 text-blue-600',
   service: 'bg-violet-500/10 text-violet-600',
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  product: 'Producto',
+  service: 'Servicio',
 };
 
 export function CatalogView() {
@@ -62,7 +74,95 @@ export function CatalogView() {
     setDrawerOpen(true);
   };
 
-  const filtered = products;
+  const columns = useMemo(
+    () => [
+      col.accessor('name', {
+        header: 'Producto',
+        cell: (info) => (
+          <div>
+            <p className="font-medium text-foreground">{info.getValue()}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{info.row.original.sku}</p>
+          </div>
+        ),
+      }),
+      col.accessor('type', {
+        header: 'Tipo',
+        cell: (info) => (
+          <Badge
+            variant="soft"
+            className={`text-xs px-2.5 py-0.5 rounded-full border-none ${TYPE_COLORS[info.getValue()]}`}
+          >
+            {TYPE_LABELS[info.getValue()]}
+          </Badge>
+        ),
+      }),
+      col.display({
+        id: 'price',
+        header: 'Precio base',
+        cell: ({ row }) => {
+          const p = row.original;
+          const price = p.default_price ?? p.inventory_product?.sale_price;
+          return (
+            <span className="font-semibold text-foreground">
+              {price != null ? formatMoney(price, { scope: 'tenant' }) : '—'}
+            </span>
+          );
+        },
+      }),
+      col.display({
+        id: 'stock',
+        header: 'Stock',
+        cell: ({ row }) => {
+          const p = row.original;
+          if (p.type !== 'product' || !p.inventory_product) return <span className="text-muted-foreground">—</span>;
+          const stock = p.inventory_product.stock_available_total;
+          return (
+            <span className={`font-semibold ${stock > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+              {stock}
+            </span>
+          );
+        },
+      }),
+      col.accessor('status', {
+        header: 'Estado',
+        cell: (info) => (
+          <Badge
+            variant="soft"
+            className={`text-xs px-2.5 py-0.5 rounded-full border-none ${
+              info.getValue() === 'active'
+                ? 'bg-emerald-500/10 text-emerald-600'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {info.getValue() === 'active' ? 'Activo' : 'Inactivo'}
+          </Badge>
+        ),
+      }),
+      col.display({
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.stopPropagation();
+                openEdit(row.original);
+              }}
+            >
+              <Icon name="Pencil" size={15} />
+            </Button>
+          </div>
+        ),
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  const { table, dense, onChangeDense } = useTable({ data: products, columns });
 
   return (
     <PageContainer>
@@ -77,113 +177,66 @@ export function CatalogView() {
         }
       />
 
-      <div className="mb-4 max-w-sm relative">
-        <Icon
-          name="Search"
-          size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-        />
+      <div className="mb-4 max-w-sm">
         <Input
           placeholder="Buscar por nombre o SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-8"
+          leftIcon={<Icon name="Search" size={15} />}
         />
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <Icon name="Loader2" size={24} className="animate-spin text-muted-foreground" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <Card className="border-none shadow-card">
-          <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
-            <Icon name="BookOpen" size={36} className="text-muted-foreground opacity-40" />
-            <p className="text-sm text-muted-foreground font-medium">
-              {search ? 'Sin resultados para esa búsqueda' : 'No hay productos en el catálogo'}
-            </p>
-            {!search && (
-              <Button variant="outline" onClick={openCreate}>
-                Agregar el primero
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((product) => (
-            <Card
-              key={product.uid}
-              className="border-none shadow-card hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => openEdit(product)}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">{product.name}</p>
-                    <p className="text-caption text-muted-foreground mt-0.5">{product.sku}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    <Badge
-                      variant="soft"
-                      className={`text-[10px] px-2 py-0.5 rounded-full border-none ${TYPE_COLORS[product.type]}`}
+      <SectionCard noPadding>
+        <TableContainer>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-48">
+              <Icon name="Loader2" size={24} className="animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeadCustom table={table} />
+              <TableBody dense={dense}>
+                {table.getRowModel().rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <Icon name="BookOpen" size={32} className="opacity-30" />
+                        <span className="text-sm">
+                          {search
+                            ? 'Sin resultados para esa búsqueda'
+                            : 'No hay productos en el catálogo'}
+                        </span>
+                        {!search && (
+                          <Button variant="outline" size="sm" onClick={openCreate}>
+                            Agregar el primero
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className="cursor-pointer"
+                      onClick={() => openEdit(row.original)}
                     >
-                      {TYPE_LABELS[product.type]}
-                    </Badge>
-                    <Badge
-                      variant="soft"
-                      className={`text-[10px] px-2 py-0.5 rounded-full border-none ${
-                        product.status === 'active'
-                          ? 'bg-emerald-500/10 text-emerald-600'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {product.status === 'active' ? 'Activo' : 'Inactivo'}
-                    </Badge>
-                  </div>
-                </div>
-
-                {product.description && (
-                  <p className="text-caption text-muted-foreground line-clamp-2 mb-3">
-                    {product.description}
-                  </p>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
                 )}
-
-                <div className="flex items-center justify-between pt-3 border-t border-border/40">
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      Precio base
-                    </p>
-                    <p className="text-sm font-bold text-foreground">
-                      {product.default_price != null
-                        ? formatMoney(product.default_price, { scope: 'tenant' })
-                        : product.inventory_product?.sale_price != null
-                          ? formatMoney(product.inventory_product.sale_price, { scope: 'tenant' })
-                          : '—'}
-                    </p>
-                  </div>
-                  {product.type === 'product' && product.inventory_product && (
-                    <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                        Stock disponible
-                      </p>
-                      <p
-                        className={`text-sm font-bold ${
-                          product.inventory_product.stock_available_total > 0
-                            ? 'text-emerald-600'
-                            : 'text-red-500'
-                        }`}
-                      >
-                        {product.inventory_product.stock_available_total}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              </TableBody>
+            </Table>
+          )}
+        </TableContainer>
+        <div className="border-t border-border/40">
+          <TablePaginationCustom table={table} dense={dense} onChangeDense={onChangeDense} />
         </div>
-      )}
+      </SectionCard>
 
       <CatalogProductDrawer
         open={drawerOpen}
