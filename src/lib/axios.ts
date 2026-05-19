@@ -141,6 +141,7 @@ export const endpoints = {
       summary: '/admin/billing/summary',
       markPaid: (uid: string) => `/admin/billing/${uid}/mark-paid`,
       markPaidBulk: '/admin/billing/mark-paid-bulk',
+      export: '/admin/billing/export',
     },
     telemetry: {
       logs: '/admin/telemetry/logs',

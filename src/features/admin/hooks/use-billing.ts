@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BillingFilters, billingService } from 'src/features/admin/services/billing.service';
-import { BillingSummary, Factura } from 'src/features/admin/types/admin.types';
+import { billingService } from 'src/features/admin/services/billing.service';
+import { BillingFilters, BillingSummary, Factura } from 'src/features/admin/types/admin.types';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 

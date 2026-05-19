@@ -1,15 +1,12 @@
-import type { BillingSummary, Factura } from 'src/features/admin/types/admin.types';
+import type {
+  BillingExportFilters,
+  BillingFilters,
+  BillingSummary,
+  Factura,
+} from 'src/features/admin/types/admin.types';
 import axiosInstance, { endpoints } from 'src/lib/axios';
 
-export interface BillingFilters {
-  estado?: string;
-  from?: string;
-  to?: string;
-  search?: string;
-  plan_uid?: string;
-  page?: number;
-  per_page?: number;
-}
+export type { BillingExportFilters, BillingFilters };
 
 export const billingService = {
   async getAll(params?: BillingFilters): Promise<unknown> {
@@ -27,5 +24,12 @@ export const billingService = {
   async marcarPagadas(uids: string[]): Promise<Factura[]> {
     const res = await axiosInstance.post(endpoints.admin.billing.markPaidBulk, { ids: uids });
     return res.data.data;
+  },
+  async exportReport(params?: BillingExportFilters): Promise<Blob> {
+    const res = await axiosInstance.get(endpoints.admin.billing.export, {
+      params,
+      responseType: 'blob',
+    });
+    return res.data;
   },
 };

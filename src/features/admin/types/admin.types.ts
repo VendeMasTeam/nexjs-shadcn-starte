@@ -157,3 +157,21 @@ export interface TenantErrorByTenant {
 export type PlanPayload = Omit<PlanSaaS, 'uid' | 'created_at' | 'total_tenants'>;
 export type AlertaPayload = Omit<Alerta, 'uid'>;
 export type CreateTenantUserPayload = { name: string; email: string; role: string };
+
+// --- Billing filters ---
+
+export interface BillingFilters {
+  tenant_uid?: string;
+  search?: string;
+  plan_uid?: string;
+  plan_nombre?: string;
+  estado?: EstadoFactura;
+  from?: string;
+  to?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export type BillingExportFilters = Omit<BillingFilters, 'page' | 'per_page'> & {
+  format?: 'json' | 'csv';
+};

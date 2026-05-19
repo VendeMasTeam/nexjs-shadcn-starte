@@ -5,7 +5,8 @@ import { BillingDetailDrawer } from 'src/features/admin/components/billing-detai
 import { BillingTable } from 'src/features/admin/components/billing-table';
 import { useBilling } from 'src/features/admin/hooks/use-billing';
 import { usePlansAdmin } from 'src/features/admin/hooks/use-plans-admin';
-import { Factura } from 'src/features/admin/types/admin.types';
+import { billingService } from 'src/features/admin/services/billing.service';
+import { BillingExportFilters, EstadoFactura, Factura } from 'src/features/admin/types/admin.types';
 import { formatMoney } from 'src/lib/currency';
 import {
   PageContainer,
@@ -53,7 +54,7 @@ export const BillingView = () => {
   const { planes } = usePlansAdmin();
 
   const { facturas, summary, isLoading, marcarPagadas, pagination } = useBilling({
-    estado: filterEstado || undefined,
+    estado: (filterEstado as EstadoFactura) || undefined,
     from,
     to,
     search: debouncedSearch || undefined,
@@ -62,6 +63,7 @@ export const BillingView = () => {
 
   const [selectedFactura, setSelectedFactura] = useState<Factura | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleOpenDetail = (factura: Factura) => {
     setSelectedFactura(factura);
@@ -70,6 +72,29 @@ export const BillingView = () => {
 
   const activeFiltersCount =
     (filterEstado ? 1 : 0) + (filterPeriodo ? 1 : 0) + (search ? 1 : 0) + (filterPlan ? 1 : 0);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const format = 'csv';
+      const blob = await billingService.exportReport({
+        estado: (filterEstado as BillingExportFilters['estado']) || undefined,
+        from,
+        to,
+        search: debouncedSearch || undefined,
+        plan_uid: filterPlan || undefined,
+        format,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `billing-report-${new Date().toISOString().slice(0, 10)}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const clearFilters = () => {
     setSearch('');
@@ -89,9 +114,12 @@ export const BillingView = () => {
         title="Facturación"
         subtitle="Historial de cobros y estado de pagos por cliente"
         action={
-          <Button variant="outline" className="gap-2">
-            <Icon name="Download" className="h-4 w-4" />
-            Generar Reporte
+          <Button variant="outline" className="gap-2" onClick={handleExport} disabled={isExporting}>
+            <Icon
+              name={isExporting ? 'Loader2' : 'Download'}
+              className={`h-4 w-4${isExporting ? ' animate-spin' : ''}`}
+            />
+            {isExporting ? 'Exportando...' : 'Generar Reporte'}
           </Button>
         }
       />
