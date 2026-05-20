@@ -207,7 +207,6 @@ export type PlatformUserPayload = {
 
 export type PlatformRolePayload = {
   name: string;
-  key: string;
   description?: string;
   permission_uids?: string[];
 };

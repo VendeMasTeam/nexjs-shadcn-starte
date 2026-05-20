@@ -246,6 +246,7 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
           </Button>
           <Button
             type="button"
+            color="primary"
             onClick={handleSave}
             disabled={!name.trim() || isSubmitting || isLoadingPerms}
           >

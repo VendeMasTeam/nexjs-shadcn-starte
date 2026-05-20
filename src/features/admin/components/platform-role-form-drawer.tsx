@@ -27,17 +27,13 @@ import type { PlatformPermission, PlatformRole, PlatformRolePayload } from '../t
 
 const roleSchema = z.object({
   name: z.string().min(1, 'Requerido'),
-  key: z
-    .string()
-    .min(1, 'Requerido')
-    .regex(/^[a-z0-9_]+$/, 'Solo minúsculas, números y _'),
   description: z.string().optional(),
   permission_uids: z.array(z.string()),
 });
 
 type RoleFormData = z.infer<typeof roleSchema>;
 
-const DEFAULTS: RoleFormData = { name: '', key: '', description: '', permission_uids: [] };
+const DEFAULTS: RoleFormData = { name: '', description: '', permission_uids: [] };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -76,7 +72,6 @@ export function PlatformRoleFormDrawer({
         role
           ? {
               name: role.name,
-              key: role.key,
               description: role.description ?? '',
               permission_uids: (role.permissions ?? []).map((p) => p.uid),
             }
@@ -152,14 +147,6 @@ export function PlatformRoleFormDrawer({
                 label="Nombre"
                 required
                 placeholder="Ej. Soporte N1"
-              />
-              <FormInput
-                control={control}
-                name="key"
-                label="Clave (key)"
-                required
-                placeholder="Ej. support_n1"
-                disabled={isEditing}
               />
               <FormInput
                 control={control}
