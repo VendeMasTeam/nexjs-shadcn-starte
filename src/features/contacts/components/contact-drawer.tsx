@@ -2,12 +2,15 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import { localizationService } from 'src/features/settings/services/localization.service';
 import { Button } from 'src/shared/components/ui/button';
-import { CustomFieldsSection } from 'src/shared/components/ui/custom-fields-section';
+import {
+  CustomFieldsSection,
+  type CustomFieldsSectionHandle,
+} from 'src/shared/components/ui/custom-fields-section';
 import { Icon } from 'src/shared/components/ui/icon';
 import {
   Sheet,
@@ -66,6 +69,7 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
   empresas,
   onSave,
 }) => {
+  const customFieldsRef = useRef<CustomFieldsSectionHandle>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>(() =>
     Object.fromEntries((contacto?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
@@ -162,6 +166,7 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
   }, [checkDuplicate]);
 
   const onSubmit = async (data: ContactDrawerFormData) => {
+    if (customFieldsRef.current && !customFieldsRef.current.validate()) return;
     const payload: ContactPayload = {
       type: data.type,
       name: data.name,
@@ -234,6 +239,7 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
 
             {/* Custom fields */}
             <CustomFieldsSection
+              ref={customFieldsRef}
               module={type === 'company' ? 'companies' : 'contacts'}
               values={customFieldValues}
               onChange={setCustomFieldValues}
@@ -247,7 +253,7 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
           </Button>
           <Button
             type="button"
-            onClick={handleSubmit(onSubmit)}
+            onClick={() => handleSubmit(onSubmit)()}
             disabled={!isValid || isSubmitting}
           >
             {isSubmitting ? 'Guardando...' : contacto ? 'Guardar cambios' : 'Crear contacto'}

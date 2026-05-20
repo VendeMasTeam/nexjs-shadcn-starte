@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import {
   Button,
@@ -15,7 +15,10 @@ import {
   Switch,
   Textarea,
 } from 'src/shared/components/ui';
-import { CustomFieldsSection } from 'src/shared/components/ui/custom-fields-section';
+import {
+  CustomFieldsSection,
+  type CustomFieldsSectionHandle,
+} from 'src/shared/components/ui/custom-fields-section';
 import { useDebounce } from 'use-debounce';
 
 import { useCategories } from '../hooks/use-categories';
@@ -61,6 +64,7 @@ export function ProductDrawer({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
+  const customFieldsRef = useRef<CustomFieldsSectionHandle>(null);
 
   useEffect(() => {
     setName(product?.name ?? '');
@@ -89,6 +93,7 @@ export function ProductDrawer({
 
   const handleSave = async () => {
     if (!validate()) return;
+    if (customFieldsRef.current && !customFieldsRef.current.validate()) return;
     setLoading(true);
     try {
       const payload: CreateProductPayload = {
@@ -279,6 +284,7 @@ export function ProductDrawer({
           )}
 
           <CustomFieldsSection
+            ref={customFieldsRef}
             module="products"
             values={customFieldValues}
             onChange={setCustomFieldValues}

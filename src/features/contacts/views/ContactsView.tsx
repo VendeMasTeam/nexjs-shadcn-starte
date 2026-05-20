@@ -14,6 +14,7 @@ import { ContactDetailDrawer } from '../components/contact-detail-drawer';
 import { ContactDrawer } from '../components/contact-drawer';
 import { ContactsTable } from '../components/contacts-table';
 import { useContacts } from '../hooks/use-contacts';
+import { contactsService } from '../services/contacts.service';
 import type { Contact, ContactPayload, ContactType } from '../types/contacts.types';
 
 const TABS: { value: 'ALL' | ContactType; label: string }[] = [
@@ -64,8 +65,12 @@ export const ContactsView = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleEdit = (c: Contact) => {
-    setSelectedContacto(c);
+  const handleEdit = async (c: Contact) => {
+    const detail =
+      c.type === 'company'
+        ? await contactsService.accounts.getById(c.uid)
+        : await contactsService.contacts.getById(c.uid);
+    setSelectedContacto(detail as Contact);
     setIsDetailOpen(false);
     setIsDrawerOpen(true);
   };

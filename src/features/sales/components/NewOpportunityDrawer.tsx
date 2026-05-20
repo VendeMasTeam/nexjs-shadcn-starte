@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { PipelineStage } from 'src/features/sales/types/sales.types';
 import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import { Button } from 'src/shared/components/ui/button';
-import { CustomFieldsSection } from 'src/shared/components/ui/custom-fields-section';
+import {
+  CustomFieldsSection,
+  type CustomFieldsSectionHandle,
+} from 'src/shared/components/ui/custom-fields-section';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import {
@@ -88,6 +91,7 @@ export function NewOpportunityDrawer({
           email: '',
         };
 
+  const customFieldsRef = useRef<CustomFieldsSectionHandle>(null);
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>(
@@ -112,6 +116,7 @@ export function NewOpportunityDrawer({
 
   const handleSubmit = async () => {
     if (!validate()) return;
+    if (customFieldsRef.current && !customFieldsRef.current.validate()) return;
     setIsSaving(true);
 
     try {
@@ -237,6 +242,7 @@ export function NewOpportunityDrawer({
             </div>
 
             <CustomFieldsSection
+              ref={customFieldsRef}
               module="opportunities"
               values={customFieldValues}
               onChange={setCustomFieldValues}

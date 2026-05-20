@@ -550,8 +550,9 @@ export function OpportunityPanel({
                 <ResumenTab
                   opportunity={opportunity}
                   stages={stages}
-                  onEdit={(opp) => {
-                    setEditingOpportunity(opp);
+                  onEdit={async (opp) => {
+                    const detail = await opportunityService.getOne(opp.uid);
+                    setEditingOpportunity(detail);
                     setEditDrawerOpen(true);
                   }}
                   onOutcome={() => setOutcomeDialogOpen(true)}
@@ -597,6 +598,7 @@ export function OpportunityPanel({
                 expected_close_date: editingOpportunity.expected_close_date,
                 description: editingOpportunity.description,
                 email: editingOpportunity.email,
+                custom_fields: editingOpportunity.custom_fields,
               }
             : null
         }
