@@ -30,11 +30,6 @@ export const inventoryProductService = {
     return res.data.data;
   },
 
-  async getOne(uid: string): Promise<InventoryMasterItem> {
-    const res = await axiosInstance.get(endpoints.inventory.product(uid));
-    return res.data?.data ?? res.data;
-  },
-
   async update(uid: string, payload: Partial<CreateProductPayload>): Promise<InventoryMasterItem> {
     const res = await axiosInstance.put(endpoints.inventory.product(uid), payload);
     return res.data.data;

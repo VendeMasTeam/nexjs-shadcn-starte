@@ -34,7 +34,6 @@ import { StockBadge } from '../components/StockBadge';
 import { useCategories } from '../hooks/use-categories';
 import { useProducts } from '../hooks/use-products';
 import { useWarehouses } from '../hooks/use-warehouses';
-import { inventoryProductService } from '../services/inventory-product.service';
 import type { CreateProductPayload, InventoryMasterItem } from '../types/inventory.types';
 
 const columnHelper = createColumnHelper<InventoryMasterItem>();
@@ -178,9 +177,8 @@ export function ProductsView() {
         cell: (info) => (
           <div className="flex items-center justify-end gap-1">
             <EditButton
-              onClick={async () => {
-                const detail = await inventoryProductService.getOne(info.row.original.uid);
-                setSelectedProduct(detail);
+              onClick={() => {
+                setSelectedProduct(info.row.original);
                 setDrawerMode('edit');
                 setDrawerOpen(true);
               }}

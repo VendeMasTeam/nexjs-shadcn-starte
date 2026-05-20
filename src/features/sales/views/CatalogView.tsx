@@ -71,15 +71,20 @@ export function CatalogView() {
     status: (statusFilter as 'active' | 'inactive') || undefined,
   });
 
-  const handleSave = async (payload: CreateCatalogProductPayload) => {
+  const handleSave = async (
+    payload: CreateCatalogProductPayload
+  ): Promise<{ uid: string } | void> => {
     if (selected) {
       await catalogService.update(selected.uid, payload);
       notify.success('Producto actualizado');
+      refetch();
+      return { uid: selected.uid };
     } else {
-      await catalogService.create(payload);
+      const created = await catalogService.create(payload);
       notify.success('Producto creado');
+      refetch();
+      return { uid: created.uid };
     }
-    refetch();
   };
 
   const handleDeactivate = async (product: CatalogProduct) => {
@@ -97,8 +102,9 @@ export function CatalogView() {
     setDrawerOpen(true);
   };
 
-  const openEdit = (product: CatalogProduct) => {
-    setSelected(product);
+  const openEdit = async (product: CatalogProduct) => {
+    const detail = await catalogService.getOne(product.uid);
+    setSelected(detail);
     setDrawerOpen(true);
   };
 
@@ -300,6 +306,7 @@ export function CatalogView() {
       </SectionCard>
 
       <CatalogProductDrawer
+        key={drawerOpen ? (selected?.uid ?? 'new') : 'closed'}
         open={drawerOpen}
         mode={selected ? 'edit' : 'create'}
         product={selected}

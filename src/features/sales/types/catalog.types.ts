@@ -17,6 +17,13 @@ export interface CatalogProduct {
     discount_percent: number | null;
     stock_available_total: number;
   } | null;
+  custom_fields?: {
+    custom_field_uid: string;
+    key: string;
+    label: string;
+    type: string;
+    value: unknown;
+  }[];
   created_at: string;
   updated_at: string;
 }

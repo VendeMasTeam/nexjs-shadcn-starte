@@ -44,13 +44,6 @@ export interface WarehouseStockEntry {
 export interface InventoryMasterItem {
   uid: string;
   sku: string;
-  custom_fields?: {
-    custom_field_uid: string;
-    key: string;
-    label: string;
-    type: string;
-    value: unknown;
-  }[];
   name: string;
   description: string | null;
   category_uid: string | null;

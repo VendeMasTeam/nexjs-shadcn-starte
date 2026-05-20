@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProducts } from 'src/features/inventory/hooks/use-products';
+import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import { notify } from 'src/lib/notify';
 import {
   Button,
@@ -16,6 +17,10 @@ import {
   Switch,
   Textarea,
 } from 'src/shared/components/ui';
+import {
+  CustomFieldsSection,
+  type CustomFieldsSectionHandle,
+} from 'src/shared/components/ui/custom-fields-section';
 import { useDebounce } from 'use-debounce';
 
 import type { CatalogProduct, CreateCatalogProductPayload } from '../types/catalog.types';
@@ -25,7 +30,7 @@ interface CatalogProductDrawerProps {
   mode: 'create' | 'edit';
   product?: CatalogProduct | null;
   onClose: () => void;
-  onSave: (payload: CreateCatalogProductPayload) => Promise<void>;
+  onSave: (payload: CreateCatalogProductPayload) => Promise<{ uid: string } | void>;
 }
 
 const TYPE_OPTIONS = [
@@ -40,6 +45,7 @@ export function CatalogProductDrawer({
   onClose,
   onSave,
 }: CatalogProductDrawerProps) {
+  const customFieldsRef = useRef<CustomFieldsSectionHandle>(null);
   const [inventorySearch, setInventorySearch] = useState('');
   const [debouncedInventorySearch] = useDebounce(inventorySearch, 400);
   const { items: inventoryProducts } = useProducts({
@@ -57,6 +63,9 @@ export function CatalogProductDrawer({
   const [active, setActive] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>(() =>
+    Object.fromEntries((product?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
+  );
 
   useEffect(() => {
     setName(product?.name ?? '');
@@ -82,6 +91,7 @@ export function CatalogProductDrawer({
 
   const handleSave = async () => {
     if (!validate()) return;
+    if (customFieldsRef.current && !customFieldsRef.current.validate()) return;
     setLoading(true);
     try {
       const payload: CreateCatalogProductPayload = {
@@ -95,7 +105,12 @@ export function CatalogProductDrawer({
         inventory_product_uid:
           type === 'product' && inventoryProductUid ? inventoryProductUid : undefined,
       };
-      await onSave(payload);
+      const result = await onSave(payload);
+      const entityUid =
+        mode === 'edit' ? product?.uid : (result as { uid: string } | undefined)?.uid;
+      if (entityUid && Object.keys(customFieldValues).length > 0) {
+        await customFieldsService.saveAll(entityUid, 'products', customFieldValues);
+      }
       onClose();
     } catch {
       notify.error('Error al guardar el producto');
@@ -203,6 +218,13 @@ export function CatalogProductDrawer({
             </div>
             <Switch checked={active} onCheckedChange={setActive} />
           </div>
+
+          <CustomFieldsSection
+            ref={customFieldsRef}
+            module="products"
+            values={customFieldValues}
+            onChange={setCustomFieldValues}
+          />
         </div>
 
         <SheetFooter className="border-t border-border/60 pt-4 px-4 pb-4">
