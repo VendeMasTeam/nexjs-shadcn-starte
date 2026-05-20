@@ -88,16 +88,37 @@ export function AuthProvider({ children }: Props) {
           });
           return { permissions, modules, role: user.role };
         } else {
-          setState({ user: null, tenant: null, loading: false, permissions: [], modules: [] });
+          setState({
+            user: null,
+            tenant: null,
+            loading: false,
+            permissions: [],
+            modules: [],
+            features: FEATURES_FALLBACK,
+          });
         }
       } else {
-        setState({ user: null, tenant: null, loading: false, permissions: [], modules: [] });
+        setState({
+          user: null,
+          tenant: null,
+          loading: false,
+          permissions: [],
+          modules: [],
+          features: FEATURES_FALLBACK,
+        });
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.warn('[Auth] Session check failed:', (error as Error)?.message ?? 'Unknown error');
       }
-      setState({ user: null, tenant: null, loading: false, permissions: [], modules: [] });
+      setState({
+        user: null,
+        tenant: null,
+        loading: false,
+        permissions: [],
+        modules: [],
+        features: FEATURES_FALLBACK,
+      });
     }
     return { permissions: [], modules: [], role: undefined };
   }, []);
@@ -114,10 +135,7 @@ export function AuthProvider({ children }: Props) {
     [state.permissions]
   );
 
-  const hasFeature = useCallback(
-    (key: string) => state.features[key] ?? true,
-    [state.features]
-  );
+  const hasFeature = useCallback((key: string) => state.features[key] ?? true, [state.features]);
 
   const memoizedValue = useMemo(
     () => ({

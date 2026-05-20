@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { paths } from 'src/routes/paths';
 import { useAuthContext } from 'src/shared/auth/hooks/use-auth-context';
-import type { Module } from 'src/shared/auth/types';
+import type { Module, ModuleItem } from 'src/shared/auth/types';
 import { Icon, type IconName } from 'src/shared/components/ui';
 
 import type { NavItemProps } from '../components/layouts/dashboard/nav-item';
@@ -18,7 +18,8 @@ type StaticNavItem = {
   title: string;
   path: string;
   icon: IconName;
-  moduleKey?: string;
+  gatedByModule?: string; // item visible only if this top-level module is enabled (cross-section gate)
+  itemKey?: string; // key within parent module's items[] — item visible only if item.enabled
   children?: StaticNavItem[];
 };
 
@@ -131,7 +132,7 @@ const NAV_CONFIG: StaticSection[] = [
       { title: 'Directorio', path: paths.contacts.root, icon: 'Users' },
       { title: 'Segmentación Dinámica', path: paths.contacts.segments, icon: 'Filter' },
       { title: 'Agenda & Productividad', path: paths.schedule.root, icon: 'Calendar' },
-      { title: 'Tareas', path: paths.schedule.tasks, icon: 'CheckSquare' },
+      { title: 'Tareas', path: paths.schedule.tasks, icon: 'CheckSquare', gatedByModule: 'tasks' },
     ],
   },
   {
@@ -139,7 +140,7 @@ const NAV_CONFIG: StaticSection[] = [
     subheader: 'Gastos',
     order: 10,
     items: [
-      { title: 'Gastos', path: paths.expenses.root, icon: 'Receipt' },
+      { title: 'Gastos', path: paths.expenses.root, icon: 'Receipt', itemKey: 'expenses' },
       { title: 'Categorías', path: paths.expenses.categories, icon: 'Tag' },
       { title: 'Proveedores', path: paths.expenses.suppliers, icon: 'Package' },
       { title: 'Centros de Costo', path: paths.expenses.costCenters, icon: 'Building2' },
@@ -152,19 +153,31 @@ const NAV_CONFIG: StaticSection[] = [
     items: [
       { title: 'Partners', path: paths.partners.root, icon: 'Handshake' },
       { title: 'Oportunidades', path: paths.partners.opportunities, icon: 'ClipboardList' },
-      { title: 'Portal de Materiales', path: paths.partners.portal, icon: 'FolderOpen' },
+      {
+        title: 'Portal de Materiales',
+        path: paths.partners.portal,
+        icon: 'FolderOpen',
+        itemKey: 'portal',
+      },
     ],
   },
   {
     moduleKey: 'purchases',
     subheader: 'Compras',
     order: 11,
-    items: [{ title: 'Órdenes de Compra', path: paths.purchases.root, icon: 'ShoppingCart' }],
+    items: [
+      {
+        title: 'Órdenes de Compra',
+        path: paths.purchases.root,
+        icon: 'ShoppingCart',
+        itemKey: 'orders',
+      },
+    ],
   },
   {
     moduleKey: 'intelligence',
     subheader: 'Inteligencia Competitiva',
-    order: 11,
+    order: 12,
     items: [
       { title: 'Battlecards', path: paths.intelligence.battlecards, icon: 'Swords' },
       { title: 'Razones de Pérdida', path: paths.intelligence.lostReasons, icon: 'TrendingDown' },
@@ -173,10 +186,15 @@ const NAV_CONFIG: StaticSection[] = [
   {
     moduleKey: 'automation',
     subheader: 'Automatización',
-    order: 12,
+    order: 13,
     items: [
-      { title: 'Reglas', path: paths.automation.rules, icon: 'Zap' },
-      { title: 'Asignación', path: paths.automation.assignment, icon: 'UserCheck' },
+      { title: 'Reglas', path: paths.automation.rules, icon: 'Zap', itemKey: 'rules' },
+      {
+        title: 'Asignación',
+        path: paths.automation.assignment,
+        icon: 'UserCheck',
+        itemKey: 'assignment',
+      },
     ],
   },
 ];
@@ -206,31 +224,51 @@ function isModuleEnabled(modules: Module[], moduleKey: string | undefined): bool
   return mod?.enabled === true;
 }
 
+function isItemEnabled(moduleItems: ModuleItem[] | undefined, itemKey: string): boolean {
+  if (!moduleItems?.length) return true; // backend didn't send items → show all
+  const item = moduleItems.find((i) => i.key === itemKey);
+  return item ? item.enabled : true; // unknown key → show (forward compatible)
+}
+
 function isPlatformAdmin(userRole: string | undefined): boolean {
   return userRole === 'platform-admin';
 }
 
-function buildNavItems(items: StaticNavItem[]): NavItemProps[] {
-  return items.map((item) => ({
-    title: item.title,
-    path: item.path,
-    icon: <Icon name={item.icon} size={18} />,
-    ...(item.children?.length ? { children: buildNavItems(item.children) } : {}),
-  }));
+function buildNavItems(
+  items: StaticNavItem[],
+  parentModuleItems: ModuleItem[] | undefined,
+  allModules: Module[]
+): NavItemProps[] {
+  return items
+    .filter((item) => {
+      if (item.gatedByModule) return isModuleEnabled(allModules, item.gatedByModule);
+      if (item.itemKey) return isItemEnabled(parentModuleItems, item.itemKey);
+      return true;
+    })
+    .map((item) => ({
+      title: item.title,
+      path: item.path,
+      icon: <Icon name={item.icon} size={18} />,
+      ...(item.children?.length
+        ? { children: buildNavItems(item.children, parentModuleItems, allModules) }
+        : {}),
+    }));
 }
 
 function buildSections(config: StaticSection[], modules: Module[]): NavSectionData[] {
   return config
     .filter((section) => {
-      // Sections without moduleKey are always shown (e.g., ADMIN_NAV)
       if (!section.moduleKey) return true;
       return isModuleEnabled(modules, section.moduleKey);
     })
     .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
-    .map((section) => ({
-      subheader: section.subheader,
-      items: buildNavItems(section.items),
-    }))
+    .map((section) => {
+      const parentModule = modules.find((m) => m.key === section.moduleKey);
+      return {
+        subheader: section.subheader,
+        items: buildNavItems(section.items, parentModule?.items, modules),
+      };
+    })
     .filter((section) => section.items.length > 0);
 }
 

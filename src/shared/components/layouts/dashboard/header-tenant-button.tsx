@@ -36,7 +36,11 @@ export function HeaderTenantButton({ tenant }: Props) {
       </span>
 
       {/* Chevron */}
-      <Icon name="ChevronDown" size={13} className="hidden sm:block text-muted-foreground shrink-0" />
+      <Icon
+        name="ChevronDown"
+        size={13}
+        className="hidden sm:block text-muted-foreground shrink-0"
+      />
     </button>
   );
 }

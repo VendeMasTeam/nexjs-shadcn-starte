@@ -20,11 +20,17 @@ export type UserType = {
 
 export type AuthUser = UserType;
 
+export type ModuleItem = {
+  key: string;
+  enabled: boolean;
+};
+
 export type Module = {
   key: string;
   label: string;
   enabled: boolean;
   permissions: string[];
+  items?: ModuleItem[];
 };
 
 export type TenantInfo = {
