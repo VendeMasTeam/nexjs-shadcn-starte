@@ -18,7 +18,5 @@ export interface ContactDrawerFormData {
   job_title?: string | undefined;
   company_uid?: string | undefined;
   // Government
-  institution_type?: string | undefined;
   is_public_entity?: boolean | undefined;
-  bid_code?: string | undefined;
 }

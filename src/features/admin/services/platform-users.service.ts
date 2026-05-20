@@ -19,9 +19,6 @@ export const platformUsersService = {
     const res = await axiosInstance.put(endpoints.admin.platform.users.update(uid), data);
     return res.data.data;
   },
-  async delete(uid: string): Promise<void> {
-    await axiosInstance.delete(endpoints.admin.platform.users.delete(uid));
-  },
   async assignRole(uid: string, roleUid: string): Promise<PlatformUser> {
     const res = await axiosInstance.post(endpoints.admin.platform.users.assignRole(uid), {
       role_uid: roleUid,

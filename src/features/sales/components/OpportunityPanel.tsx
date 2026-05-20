@@ -232,15 +232,19 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
             <ul className="space-y-1.5">
               {lostReasons.map((reason, i) => (
                 <li key={i} className="text-caption text-muted-foreground">
-                  <span className="font-medium text-foreground">{reason.category}</span>
+                  <span className="font-medium text-foreground">
+                    {reason.lost_reason_category ?? reason.reason_type}
+                  </span>
                   {reason.competitor_name && (
                     <span className="text-muted-foreground/70">
                       {' '}
                       — Competidor: {reason.competitor_name}
                     </span>
                   )}
-                  {reason.detail && (
-                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">{reason.detail}</p>
+                  {(reason.lost_reason_detail ?? reason.detail) && (
+                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                      {reason.lost_reason_detail ?? reason.detail}
+                    </p>
                   )}
                 </li>
               ))}
@@ -610,10 +614,10 @@ export function OpportunityPanel({
           open={outcomeDialogOpen}
           clientName={opportunity.title}
           competitors={competitors}
-          onConfirm={async (outcome, lostReason) => {
+          onConfirm={async (outcome, lostReason, wonInfo) => {
             try {
               if (outcome === 'ganado') {
-                await opportunityService.markWon(opportunity.uid);
+                await opportunityService.markWon(opportunity.uid, wonInfo);
                 notify.success('Oportunidad marcada como ganada');
               } else {
                 await opportunityService.markLost(opportunity.uid, lostReason ? [lostReason] : []);

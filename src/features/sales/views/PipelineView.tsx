@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useIntelligence } from 'src/features/intelligence/hooks/useIntelligence';
-import type { LostReasonInfo } from 'src/features/sales/types/sales.types';
+import type { LostReasonInfo, WonInfo } from 'src/features/sales/types/sales.types';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
@@ -53,12 +53,13 @@ export function PipelineView() {
 
   const handleOutcomeConfirm = async (
     outcome: 'ganado' | 'perdido',
-    lostReason?: LostReasonInfo
+    lostReason?: LostReasonInfo,
+    wonInfo?: WonInfo
   ) => {
     if (!pendingMove) return;
     try {
       if (outcome === 'ganado') {
-        await opportunityService.markWon(pendingMove.oppUid);
+        await opportunityService.markWon(pendingMove.oppUid, wonInfo);
       } else {
         await opportunityService.markLost(pendingMove.oppUid, lostReason ? [lostReason] : []);
       }

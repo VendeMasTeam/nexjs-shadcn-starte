@@ -170,11 +170,29 @@ export interface Note {
 
 export type LostReasonCategory = string;
 
+export interface WonInfo {
+  competitor_uid?: string;
+  competitor?: { name: string; type?: string };
+  comment?: string;
+}
+
 export interface LostReasonInfo {
-  category: string;
+  // payload fields (sent to backend)
+  reason_type: string;
+  detail: string;
   competitor_uid?: string;
   competitor_name?: string;
-  detail: string;
+  competitor?: { name: string; type?: string; description?: string };
+  // response fields (received from backend)
+  uid?: string;
+  lost_reason_category?: string;
+  lost_reason_detail?: string;
+  summary?: string;
+  estimated_value?: number;
+  currency?: string;
+  lost_at?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // ─── Finance Dashboard ────────────────────────────────────────────────────────

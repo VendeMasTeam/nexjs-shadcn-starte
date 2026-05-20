@@ -12,23 +12,31 @@ import {
   DialogTitle,
 } from 'src/shared/components/ui/dialog';
 import { Icon } from 'src/shared/components/ui/icon';
+import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import { Textarea } from 'src/shared/components/ui/textarea';
 import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
 
-import type { LostReasonInfo } from '../types/sales.types';
+import type { LostReasonInfo, WonInfo } from '../types/sales.types';
 
-type Step = 'outcome' | 'reason';
+const NEW_COMPETITOR_KEY = '__new__';
+
+type Step = 'outcome' | 'won' | 'reason';
 
 interface OutcomeDialogProps {
   open: boolean;
   clientName: string;
   competitors: Competitor[];
-  onConfirm: (outcome: 'ganado' | 'perdido', lostReason?: LostReasonInfo) => void;
+  onConfirm: (
+    outcome: 'ganado' | 'perdido',
+    lostReason?: LostReasonInfo,
+    wonInfo?: WonInfo
+  ) => void;
   onCancel: () => void;
 }
 
-const DEFAULT_REASON = { category: '', competitor_uid: '', detail: '' };
+const DEFAULT_LOST = { reason_type: '', competitor_uid: '', detail: '' };
+const DEFAULT_WON = { competitor_uid: '', comment: '' };
 
 export function OutcomeDialog({
   open,
@@ -38,7 +46,9 @@ export function OutcomeDialog({
   onCancel,
 }: OutcomeDialogProps) {
   const [step, setStep] = useState<Step>('outcome');
-  const [reason, setReason] = useState(DEFAULT_REASON);
+  const [lostReason, setLostReason] = useState(DEFAULT_LOST);
+  const [wonForm, setWonForm] = useState(DEFAULT_WON);
+  const [newCompetitorName, setNewCompetitorName] = useState('');
   const [error, setError] = useState('');
 
   const { lostReasonCategories } = useTenantOptions();
@@ -54,31 +64,58 @@ export function OutcomeDialog({
   const competitorOptions = [
     { value: '', label: 'Sin competidor identificado' },
     ...competitors.map((c) => ({ value: c.uid, label: c.name })),
+    { value: NEW_COMPETITOR_KEY, label: '+ Crear nuevo competidor' },
   ];
+
+  const isNewLost = lostReason.competitor_uid === NEW_COMPETITOR_KEY;
+  const isNewWon = wonForm.competitor_uid === NEW_COMPETITOR_KEY;
 
   const reset = () => {
     setStep('outcome');
-    setReason(DEFAULT_REASON);
+    setLostReason(DEFAULT_LOST);
+    setWonForm(DEFAULT_WON);
+    setNewCompetitorName('');
     setError('');
   };
 
-  const handleGanado = () => {
-    onConfirm('ganado');
+  const handleGanadoConfirm = () => {
+    if (isNewWon && !newCompetitorName.trim()) {
+      setError('Ingresá el nombre del competidor.');
+      return;
+    }
+    const competitor = competitors.find((c) => c.uid === wonForm.competitor_uid);
+    const wonInfo: WonInfo = {
+      comment: wonForm.comment.trim() || undefined,
+      ...(isNewWon
+        ? { competitor: { name: newCompetitorName.trim() } }
+        : competitor
+          ? { competitor_uid: competitor.uid }
+          : {}),
+    };
+    onConfirm('ganado', undefined, wonInfo);
     reset();
   };
 
   const handlePerdidoConfirm = () => {
-    if (!reason.detail.trim()) {
+    if (!lostReason.detail.trim()) {
       setError('Agrega un detalle sobre lo que pasó.');
       return;
     }
-    const competitor = competitors.find((c) => c.uid === reason.competitor_uid);
-    onConfirm('perdido', {
-      category: reason.category as LostReasonInfo['category'],
-      competitor_uid: reason.competitor_uid || undefined,
-      competitor_name: competitor?.name,
-      detail: reason.detail.trim(),
-    });
+    if (isNewLost && !newCompetitorName.trim()) {
+      setError('Ingresá el nombre del competidor.');
+      return;
+    }
+    const competitor = competitors.find((c) => c.uid === lostReason.competitor_uid);
+    const info: LostReasonInfo = {
+      reason_type: lostReason.reason_type,
+      detail: lostReason.detail.trim(),
+      ...(isNewLost
+        ? { competitor: { name: newCompetitorName.trim() } }
+        : competitor
+          ? { competitor_uid: competitor.uid, competitor_name: competitor.name }
+          : {}),
+    };
+    onConfirm('perdido', info);
     reset();
   };
 
@@ -87,10 +124,17 @@ export function OutcomeDialog({
     onCancel();
   };
 
+  const handleChangeCompetitor = (v: string, target: 'won' | 'lost') => {
+    if (target === 'won') setWonForm((p) => ({ ...p, competitor_uid: v }));
+    else setLostReason((p) => ({ ...p, competitor_uid: v }));
+    setNewCompetitorName('');
+    setError('');
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleCancel()}>
       <DialogContent className="sm:max-w-[440px]">
-        {step === 'outcome' ? (
+        {step === 'outcome' && (
           <>
             <DialogHeader>
               <DialogTitle>¿Cómo cerró {clientName}?</DialogTitle>
@@ -99,14 +143,20 @@ export function OutcomeDialog({
 
             <div className="grid grid-cols-2 gap-3 py-4">
               <button
-                onClick={handleGanado}
+                onClick={() => {
+                  setStep('won');
+                  setError('');
+                }}
                 className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-success/30 bg-success/5 hover:bg-success/10 hover:border-success/50 transition-all"
               >
                 <Icon name="Trophy" size={28} className="text-success" />
                 <span className="text-sm font-bold text-success">Ganado</span>
               </button>
               <button
-                onClick={() => setStep('reason')}
+                onClick={() => {
+                  setStep('reason');
+                  setError('');
+                }}
                 className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-destructive/30 bg-destructive/5 hover:bg-destructive/10 hover:border-destructive/50 transition-all"
               >
                 <Icon name="XCircle" size={28} className="text-destructive" />
@@ -120,7 +170,61 @@ export function OutcomeDialog({
               </Button>
             </DialogFooter>
           </>
-        ) : (
+        )}
+
+        {step === 'won' && (
+          <>
+            <DialogHeader>
+              <DialogTitle>¡Oportunidad ganada!</DialogTitle>
+              <DialogDescription>
+                ¿A quién le ganaste con{' '}
+                <span className="font-semibold text-foreground">{clientName}</span>?
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <SelectField
+                label="Competidor al que le ganamos"
+                options={competitorOptions}
+                value={wonForm.competitor_uid}
+                onChange={(v) => handleChangeCompetitor(v as string, 'won')}
+                clearable
+                placeholder="Sin competidor identificado"
+              />
+              {isNewWon && (
+                <Input
+                  label="Nombre del nuevo competidor *"
+                  value={newCompetitorName}
+                  onChange={(e) => {
+                    setNewCompetitorName(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Ej: Empresa XYZ"
+                  error={error}
+                />
+              )}
+              <Textarea
+                label="Notas (opcional)"
+                placeholder="¿Qué fue clave para ganar?"
+                rows={3}
+                value={wonForm.comment}
+                onChange={(e) => setWonForm((p) => ({ ...p, comment: e.target.value }))}
+              />
+              {!isNewWon && error && <p className="text-xs text-destructive">{error}</p>}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStep('outcome')}>
+                Atrás
+              </Button>
+              <Button color="success" onClick={handleGanadoConfirm}>
+                Confirmar ganancia
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+
+        {step === 'reason' && (
           <>
             <DialogHeader>
               <DialogTitle>Razón de pérdida</DialogTitle>
@@ -133,30 +237,41 @@ export function OutcomeDialog({
 
             <div className="space-y-4 py-2">
               <SelectField
-                label="Razón principal *"
+                label="Razón principal"
                 options={reasonOptions}
-                value={reason.category}
-                onChange={(v) => setReason((p) => ({ ...p, category: v as string }))}
+                value={lostReason.reason_type}
+                onChange={(v) => setLostReason((p) => ({ ...p, reason_type: v as string }))}
               />
               <SelectField
                 label="Competidor que ganó"
                 options={competitorOptions}
-                value={reason.competitor_uid}
-                onChange={(v) => setReason((p) => ({ ...p, competitor_uid: v as string }))}
+                value={lostReason.competitor_uid}
+                onChange={(v) => handleChangeCompetitor(v as string, 'lost')}
                 clearable
                 placeholder="Sin competidor identificado"
               />
+              {isNewLost && (
+                <Input
+                  label="Nombre del nuevo competidor *"
+                  value={newCompetitorName}
+                  onChange={(e) => {
+                    setNewCompetitorName(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Ej: Empresa XYZ"
+                />
+              )}
               <Textarea
-                label="Detalle"
+                label="Detalle *"
                 required
                 placeholder="Describe qué pasó. Cuanto más detalle, mejor para el equipo."
                 rows={3}
-                value={reason.detail}
+                value={lostReason.detail}
                 onChange={(e) => {
-                  setReason((p) => ({ ...p, detail: e.target.value }));
+                  setLostReason((p) => ({ ...p, detail: e.target.value }));
                   setError('');
                 }}
-                error={error}
+                error={!isNewLost ? error : undefined}
               />
             </div>
 

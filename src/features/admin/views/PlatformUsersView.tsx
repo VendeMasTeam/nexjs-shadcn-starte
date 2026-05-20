@@ -19,16 +19,7 @@ import {
   TableRow,
   useTable,
 } from 'src/shared/components/table';
-import {
-  Badge,
-  Button,
-  DeleteButton,
-  EditButton,
-  Icon,
-  Input,
-  SelectField,
-} from 'src/shared/components/ui';
-import { ConfirmDialog } from 'src/shared/components/ui/confirm-dialog';
+import { Badge, Button, EditButton, Icon, Input, SelectField } from 'src/shared/components/ui';
 
 import { PlatformUserFormDrawer } from '../components/platform-user-form-drawer';
 import { usePlatformRoles } from '../hooks/use-platform-roles';
@@ -51,10 +42,9 @@ const columnHelper = createColumnHelper<PlatformUser>();
 
 interface UserColumnHandlers {
   onEdit: (user: PlatformUser) => void;
-  onDelete: (user: PlatformUser) => void;
 }
 
-function buildUserColumns({ onEdit, onDelete }: UserColumnHandlers) {
+function buildUserColumns({ onEdit }: UserColumnHandlers) {
   return [
     columnHelper.accessor('name', {
       header: 'Usuario',
@@ -111,7 +101,6 @@ function buildUserColumns({ onEdit, onDelete }: UserColumnHandlers) {
         return (
           <div className="flex items-center gap-1">
             <EditButton onClick={() => onEdit(user)} />
-            <DeleteButton onClick={() => onDelete(user)} />
           </div>
         );
       },
@@ -125,7 +114,7 @@ export function PlatformUsersView() {
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const { users, isLoading, createUser, updateUser, deleteUser, pagination } = usePlatformUsers({
+  const { users, isLoading, createUser, updateUser, pagination } = usePlatformUsers({
     admin_role_uid: filterRole !== 'all' ? filterRole : undefined,
     status: filterStatus !== 'all' ? filterStatus : undefined,
   });
@@ -134,7 +123,6 @@ export function PlatformUsersView() {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<PlatformUser | null>(null);
 
   const COLUMNS = useMemo(
     () =>
@@ -143,7 +131,6 @@ export function PlatformUsersView() {
           setSelectedUser(user);
           setDrawerOpen(true);
         },
-        onDelete: (user) => setDeleteTarget(user),
       }),
     []
   );
@@ -305,24 +292,6 @@ export function PlatformUsersView() {
         }}
         onCreate={(data: PlatformUserPayload) => createUser(data)}
         onUpdate={(uid, data) => updateUser(uid, data)}
-      />
-
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => {
-          if (deleteTarget) await deleteUser(deleteTarget.uid);
-          setDeleteTarget(null);
-        }}
-        title="¿Eliminar usuario?"
-        description={
-          <>
-            Vas a eliminar a <strong>{deleteTarget?.name}</strong> ({deleteTarget?.email}). Esta
-            acción no se puede deshacer.
-          </>
-        }
-        confirmLabel="Eliminar"
-        variant="error"
       />
     </PageContainer>
   );

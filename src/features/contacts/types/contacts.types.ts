@@ -85,7 +85,5 @@ export interface ContactPayload {
   job_title?: string;
   company_uid?: string;
   // Government
-  institution_type?: string;
   is_public_entity?: boolean;
-  bid_code?: string;
 }

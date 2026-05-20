@@ -11,11 +11,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from 'src/shared/components/ui/dialog';
+import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import { Textarea } from 'src/shared/components/ui/textarea';
 import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
 
 import type { LostReasonInfo } from '../types/sales.types';
+
+const NEW_COMPETITOR_KEY = '__new__';
 
 interface LostReasonDialogProps {
   open: boolean;
@@ -25,11 +28,7 @@ interface LostReasonDialogProps {
   onCancel: () => void;
 }
 
-const DEFAULT: { category: string; competitor_uid: string; detail: string } = {
-  category: '',
-  competitor_uid: '',
-  detail: '',
-};
+const DEFAULT = { reason_type: '', competitor_uid: '', detail: '' };
 
 export function LostReasonDialog({
   open,
@@ -39,6 +38,7 @@ export function LostReasonDialog({
   onCancel,
 }: LostReasonDialogProps) {
   const [form, setForm] = useState(DEFAULT);
+  const [newCompetitorName, setNewCompetitorName] = useState('');
   const [error, setError] = useState('');
 
   const { lostReasonCategories } = useTenantOptions();
@@ -54,26 +54,39 @@ export function LostReasonDialog({
   const competitorOptions = [
     { value: '', label: 'Sin competidor identificado' },
     ...competitors.map((c) => ({ value: c.uid, label: c.name })),
+    { value: NEW_COMPETITOR_KEY, label: '+ Crear nuevo competidor' },
   ];
+
+  const isNewCompetitor = form.competitor_uid === NEW_COMPETITOR_KEY;
 
   const handleConfirm = () => {
     if (!form.detail.trim()) {
       setError('Agrega un detalle sobre lo que pasó.');
       return;
     }
+    if (isNewCompetitor && !newCompetitorName.trim()) {
+      setError('Ingresá el nombre del competidor.');
+      return;
+    }
     const competitor = competitors.find((c) => c.uid === form.competitor_uid);
-    onConfirm({
-      category: form.category as LostReasonInfo['category'],
-      competitor_uid: form.competitor_uid || undefined,
-      competitor_name: competitor?.name,
+    const lostReason: LostReasonInfo = {
+      reason_type: form.reason_type,
       detail: form.detail.trim(),
-    });
+      ...(isNewCompetitor
+        ? { competitor: { name: newCompetitorName.trim() } }
+        : competitor
+          ? { competitor_uid: competitor.uid, competitor_name: competitor.name }
+          : {}),
+    };
+    onConfirm(lostReason);
     setForm(DEFAULT);
+    setNewCompetitorName('');
     setError('');
   };
 
   const handleCancel = () => {
     setForm(DEFAULT);
+    setNewCompetitorName('');
     setError('');
     onCancel();
   };
@@ -91,23 +104,36 @@ export function LostReasonDialog({
 
         <div className="space-y-4 py-2">
           <SelectField
-            label="Razón principal *"
+            label="Razón principal"
             options={reasonOptions}
-            value={form.category}
-            onChange={(v) => setForm((p) => ({ ...p, category: v as string }))}
+            value={form.reason_type}
+            onChange={(v) => setForm((p) => ({ ...p, reason_type: v as string }))}
           />
-
           <SelectField
             label="Competidor que ganó"
             options={competitorOptions}
             value={form.competitor_uid}
-            onChange={(v) => setForm((p) => ({ ...p, competitor_uid: v as string }))}
+            onChange={(v) => {
+              setForm((p) => ({ ...p, competitor_uid: v as string }));
+              setNewCompetitorName('');
+              setError('');
+            }}
             clearable
             placeholder="Sin competidor identificado"
           />
-
+          {isNewCompetitor && (
+            <Input
+              label="Nombre del nuevo competidor *"
+              value={newCompetitorName}
+              onChange={(e) => {
+                setNewCompetitorName(e.target.value);
+                setError('');
+              }}
+              placeholder="Ej: Empresa XYZ"
+            />
+          )}
           <Textarea
-            label="Detalle"
+            label="Detalle *"
             required
             placeholder="Describe qué pasó. Cuanto más detalle, mejor para el equipo."
             rows={3}

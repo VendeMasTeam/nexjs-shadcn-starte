@@ -49,9 +49,7 @@ const schema = z.object({
   job_title: z.string().optional(),
   company_uid: z.string().optional(),
   // Government
-  institution_type: z.string().optional(),
   is_public_entity: z.boolean().optional(),
-  bid_code: z.string().optional(),
 });
 
 interface ContactDrawerProps {
@@ -135,9 +133,7 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
           id_number: contacto.type === 'person' ? (contacto.id_number ?? '') : '',
           job_title: contacto.type === 'person' ? (contacto.job_title ?? '') : '',
           company_uid: contacto.type === 'person' ? (contacto.company_uid ?? '') : '',
-          institution_type: contacto.type === 'government' ? (contacto.institution_type ?? '') : '',
-          is_public_entity: contacto.type === 'government' ? contacto.is_public_entity : true,
-          bid_code: contacto.type === 'government' ? (contacto.bid_code ?? '') : '',
+          is_public_entity: contacto.type === 'government',
         });
       } else {
         reset({ type: 'company', status: 'active', is_public_entity: true });
@@ -182,9 +178,7 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
       id_number: data.id_number || undefined,
       job_title: data.job_title || undefined,
       company_uid: data.company_uid || undefined,
-      institution_type: data.institution_type || undefined,
-      is_public_entity: data.is_public_entity ?? undefined,
-      bid_code: data.bid_code || undefined,
+      is_public_entity: data.type === 'government',
     };
     const result = await onSave(payload);
     if (!result) return;

@@ -102,9 +102,7 @@ export function buildContactPayload(form: ContactPayload): Record<string, unknow
     id_number: form.id_number,
     job_title: form.job_title,
     company_uid: form.company_uid,
-    institution_type: form.institution_type,
-    is_public_entity: form.is_public_entity,
-    bid_code: form.bid_code,
+    is_public_entity: form.type === 'government',
   };
 }
 

@@ -61,6 +61,7 @@ export const endpoints = {
   auth: {
     login: '/login',
     me: '/me',
+    meFeatures: '/me/features',
     init: '/auth/init',
     logout: '/logout',
     forgotPassword: '/forgot-password',

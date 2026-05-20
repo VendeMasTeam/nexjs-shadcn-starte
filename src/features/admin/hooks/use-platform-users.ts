@@ -53,12 +53,6 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (uid: string) => platformUsersService.delete(uid),
-    meta: { successMessage: 'Usuario eliminado' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
-  });
-
   const assignRoleMutation = useMutation({
     mutationFn: ({ uid, roleUid }: { uid: string; roleUid: string }) =>
       platformUsersService.assignRole(uid, roleUid),
@@ -81,9 +75,6 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     },
     updateUser: async (uid: string, data: Partial<PlatformUserPayload>): Promise<void> => {
       await updateMutation.mutateAsync({ uid, data });
-    },
-    deleteUser: async (uid: string): Promise<void> => {
-      await deleteMutation.mutateAsync(uid);
     },
     assignRole: async (uid: string, roleUid: string): Promise<void> => {
       await assignRoleMutation.mutateAsync({ uid, roleUid });

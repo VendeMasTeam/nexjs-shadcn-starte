@@ -1,7 +1,13 @@
 import type { Task, TaskPayload } from 'src/features/tasks/types/task.types';
 import axiosInstance, { endpoints } from 'src/lib/axios';
 
-import type { Activity, ActivityPayload, LostReasonInfo, Opportunity } from '../types/sales.types';
+import type {
+  Activity,
+  ActivityPayload,
+  LostReasonInfo,
+  Opportunity,
+  WonInfo,
+} from '../types/sales.types';
 
 export const opportunityService = {
   async getStages() {
@@ -68,14 +74,25 @@ export const opportunityService = {
 
   // ─── Won / Lost ──────────────────────────────────────────────────────────────
 
-  async markWon(uid: string, comment?: string): Promise<Opportunity> {
-    const res = await axiosInstance.post(endpoints.sales.opportunityWon(uid), { comment });
+  async markWon(uid: string, info?: WonInfo): Promise<Opportunity> {
+    const res = await axiosInstance.post(endpoints.sales.opportunityWon(uid), {
+      comment: info?.comment,
+      ...(info?.competitor
+        ? { competitor: info.competitor }
+        : info?.competitor_uid
+          ? { competitor_uid: info.competitor_uid }
+          : {}),
+    });
     return res.data.data.opportunity;
   },
 
   async markLost(uid: string, reasons: LostReasonInfo[]): Promise<Opportunity> {
     const res = await axiosInstance.post(endpoints.sales.opportunityLost(uid), {
-      lost_reasons: reasons,
+      lost_reasons: reasons.map(({ reason_type, competitor_uid, competitor, detail }) => ({
+        reason_type,
+        detail,
+        ...(competitor ? { competitor } : competitor_uid ? { competitor_uid } : {}),
+      })),
     });
     return res.data.data.opportunity;
   },

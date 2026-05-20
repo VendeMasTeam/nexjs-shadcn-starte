@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Button } from 'src/shared/components/ui/button';
-import { Checkbox } from 'src/shared/components/ui/checkbox';
 import { FormInput } from 'src/shared/components/ui/form-input';
+import { SelectField } from 'src/shared/components/ui/select-field';
 import {
   Sheet,
   SheetContent,
@@ -80,13 +80,6 @@ export function PlatformUserFormDrawer({ open, user, roles, onClose, onCreate, o
     }
   }, [open, user, reset]);
 
-  const toggleRole = (uid: string) => {
-    setValue(
-      'admin_role_uids',
-      selectedRoles.includes(uid) ? selectedRoles.filter((x) => x !== uid) : [...selectedRoles, uid]
-    );
-  };
-
   const onSubmit = async (data: UserFormData) => {
     if (isEditing) {
       const payload: Partial<PlatformUserPayload> = {
@@ -144,32 +137,15 @@ export function PlatformUserFormDrawer({ open, user, roles, onClose, onCreate, o
             />
 
             {roles.length > 0 && (
-              <div>
-                <p className="text-sm font-medium mb-2">Roles</p>
-                <div className="space-y-2">
-                  {roles.map((r) => (
-                    <div key={r.uid} className="flex items-start gap-2.5">
-                      <Checkbox
-                        id={`role-${r.uid}`}
-                        checked={selectedRoles.includes(r.uid)}
-                        onCheckedChange={() => toggleRole(r.uid)}
-                        className="mt-0.5"
-                      />
-                      <label
-                        htmlFor={`role-${r.uid}`}
-                        className="text-sm cursor-pointer leading-snug"
-                      >
-                        <span className="font-medium">{r.name}</span>
-                        {r.description && (
-                          <span className="block text-xs text-muted-foreground">
-                            {r.description}
-                          </span>
-                        )}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <SelectField
+                label="Roles"
+                multiple
+                searchable
+                options={roles.map((r) => ({ value: r.uid, label: r.name }))}
+                value={selectedRoles}
+                onChange={(v) => setValue('admin_role_uids', v as string[])}
+                placeholder="Seleccionar roles..."
+              />
             )}
           </div>
 
