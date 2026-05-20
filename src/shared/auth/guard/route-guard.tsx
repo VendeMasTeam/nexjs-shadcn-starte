@@ -47,5 +47,10 @@ export function RouteGuard({ children }: Props) {
     );
   }
 
+  // Block render synchronously — useEffect redirect fires after paint, causing skeleton flash
+  if (!canAccessPath(pathname, modules, user?.role)) {
+    return null;
+  }
+
   return <>{children}</>;
 }

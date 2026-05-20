@@ -23,6 +23,8 @@ const ROUTE_MODULE_MAP: Record<string, string> = {
   '/partners': 'partners',
   '/intelligence': 'intelligence',
   '/automation': 'automation',
+  '/expenses': 'expenses',
+  '/purchases': 'purchases',
   '/admin': 'admin',
 };
 
@@ -44,6 +46,8 @@ const MODULE_DEFAULT_ROUTES: Record<string, string> = {
   partners: '/partners',
   intelligence: '/intelligence/battlecards',
   automation: '/automation/rules',
+  expenses: '/expenses',
+  purchases: '/purchases',
 };
 
 /** Order of modules matching NAV_CONFIG — used to pick the first accessible one */
@@ -59,6 +63,8 @@ const MODULE_ORDER: string[] = [
   'partners',
   'intelligence',
   'automation',
+  'expenses',
+  'purchases',
 ];
 
 /**
@@ -86,9 +92,13 @@ export function canAccessPath(path: string, modules: Module[], userRole?: string
     return userRole === 'platform-admin';
   }
 
-  // Tenant routes — check module key
+  // App routes available to all authenticated users regardless of plan
+  const ALWAYS_ALLOWED = ['/profile'];
+  if (ALWAYS_ALLOWED.some((p) => path.startsWith(p))) return true;
+
+  // Tenant routes — deny if no mapping or module disabled
   const moduleKey = getModuleForPath(path);
-  if (!moduleKey) return true; // unknown routes: allow (404 will handle it)
+  if (!moduleKey) return false;
 
   const mod = modules.find((m) => m.key === moduleKey);
   return mod?.enabled === true;
