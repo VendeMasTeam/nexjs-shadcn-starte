@@ -10,28 +10,21 @@ interface Props {
 interface State {
   hasError: boolean;
   errorMessage: string;
+  retries: number;
 }
 
-/**
- * Error boundary que no bloquea la navegación.
- * - Muestra un toast con el error
- * - Hace auto-reset para que el usuario pueda seguir usando la app
- * - Si el error persiste, se mostrará otro toast (sin bloquear)
- */
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, errorMessage: '' };
+const MAX_AUTO_RETRIES = 3;
 
-  static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      errorMessage: error?.message || 'Error inesperado',
-    };
+export class ErrorBoundary extends Component<Props, State> {
+  state: State = { hasError: false, errorMessage: '', retries: 0 };
+
+  static getDerivedStateFromError(error: Error): Partial<State> {
+    return { hasError: true, errorMessage: error?.message || 'Error inesperado' };
   }
 
   componentDidCatch(error: Error) {
     console.error('[ErrorBoundary]', error);
 
-    // Clean up any leftover body locks
     if (typeof document !== 'undefined') {
       document.body.style.overflow = '';
       document.body.style.pointerEvents = '';
@@ -40,25 +33,52 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidUpdate(_prevProps: Props, prevState: State) {
-    // Cuando se detecta un error, mostrar toast y resetear
-    if (this.state.hasError && !prevState.hasError) {
+    if (!this.state.hasError || prevState.hasError) return;
+
+    const nextRetries = prevState.retries + 1;
+
+    if (nextRetries <= MAX_AUTO_RETRIES) {
       notify.error('Ocurrió un error en esta sección', {
         description: this.state.errorMessage,
-        duration: 5000,
+        duration: 4000,
       });
 
-      // Auto-reset para no bloquear la UI
-      // Pequeño delay para que React termine el render antes de resetear
       requestAnimationFrame(() => {
-        this.setState({ hasError: false, errorMessage: '' });
+        this.setState({ hasError: false, errorMessage: '', retries: nextRetries });
       });
     }
+    // si superó MAX_AUTO_RETRIES, no resetea → muestra el fallback
   }
 
+  handleReset = () => {
+    this.setState({ hasError: false, errorMessage: '', retries: 0 });
+  };
+
   render() {
-    // Siempre renderizar children — el toast ya informó al usuario.
-    // Si el error fue transitorio (ej: dato undefined momentáneo), la UI se recupera sola.
-    // Si es persistente, el boundary volverá a capturarlo y mostrará otro toast.
+    if (this.state.hasError && this.state.retries > MAX_AUTO_RETRIES) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
+          <p className="text-2xl font-semibold text-foreground">Algo salió mal</p>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Esta sección encontró un error. Podés volver atrás o navegar a otra sección desde el
+            menú lateral.
+          </p>
+          {this.state.errorMessage && (
+            <p className="text-xs text-destructive bg-destructive/10 rounded px-3 py-2 max-w-sm font-mono">
+              {this.state.errorMessage}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={this.handleReset}
+            className="mt-2 text-sm text-primary underline underline-offset-4 hover:opacity-80 transition-opacity"
+          >
+            Reintentar
+          </button>
+        </div>
+      );
+    }
+
     return this.props.children;
   }
 }

@@ -73,7 +73,7 @@ export function PlatformRoleFormDrawer({
               name: role.name,
               key: role.key,
               description: role.description ?? '',
-              permission_uids: role.permissions.map((p) => p.uid),
+              permission_uids: (role.permissions ?? []).map((p) => p.uid),
             }
           : DEFAULTS
       );

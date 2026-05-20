@@ -50,7 +50,7 @@ function buildRoleColumns({ onEdit, onDelete }: RoleColumnHandlers) {
     columnHelper.accessor('permissions', {
       header: 'Permisos',
       cell: (info) => (
-        <span className="text-body2 text-muted-foreground">{info.getValue().length}</span>
+        <span className="text-body2 text-muted-foreground">{info.getValue()?.length ?? '—'}</span>
       ),
     }),
     columnHelper.accessor('total_users', {

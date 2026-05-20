@@ -193,7 +193,7 @@ export interface PlatformRole {
   description: string;
   is_system: boolean;
   total_users: number;
-  permissions: PlatformPermission[];
+  permissions?: PlatformPermission[];
   created_at: string;
   updated_at?: string;
 }
