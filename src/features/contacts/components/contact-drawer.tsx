@@ -4,8 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import { localizationService } from 'src/features/settings/services/localization.service';
 import { Button } from 'src/shared/components/ui/button';
+import { CustomFieldsSection } from 'src/shared/components/ui/custom-fields-section';
 import { Icon } from 'src/shared/components/ui/icon';
 import {
   Sheet,
@@ -54,7 +56,7 @@ interface ContactDrawerProps {
   onClose: () => void;
   contacto: Contact | null;
   empresas: Contact[];
-  onSave: (form: ContactPayload) => Promise<boolean>;
+  onSave: (form: ContactPayload) => Promise<{ uid: string } | boolean>;
 }
 
 export const ContactDrawer: React.FC<ContactDrawerProps> = ({
@@ -65,6 +67,9 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
   onSave,
 }) => {
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>(() =>
+    Object.fromEntries((contacto?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
+  );
 
   const {
     register,
@@ -176,8 +181,14 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
       is_public_entity: data.is_public_entity ?? undefined,
       bid_code: data.bid_code || undefined,
     };
-    const success = await onSave(payload);
-    if (success) onClose();
+    const result = await onSave(payload);
+    if (!result) return;
+    const entityUid = typeof result === 'object' ? result.uid : contacto?.uid;
+    if (entityUid && Object.keys(customFieldValues).length > 0) {
+      const entityType = data.type === 'company' ? 'companies' : 'contacts';
+      await customFieldsService.saveAll(entityUid, entityType, customFieldValues);
+    }
+    onClose();
   };
 
   return (
@@ -220,6 +231,13 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
               <ContactDrawerPersonFields control={control} companies={empresas} />
             )}
             {type === 'government' && <ContactDrawerGovernmentFields control={control} />}
+
+            {/* Custom fields */}
+            <CustomFieldsSection
+              module={type === 'company' ? 'companies' : 'contacts'}
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
           </div>
         </div>
 

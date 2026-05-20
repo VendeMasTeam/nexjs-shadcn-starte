@@ -19,6 +19,13 @@ export interface Opportunity {
   updated_at: string;
   /** Populated by GET /opportunities/{uid} detail endpoint */
   lost_reasons?: LostReasonInfo[];
+  custom_fields?: {
+    custom_field_uid: string;
+    key: string;
+    label: string;
+    type: string;
+    value: unknown;
+  }[];
 }
 
 export interface PipelineStage {

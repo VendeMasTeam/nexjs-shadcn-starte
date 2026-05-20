@@ -287,9 +287,9 @@ export function useContacts(filters?: {
 
   // ── Public API wrappers ─────────────────────────────────────────────────
 
-  const createContacto = async (form: ContactPayload): Promise<boolean> => {
-    await createMutation.mutateAsync(form);
-    return true;
+  const createContacto = async (form: ContactPayload): Promise<{ uid: string }> => {
+    const contact = await createMutation.mutateAsync(form);
+    return { uid: contact.uid };
   };
 
   const updateContacto = async (uid: string, form: Partial<ContactPayload>): Promise<boolean> => {

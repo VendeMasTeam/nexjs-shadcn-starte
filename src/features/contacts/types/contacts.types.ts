@@ -27,6 +27,13 @@ interface ContactBase {
   status: ContactStatus;
   relations?: ContactRelation[];
   created_at: string;
+  custom_fields?: {
+    custom_field_uid: string;
+    key: string;
+    label: string;
+    type: string;
+    value: unknown;
+  }[];
 }
 
 /** Company — B2B (maps to /accounts) */

@@ -14,7 +14,11 @@ import { CustomFieldDrawer } from '../components/custom-fields/custom-field-draw
 import { CustomFieldsTable } from '../components/custom-fields/custom-fields-table';
 import { useCustomFields } from '../hooks/use-custom-fields';
 import { customFieldsService } from '../services/custom-fields.service';
-import type { CustomField, CustomFieldModule } from '../types/settings.types';
+import type {
+  CustomField,
+  CustomFieldCreatePayload,
+  CustomFieldModule,
+} from '../types/settings.types';
 
 // Fallback labels in case the API doesn't return modules yet
 const FALLBACK_MODULE_LABELS: Record<string, string> = {
@@ -80,7 +84,7 @@ export const CustomFieldsView = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleSave = async (data: Omit<CustomField, 'uid' | 'created_at'>) => {
+  const handleSave = async (data: CustomFieldCreatePayload) => {
     if (selectedField) return updateField(selectedField.uid, data);
     return createField(data);
   };

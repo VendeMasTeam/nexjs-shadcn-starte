@@ -76,15 +76,40 @@ export type CustomFieldModule = 'contacts' | 'companies' | 'opportunities' | 'pr
 
 export interface CustomField {
   uid: string;
-  key?: string;
+  key: string;
   name: string;
-  label: string;
+  label: string; // appended virtual (= name)
   type: CustomFieldType;
-  module: CustomFieldModule;
-  required: boolean;
-  options?: string[];
+  entity_type: string; // PHP class name (App\Models\Contact, etc.)
+  module: CustomFieldModule; // appended friendly name
+  required: boolean; // appended from options.required
+  select_options: string[] | null; // appended for select type
+  options?: Record<string, unknown>;
   created_at: string;
 }
+
+export interface EntityCustomFieldValue {
+  custom_field_uid: string;
+  key: string;
+  label: string;
+  type: CustomFieldType;
+  value: unknown;
+}
+
+export type CustomFieldCreatePayload = {
+  label: string;
+  module: CustomFieldModule;
+  type: CustomFieldType;
+  required?: boolean;
+  options?: { values: string[] };
+};
+
+export type CustomFieldValuePayload = {
+  entity_type: string;
+  entity_uid: string;
+  custom_field_uid: string;
+  value: unknown;
+};
 
 // ── Localization ────────────────────────────────────────────────────────────
 export interface LocalizationConfig {

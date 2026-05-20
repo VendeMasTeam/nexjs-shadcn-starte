@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import type { PipelineStage } from 'src/features/sales/types/sales.types';
+import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import { Button } from 'src/shared/components/ui/button';
+import { CustomFieldsSection } from 'src/shared/components/ui/custom-fields-section';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import {
@@ -36,12 +38,19 @@ interface EditOpportunityData {
   expected_close_date: string;
   description?: string;
   email?: string;
+  custom_fields?: {
+    custom_field_uid: string;
+    key: string;
+    label: string;
+    type: string;
+    value: unknown;
+  }[];
 }
 
 interface NewOpportunityDrawerProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: NewOpportunityPayload) => void;
+  onSave: (data: NewOpportunityPayload) => Promise<{ uid: string } | void> | void;
   stages: PipelineStage[];
   /** Edit mode — pre-populates form with existing opportunity data */
   isEditing?: boolean;
@@ -81,6 +90,10 @@ export function NewOpportunityDrawer({
 
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>(
+    Object.fromEntries((editingData?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
+  );
+  const [isSaving, setIsSaving] = useState(false);
 
   const stageOptions = activeStages.map((s) => ({
     value: s.uid,
@@ -97,28 +110,40 @@ export function NewOpportunityDrawer({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
+    setIsSaving(true);
 
-    const defaultCloseDate = new Date();
-    defaultCloseDate.setDate(defaultCloseDate.getDate() + 30);
+    try {
+      const defaultCloseDate = new Date();
+      defaultCloseDate.setDate(defaultCloseDate.getDate() + 30);
 
-    const payload: NewOpportunityPayload = {
-      title: form.title.trim(),
-      amount: Number(form.amount) || 0,
-      expected_close_date: form.expected_close_date || defaultCloseDate.toISOString().split('T')[0],
-      stage_uid: form.stage_uid || activeStages[0]?.uid,
-      description: form.description.trim() || undefined,
-      email: form.email.trim() || undefined,
-    };
+      const payload: NewOpportunityPayload = {
+        title: form.title.trim(),
+        amount: Number(form.amount) || 0,
+        expected_close_date:
+          form.expected_close_date || defaultCloseDate.toISOString().split('T')[0],
+        stage_uid: form.stage_uid || activeStages[0]?.uid,
+        description: form.description.trim() || undefined,
+        email: form.email.trim() || undefined,
+      };
 
-    if (isEditing && editingData) {
-      payload.entity_type = 'opportunity';
-      payload.entity_uid = editingData.uid;
+      if (isEditing && editingData) {
+        payload.entity_type = 'opportunity';
+        payload.entity_uid = editingData.uid;
+      }
+
+      const result = await Promise.resolve(onSave(payload));
+      const entityUid = isEditing ? editingData?.uid : result?.uid;
+      if (entityUid && Object.keys(customFieldValues).length > 0) {
+        await customFieldsService.saveAll(entityUid, 'opportunities', customFieldValues);
+      }
+      onClose();
+    } catch {
+      // error handled upstream
+    } finally {
+      setIsSaving(false);
     }
-
-    onSave(payload);
-    onClose();
   };
 
   return (
@@ -210,15 +235,21 @@ export function NewOpportunityDrawer({
                 className="bg-muted/30 focus:bg-background transition-colors pt-2"
               />
             </div>
+
+            <CustomFieldsSection
+              module="opportunities"
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
           </div>
         </div>
 
         <SheetFooter className="px-6 py-4 border-t border-border/40 shrink-0">
-          <Button variant="outline" onClick={onClose} className="flex-1">
+          <Button variant="outline" onClick={onClose} disabled={isSaving} className="flex-1">
             Cancelar
           </Button>
-          <Button color="primary" onClick={handleSubmit} className="flex-1">
-            {isEditing ? 'Guardar cambios' : 'Guardar Lead'}
+          <Button color="primary" onClick={handleSubmit} disabled={isSaving} className="flex-1">
+            {isSaving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Guardar Lead'}
           </Button>
         </SheetFooter>
       </SheetContent>

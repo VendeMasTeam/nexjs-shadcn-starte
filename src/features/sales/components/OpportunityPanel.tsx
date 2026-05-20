@@ -580,11 +580,10 @@ export function OpportunityPanel({
           setEditDrawerOpen(false);
           setEditingOpportunity(null);
         }}
-        onSave={(payload) => {
+        onSave={async (payload): Promise<{ uid: string } | void> => {
           if (!editingOpportunity) return;
-          updateOpportunity(editingOpportunity.uid, payload as Partial<Opportunity>);
-          setEditDrawerOpen(false);
-          setEditingOpportunity(null);
+          await updateOpportunity(editingOpportunity.uid, payload as Partial<Opportunity>);
+          return { uid: editingOpportunity.uid };
         }}
         stages={stages}
         isEditing={true}

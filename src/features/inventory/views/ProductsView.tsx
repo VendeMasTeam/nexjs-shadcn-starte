@@ -201,11 +201,13 @@ export function ProductsView() {
     onPageSizeChange: pagination.onChangeRowsPerPage,
   });
 
-  const handleSave = async (payload: CreateProductPayload) => {
+  const handleSave = async (payload: CreateProductPayload): Promise<{ uid: string } | void> => {
     if (drawerMode === 'create') {
-      await createProduct(payload);
+      const product = await createProduct(payload);
+      return { uid: product.uid };
     } else if (selectedProduct) {
       await updateProduct(selectedProduct.uid, payload);
+      return { uid: selectedProduct.uid };
     }
   };
 

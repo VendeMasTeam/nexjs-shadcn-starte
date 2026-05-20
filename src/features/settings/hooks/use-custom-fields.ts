@@ -7,7 +7,11 @@ import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
 import { customFieldsService } from '../services/custom-fields.service';
-import type { CustomField, CustomFieldModule } from '../types/settings.types';
+import type {
+  CustomField,
+  CustomFieldCreatePayload,
+  CustomFieldModule,
+} from '../types/settings.types';
 
 export interface ModuleTotals {
   contacts: number;
@@ -26,12 +30,12 @@ export function useCustomFields(filters: CustomFieldFilters = {}) {
   const pagination = usePaginationParams();
   const [moduleTotals, setModuleTotals] = useState<ModuleTotals | null>(null);
 
-  const moduleFilter = filters.module && filters.module !== 'ALL' ? filters.module : undefined;
+  const entityType = filters.module && filters.module !== 'ALL' ? filters.module : undefined;
 
   const queryParams = {
     ...pagination.params,
     ...(filters.search && { search: filters.search }),
-    ...(moduleFilter ? { module: moduleFilter } : {}),
+    ...(entityType ? { module: entityType } : {}),
   };
 
   const { data: fields = [], isLoading } = useQuery({
@@ -39,29 +43,26 @@ export function useCustomFields(filters: CustomFieldFilters = {}) {
     staleTime: 0,
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const res = await customFieldsService.getAll(queryParams);
-      const raw = res as Record<string, unknown>;
-      // Backend may return { items, totals } inside data OR data as array with totals in meta
-      const data = raw;
-      const items = (data.items ?? data.data ?? []) as CustomField[];
-      const totals = (data.totals ?? (data.meta as Record<string, unknown> | undefined)?.totals) as
-        | ModuleTotals
-        | undefined;
+      const raw = (await customFieldsService.getAll(queryParams)) as {
+        data: CustomField[];
+        meta?: { total?: number; totals?: ModuleTotals };
+      };
+      const totals = raw.meta?.totals;
       if (totals) setModuleTotals(totals);
-      const meta = extractPaginationMeta(raw);
+      const meta = extractPaginationMeta(raw as Record<string, unknown>);
       if (meta) pagination.setTotal(meta.total);
-      return items;
+      return raw.data ?? [];
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: Omit<CustomField, 'uid' | 'created_at'>) => customFieldsService.create(data),
+    mutationFn: (data: CustomFieldCreatePayload) => customFieldsService.create(data),
     meta: { successMessage: 'Campo personalizado creado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ uid, data }: { uid: string; data: Partial<CustomField> }) =>
+    mutationFn: ({ uid, data }: { uid: string; data: Partial<CustomFieldCreatePayload> }) =>
       customFieldsService.update(uid, data),
     meta: { successMessage: 'Campo personalizado actualizado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.customFields }),
@@ -77,11 +78,11 @@ export function useCustomFields(filters: CustomFieldFilters = {}) {
     fields,
     isLoading,
     moduleTotals,
-    createField: async (data: Omit<CustomField, 'uid' | 'created_at'>): Promise<boolean> => {
+    createField: async (data: CustomFieldCreatePayload): Promise<boolean> => {
       await createMutation.mutateAsync(data);
       return true;
     },
-    updateField: async (uid: string, data: Partial<CustomField>): Promise<boolean> => {
+    updateField: async (uid: string, data: Partial<CustomFieldCreatePayload>): Promise<boolean> => {
       await updateMutation.mutateAsync({ uid, data });
       return true;
     },

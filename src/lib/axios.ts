@@ -192,6 +192,7 @@ export const endpoints = {
       update: (uid: string) => `/custom-fields/${uid}`,
       delete: (uid: string) => `/custom-fields/${uid}`,
       modules: '/custom-fields/modules',
+      value: '/custom-fields/value',
     },
     localization: {
       get: '/settings/localization',

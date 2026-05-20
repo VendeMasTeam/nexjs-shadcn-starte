@@ -21,14 +21,15 @@ import {
 } from 'src/shared/components/ui/sheet';
 import { z } from 'zod';
 
-import type { CustomField, CustomFieldModule, CustomFieldType } from '../../types/settings.types';
+import type {
+  CustomField,
+  CustomFieldCreatePayload,
+  CustomFieldModule,
+  CustomFieldType,
+} from '../../types/settings.types';
 
 const schema = z.object({
   label: z.string().min(2, 'Requerido'),
-  name: z
-    .string()
-    .min(2, 'Requerido')
-    .regex(/^[a-z_]+$/, 'Solo minúsculas y guiones bajos'),
   type: z.enum(['text', 'number', 'date', 'select', 'boolean']),
   module: z.string().min(1, 'Requerido'),
   required: z.boolean(),
@@ -40,7 +41,7 @@ interface CustomFieldDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   field: CustomField | null;
-  onSave: (data: Omit<CustomField, 'uid' | 'created_at'>) => Promise<boolean>;
+  onSave: (data: CustomFieldCreatePayload) => Promise<boolean>;
 }
 
 const TYPE_OPTIONS = [
@@ -64,7 +65,7 @@ export const CustomFieldDrawer: React.FC<CustomFieldDrawerProps> = ({
   field,
   onSave,
 }) => {
-  const [options, setOptions] = useState<string[]>(() => field?.options ?? []);
+  const [selectOptions, setSelectOptions] = useState<string[]>(() => field?.select_options ?? []);
   const [newOption, setNewOption] = useState('');
 
   const { data: moduleOptions = MODULE_OPTIONS_FALLBACK } = useQuery({
@@ -80,7 +81,6 @@ export const CustomFieldDrawer: React.FC<CustomFieldDrawerProps> = ({
     control,
     handleSubmit,
     reset,
-    setValue,
     formState: { isValid, isSubmitting },
   } = useForm<FieldForm>({
     resolver: zodResolver(schema),
@@ -89,50 +89,39 @@ export const CustomFieldDrawer: React.FC<CustomFieldDrawerProps> = ({
   });
 
   const typeWatched = useWatch({ control, name: 'type' });
-  const labelWatched = useWatch({ control, name: 'label' });
-
-  useEffect(() => {
-    if (labelWatched && !field) {
-      const slug = labelWatched
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, '_')
-        .replace(/[^a-z_]/g, '');
-      setValue('name', slug, { shouldValidate: true });
-    }
-  }, [labelWatched, field, setValue]);
 
   useEffect(() => {
     if (isOpen) {
       if (field) {
         reset({
           label: field.label,
-          name: field.name,
           type: field.type,
           module: field.module,
           required: field.required,
         });
       } else {
-        reset({ label: '', name: '', type: 'text', module: 'contacts', required: false });
+        reset({ label: '', type: 'text', module: 'contacts', required: false });
       }
     }
   }, [isOpen, field, reset]);
 
   const onSubmit = async (data: FieldForm) => {
-    const success = await onSave({
-      ...data,
-      key: data.name,
-      type: data.type as CustomFieldType,
+    const payload: CustomFieldCreatePayload = {
+      label: data.label,
       module: data.module as CustomFieldModule,
-      options: data.type === 'select' ? options : undefined,
-    });
+      type: data.type as CustomFieldType,
+      required: data.required,
+      options:
+        data.type === 'select' && selectOptions.length > 0 ? { values: selectOptions } : undefined,
+    };
+    const success = await onSave(payload);
     if (success) onClose();
   };
 
   const addOption = () => {
-    if (newOption.trim() && !options.includes(newOption.trim())) {
-      setOptions((prev) => [...prev, newOption.trim()]);
+    const trimmed = newOption.trim();
+    if (trimmed && !selectOptions.includes(trimmed)) {
+      setSelectOptions((prev) => [...prev, trimmed]);
       setNewOption('');
     }
   };
@@ -153,15 +142,6 @@ export const CustomFieldDrawer: React.FC<CustomFieldDrawerProps> = ({
               label="Etiqueta (visible al usuario)"
               required
               placeholder="Ej. Código de Licitación"
-            />
-
-            <FormInput
-              control={control}
-              name="name"
-              label="Nombre técnico"
-              required
-              hint="Solo minúsculas y guiones bajos"
-              placeholder="codigo_licitacion"
             />
 
             <div className="grid grid-cols-2 gap-4">
@@ -197,9 +177,9 @@ export const CustomFieldDrawer: React.FC<CustomFieldDrawerProps> = ({
             {typeWatched === 'select' && (
               <div className="space-y-3 bg-muted/40 p-4 rounded-lg border border-border/40">
                 <h4 className="text-sm font-semibold text-foreground">Opciones de la lista</h4>
-                {options.length > 0 ? (
+                {selectOptions.length > 0 ? (
                   <div className="space-y-1.5">
-                    {options.map((op) => (
+                    {selectOptions.map((op) => (
                       <div
                         key={op}
                         className="flex items-center justify-between gap-2 bg-background px-3 py-2 rounded border border-border/40 text-sm"
@@ -207,7 +187,7 @@ export const CustomFieldDrawer: React.FC<CustomFieldDrawerProps> = ({
                         <span>{op}</span>
                         <button
                           type="button"
-                          onClick={() => setOptions((prev) => prev.filter((o) => o !== op))}
+                          onClick={() => setSelectOptions((prev) => prev.filter((o) => o !== op))}
                           className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                         >
                           <Icon name="Trash2" size={13} />
@@ -255,6 +235,7 @@ export const CustomFieldDrawer: React.FC<CustomFieldDrawerProps> = ({
           </Button>
           <Button
             type="button"
+            color="primary"
             onClick={handleSubmit(onSubmit)}
             disabled={!isValid || isSubmitting}
             className="cursor-pointer"

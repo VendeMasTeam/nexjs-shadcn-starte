@@ -75,8 +75,11 @@ export function PipelineView() {
     setPendingMove(null);
   };
 
-  const handleSaveOpportunity = (data: NewOpportunityPayload) => {
-    addOpportunity(data);
+  const handleSaveOpportunity = async (
+    data: NewOpportunityPayload
+  ): Promise<{ uid: string } | void> => {
+    const result = await addOpportunity(data);
+    return { uid: result.uid };
   };
 
   return (

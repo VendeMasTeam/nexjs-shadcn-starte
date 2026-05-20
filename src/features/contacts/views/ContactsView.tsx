@@ -75,7 +75,7 @@ export const ContactsView = () => {
     setIsDetailOpen(true);
   };
 
-  const handleSave = async (form: ContactPayload): Promise<boolean> => {
+  const handleSave = async (form: ContactPayload): Promise<{ uid: string } | boolean> => {
     if (selectedContacto) return updateContacto(selectedContacto.uid, form);
     return createContacto(form);
   };

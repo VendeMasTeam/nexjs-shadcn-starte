@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import {
   Button,
   Icon,
@@ -14,6 +15,7 @@ import {
   Switch,
   Textarea,
 } from 'src/shared/components/ui';
+import { CustomFieldsSection } from 'src/shared/components/ui/custom-fields-section';
 import { useDebounce } from 'use-debounce';
 
 import { useCategories } from '../hooks/use-categories';
@@ -27,7 +29,7 @@ interface ProductDrawerProps {
   product?: InventoryMasterItem | null;
   warehouses: { uid: string; name: string }[];
   onClose: () => void;
-  onSave: (payload: CreateProductPayload) => Promise<void>;
+  onSave: (payload: CreateProductPayload) => Promise<{ uid: string } | void>;
 }
 
 export function ProductDrawer({
@@ -58,6 +60,7 @@ export function ProductDrawer({
   >([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     setName(product?.name ?? '');
@@ -71,6 +74,9 @@ export function ProductDrawer({
     setActive(product ? product.is_active : true);
     setWarehouseStocks([]);
     setErrors({});
+    setCustomFieldValues(
+      Object.fromEntries((product?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
+    );
   }, [open, product, warehouses]);
 
   const validate = () => {
@@ -101,7 +107,11 @@ export function ProductDrawer({
           .filter((s) => Number(s.quantity) > 0)
           .map((s) => ({ warehouse_uid: s.warehouse_uid, quantity: Number(s.quantity) }));
       }
-      await onSave(payload);
+      const result = await onSave(payload);
+      const entityUid = mode === 'edit' ? product?.uid : result?.uid;
+      if (entityUid && Object.keys(customFieldValues).length > 0) {
+        await customFieldsService.saveAll(entityUid, 'products', customFieldValues);
+      }
       onClose();
     } catch {
       // error handled by MutationCache
@@ -267,6 +277,12 @@ export function ProductDrawer({
               )}
             </div>
           )}
+
+          <CustomFieldsSection
+            module="products"
+            values={customFieldValues}
+            onChange={setCustomFieldValues}
+          />
 
           {mode === 'edit' && (
             <div

@@ -65,10 +65,10 @@ export function CustomFieldsTable({
           return (
             <div>
               <p className="font-medium text-foreground text-sm">{field.label}</p>
-              {field.type === 'select' && field.options && (
+              {field.type === 'select' && field.select_options && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {field.options.slice(0, 3).join(', ')}
-                  {field.options.length > 3 ? '...' : ''}
+                  {field.select_options.slice(0, 3).join(', ')}
+                  {field.select_options.length > 3 ? '...' : ''}
                 </p>
               )}
             </div>
