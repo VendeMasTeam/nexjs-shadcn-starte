@@ -1,3 +1,11 @@
+export type PlanFeatures = {
+  inventory: boolean;
+  reports: boolean;
+  multicurrency: boolean;
+  custom_fields: boolean;
+  [key: string]: boolean;
+};
+
 export type UserType = {
   uid: string;
   name: string;
@@ -32,6 +40,7 @@ export type AuthState = {
   loading: boolean;
   permissions: string[];
   modules: Module[];
+  features: PlanFeatures;
 };
 
 export type AuthContextValue = {
@@ -42,7 +51,9 @@ export type AuthContextValue = {
   unauthenticated: boolean;
   permissions: string[];
   modules: Module[];
+  features: PlanFeatures;
   hasPermission: (key: string) => boolean;
+  hasFeature: (key: string) => boolean;
   checkUserSession: () => Promise<{ permissions: string[]; modules: Module[]; role?: string }>;
 };
 
@@ -65,4 +76,5 @@ export type InitPayload = {
     [key: string]: unknown;
   };
   permissions: InitPermissions;
+  features?: PlanFeatures;
 };

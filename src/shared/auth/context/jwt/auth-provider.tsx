@@ -3,7 +3,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { init } from 'src/features/auth/services/auth.service';
 import { setCurrencyPreferences } from 'src/lib/currency';
-import type { AuthState, Module, TenantInfo } from 'src/shared/auth/types';
+import type { AuthState, Module, PlanFeatures, TenantInfo } from 'src/shared/auth/types';
 
 import { AuthContext } from '../auth-context';
 import { isValidToken, setSession } from './utils';
@@ -15,6 +15,13 @@ function derivePermissions(modules: Module[]): string[] {
   return modules.flatMap((m) => m.permissions.map((p) => `${m.key}.${p}`));
 }
 
+const FEATURES_FALLBACK: PlanFeatures = {
+  inventory: true,
+  reports: true,
+  multicurrency: true,
+  custom_fields: true,
+};
+
 export function AuthProvider({ children }: Props) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -22,6 +29,7 @@ export function AuthProvider({ children }: Props) {
     loading: true,
     permissions: [],
     modules: [],
+    features: FEATURES_FALLBACK,
   });
 
   const checkUserSession = useCallback(async () => {
@@ -34,7 +42,14 @@ export function AuthProvider({ children }: Props) {
 
         const data = await init();
         const payload = data?.data ?? data;
-        const { user, modules, localization: loc, permissions: permsPayload, tenant } = payload;
+        const {
+          user,
+          modules,
+          localization: loc,
+          permissions: permsPayload,
+          tenant,
+          features,
+        } = payload;
 
         if (user) {
           // Set currency preferences from auth/init localization
@@ -68,6 +83,7 @@ export function AuthProvider({ children }: Props) {
             tenant: tenantInfo,
             permissions,
             modules,
+            features: features ?? FEATURES_FALLBACK,
             loading: false,
           });
           return { permissions, modules, role: user.role };
@@ -98,6 +114,11 @@ export function AuthProvider({ children }: Props) {
     [state.permissions]
   );
 
+  const hasFeature = useCallback(
+    (key: string) => state.features[key] ?? true,
+    [state.features]
+  );
+
   const memoizedValue = useMemo(
     () => ({
       user: state.user,
@@ -105,7 +126,9 @@ export function AuthProvider({ children }: Props) {
       loading: state.loading,
       permissions: state.permissions,
       modules: state.modules,
+      features: state.features,
       hasPermission,
+      hasFeature,
       authenticated: state.user !== null,
       unauthenticated: state.user === null,
       checkUserSession,
@@ -116,7 +139,9 @@ export function AuthProvider({ children }: Props) {
       state.loading,
       state.permissions,
       state.modules,
+      state.features,
       hasPermission,
+      hasFeature,
       checkUserSession,
     ]
   );
