@@ -9,9 +9,7 @@ export const customFieldsService = {
     return res.data;
   },
 
-  async getAll(
-    params?: PaginationParams & { entity_type?: string; search?: string }
-  ): Promise<unknown> {
+  async getAll(params?: PaginationParams & { module?: string; search?: string }): Promise<unknown> {
     const res = await axiosInstance.get(endpoints.settings.customFields.list, { params });
     return res.data;
   },

@@ -25,7 +25,6 @@ import type { Permission, Role } from '../../types/settings.types';
 
 type RoleSavePayload = {
   name: string;
-  key: string;
   description: string;
   permission_uids: string[];
 };
@@ -63,7 +62,6 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
   }, [permissions, modules]);
 
   const [name, setName] = useState(role?.name ?? '');
-  const [key, setKey] = useState(role?.key ?? '');
   const [description, setDescription] = useState(role?.description ?? '');
   const [selectedUids, setSelectedUids] = useState<string[]>(role?.permission_uids ?? []);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,7 +69,6 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
   React.useEffect(() => {
     if (isOpen) {
       setName(role?.name ?? '');
-      setKey(role?.key ?? '');
       setDescription(role?.description ?? '');
       setSelectedUids(role?.permission_uids ?? []);
     }
@@ -97,7 +94,7 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
   const handleSave = async () => {
     if (!name.trim()) return;
     setIsSubmitting(true);
-    const success = await onSave({ name, key, description, permission_uids: selectedUids });
+    const success = await onSave({ name, description, permission_uids: selectedUids });
     setIsSubmitting(false);
     if (success) onClose();
   };
@@ -118,13 +115,6 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
               label="Nombre del rol"
               required
               placeholder="Ej. Gerente de Zona"
-            />
-            <Input
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              label="Clave (key)"
-              required
-              placeholder="Ej. gerente_zona"
             />
             <Textarea
               value={description}
@@ -257,7 +247,7 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
           <Button
             type="button"
             onClick={handleSave}
-            disabled={!name.trim() || !key.trim() || isSubmitting || isLoadingPerms}
+            disabled={!name.trim() || isSubmitting || isLoadingPerms}
           >
             {isSubmitting ? 'Guardando...' : 'Guardar Rol'}
           </Button>

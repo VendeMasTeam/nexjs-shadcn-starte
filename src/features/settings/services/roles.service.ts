@@ -4,7 +4,6 @@ import type { Permission, Role } from '../types/settings.types';
 
 type RoleSavePayload = {
   name: string;
-  key: string;
   description: string;
   permission_uids: string[];
 };
@@ -21,22 +20,12 @@ export const rolesService = {
   },
 
   async create(data: RoleSavePayload): Promise<Role> {
-    const res = await axiosInstance.post(endpoints.rbac.roles, {
-      name: data.name,
-      key: data.key,
-      description: data.description,
-      permission_uids: data.permission_uids,
-    });
+    const res = await axiosInstance.post(endpoints.rbac.roles, data);
     return (res.data?.data ?? res.data) as Role;
   },
 
   async update(id: string, data: RoleSavePayload): Promise<Role> {
-    const res = await axiosInstance.put(endpoints.rbac.role(id), {
-      name: data.name,
-      key: data.key,
-      description: data.description,
-      permission_uids: data.permission_uids,
-    });
+    const res = await axiosInstance.put(endpoints.rbac.role(id), data);
     return (res.data?.data ?? res.data) as Role;
   },
 

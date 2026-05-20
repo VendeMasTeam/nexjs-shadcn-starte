@@ -36,7 +36,6 @@ export const RolesView = () => {
 
   const handleSave = async (data: {
     name: string;
-    key: string;
     description: string;
     permission_uids: string[];
   }) => {

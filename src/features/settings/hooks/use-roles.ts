@@ -66,13 +66,10 @@ export function useRoles(filters?: { search?: string }) {
     },
   });
 
+  type RolePayload = { name: string; description: string; permission_uids: string[] };
+
   const createMutation = useMutation({
-    mutationFn: (data: {
-      name: string;
-      key: string;
-      description: string;
-      permission_uids: string[];
-    }) => rolesService.create(data),
+    mutationFn: (data: RolePayload) => rolesService.create(data),
     meta: { successMessage: 'Rol creado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.roles });
@@ -80,13 +77,7 @@ export function useRoles(filters?: { search?: string }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: { name: string; key: string; description: string; permission_uids: string[] };
-    }) => rolesService.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: RolePayload }) => rolesService.update(id, data),
     meta: { successMessage: 'Rol actualizado' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.roles });
@@ -104,19 +95,11 @@ export function useRoles(filters?: { search?: string }) {
   return {
     roles,
     isLoading,
-    createRole: (data: {
-      name: string;
-      key: string;
-      description: string;
-      permission_uids: string[];
-    }) => {
+    createRole: (data: RolePayload) => {
       createMutation.mutate(data);
       return Promise.resolve(true);
     },
-    updateRole: (
-      id: string,
-      data: { name: string; key: string; description: string; permission_uids: string[] }
-    ) => {
+    updateRole: (id: string, data: RolePayload) => {
       updateMutation.mutate({ id, data });
       return Promise.resolve(true);
     },

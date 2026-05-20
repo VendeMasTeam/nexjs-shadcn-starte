@@ -26,12 +26,12 @@ export function useCustomFields(filters: CustomFieldFilters = {}) {
   const pagination = usePaginationParams();
   const [moduleTotals, setModuleTotals] = useState<ModuleTotals | null>(null);
 
-  const entity_type = filters.module && filters.module !== 'ALL' ? filters.module : undefined;
+  const moduleFilter = filters.module && filters.module !== 'ALL' ? filters.module : undefined;
 
   const queryParams = {
     ...pagination.params,
     ...(filters.search && { search: filters.search }),
-    ...(entity_type ? { entity_type } : {}),
+    ...(moduleFilter ? { module: moduleFilter } : {}),
   };
 
   const { data: fields = [], isLoading } = useQuery({
