@@ -18,6 +18,7 @@ import {
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
 import { Textarea } from 'src/shared/components/ui/textarea';
+import { MODULE_LABELS } from 'src/shared/constants/module-labels';
 
 import { usePermissions } from '../../hooks/use-roles';
 import type { Permission, Role } from '../../types/settings.types';
@@ -35,43 +36,6 @@ interface RoleDrawerProps {
   role: Role | null;
   onSave: (data: RoleSavePayload) => Promise<boolean>;
 }
-
-const MODULE_LABELS: Record<string, string> = {
-  accounts: 'Cuentas',
-  contacts: 'Contactos',
-  relations: 'Relaciones',
-  'crm-entities': 'CRM',
-  tags: 'Etiquetas',
-  search: 'Búsqueda',
-  dashboard: 'Dashboard',
-  tasks: 'Tareas',
-  interactions: 'Interacciones',
-  activities: 'Actividades',
-  segments: 'Segmentos',
-  teams: 'Equipos',
-  automation: 'Automatización',
-  documents: 'Documentos',
-  inventory: 'Inventario',
-  quotations: 'Cotizaciones',
-  products: 'Productos',
-  'price-books': 'Listas de precios',
-  commissions: 'Comisiones',
-  opportunities: 'Oportunidades',
-  finance: 'Finanzas',
-  reports: 'Reportes',
-  'custom-fields': 'Campos personalizados',
-  settings: 'Configuración',
-  logs: 'Logs',
-  metrics: 'Métricas',
-  plans: 'Planes',
-  admin: 'Admin',
-  users: 'Usuarios',
-  expenses: 'Gastos',
-  purchases: 'Compras',
-  'competitive-intelligence': 'Inteligencia competitiva',
-  partners: 'Socios',
-  projects: 'Proyectos',
-};
 
 function groupByModule(permissions: Permission[]): Map<string, Permission[]> {
   const groups = new Map<string, Permission[]>();

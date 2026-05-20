@@ -1,11 +1,15 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Accordion as AccordionPrimitive } from 'radix-ui';
 import { useEffect, useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { cn } from 'src/lib/utils';
+import { Accordion, AccordionContent, AccordionItem } from 'src/shared/components/ui/accordion';
 import { Button } from 'src/shared/components/ui/button';
 import { Checkbox } from 'src/shared/components/ui/checkbox';
 import { FormInput } from 'src/shared/components/ui/form-input';
+import { Icon } from 'src/shared/components/ui/icon';
 import {
   Sheet,
   SheetContent,
@@ -14,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
+import { MODULE_LABELS } from 'src/shared/constants/module-labels';
 import { z } from 'zod';
 
 import type { PlatformPermission, PlatformRole, PlatformRolePayload } from '../types/admin.types';
@@ -80,7 +85,6 @@ export function PlatformRoleFormDrawer({
     }
   }, [open, role, reset]);
 
-  // Group permissions by module
   const grouped = useMemo(() => {
     const map = new Map<string, PlatformPermission[]>();
     for (const p of permissions) {
@@ -91,11 +95,29 @@ export function PlatformRoleFormDrawer({
     return Array.from(map.entries());
   }, [permissions]);
 
-  const toggle = (uid: string) => {
+  const toggleUid = (uid: string) => {
     setValue(
       'permission_uids',
       selectedUids.includes(uid) ? selectedUids.filter((x) => x !== uid) : [...selectedUids, uid]
     );
+  };
+
+  const toggleModule = (
+    modulePerms: PlatformPermission[],
+    selectedCount: number,
+    total: number
+  ) => {
+    const uids = modulePerms.map((p) => p.uid);
+    setValue(
+      'permission_uids',
+      selectedCount === total
+        ? selectedUids.filter((u) => !uids.includes(u))
+        : [...new Set([...selectedUids, ...uids])]
+    );
+  };
+
+  const toggleAll = (checked: boolean) => {
+    setValue('permission_uids', checked ? permissions.map((p) => p.uid) : []);
   };
 
   const onSubmit = async (data: RoleFormData) => {
@@ -113,8 +135,8 @@ export function PlatformRoleFormDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-[520px] p-0 flex flex-col">
-        <SheetHeader className="px-6 py-5 border-b border-border/40">
+      <SheetContent side="right" className="w-full sm:max-w-[640px] p-0 flex flex-col">
+        <SheetHeader className="px-6 py-5 border-b border-border/40 bg-muted/30">
           <SheetTitle>{isEditing ? `Editar: ${role.name}` : 'Nuevo Rol'}</SheetTitle>
           <SheetDescription>
             {isEditing ? 'Modificá el rol de plataforma' : 'Creá un nuevo rol de plataforma'}
@@ -147,38 +169,108 @@ export function PlatformRoleFormDrawer({
               />
             </div>
 
-            {grouped.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Permisos</h3>
-                <div className="space-y-5">
-                  {grouped.map(([module, perms]) => (
-                    <div key={module}>
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        {module}
-                      </p>
-                      <div className="grid grid-cols-1 gap-2">
-                        {perms.map((p) => (
-                          <div key={p.uid} className="flex items-start gap-2.5">
-                            <Checkbox
-                              id={p.uid}
-                              checked={selectedUids.includes(p.uid)}
-                              onCheckedChange={() => toggle(p.uid)}
-                              className="mt-0.5"
-                            />
-                            <label htmlFor={p.uid} className="text-sm cursor-pointer leading-snug">
-                              <span className="font-medium">{p.action}</span>
-                              {p.description && (
-                                <span className="block text-xs text-muted-foreground">
-                                  {p.description}
-                                </span>
-                              )}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+            {permissions.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold uppercase text-muted-foreground tracking-wider">
+                    Permisos
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {selectedUids.length} seleccionado{selectedUids.length !== 1 ? 's' : ''}
+                    </span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <Checkbox
+                        checked={
+                          permissions.length > 0 && selectedUids.length === permissions.length
+                        }
+                        onCheckedChange={(checked) => toggleAll(!!checked)}
+                      />
+                      <span className="text-xs text-muted-foreground">Todos</span>
+                    </label>
+                  </div>
                 </div>
+
+                <Accordion
+                  type="multiple"
+                  className="border border-border rounded-lg divide-y divide-border/60"
+                >
+                  {grouped.map(([module, modulePerms]) => {
+                    const selectedCount = modulePerms.filter((p) =>
+                      selectedUids.includes(p.uid)
+                    ).length;
+                    const totalCount = modulePerms.length;
+                    const allSelected = selectedCount === totalCount;
+                    const moduleLabel = MODULE_LABELS[module] ?? module;
+
+                    return (
+                      <AccordionItem key={module} value={module} className="border-0">
+                        <AccordionPrimitive.Header className="flex items-center px-4 hover:bg-muted/30 transition-colors">
+                          <AccordionPrimitive.Trigger className="flex flex-1 items-center gap-2 py-3 text-left outline-none [&[data-state=open]>svg]:rotate-180">
+                            <Icon
+                              name="ChevronDown"
+                              className="size-4 shrink-0 text-muted-foreground transition-transform duration-200"
+                            />
+                            <span className="text-sm font-medium">{moduleLabel}</span>
+                            <span
+                              className={cn(
+                                'text-xs rounded-full px-2 py-0.5 font-medium',
+                                selectedCount > 0
+                                  ? 'bg-primary/10 text-primary'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              {selectedCount}/{totalCount}
+                            </span>
+                          </AccordionPrimitive.Trigger>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={
+                                allSelected ? true : selectedCount > 0 ? 'indeterminate' : false
+                              }
+                              onCheckedChange={() =>
+                                toggleModule(modulePerms, selectedCount, totalCount)
+                              }
+                            />
+                          </div>
+                        </AccordionPrimitive.Header>
+
+                        <AccordionContent className="pb-0">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 px-4 pb-3">
+                            {modulePerms.map((perm) => {
+                              const isChecked = selectedUids.includes(perm.uid);
+                              return (
+                                <label
+                                  key={perm.uid}
+                                  className={cn(
+                                    'flex items-start gap-3 rounded-md px-3 py-2 cursor-pointer transition-colors',
+                                    isChecked ? 'bg-primary/5' : 'hover:bg-muted/30'
+                                  )}
+                                >
+                                  <Checkbox
+                                    checked={isChecked}
+                                    onCheckedChange={() => toggleUid(perm.uid)}
+                                    className="mt-0.5 shrink-0"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-sm font-medium text-foreground capitalize block">
+                                      {perm.action}
+                                    </span>
+                                    {perm.description && (
+                                      <p className="text-xs text-muted-foreground line-clamp-1">
+                                        {perm.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
               </div>
             )}
           </div>
