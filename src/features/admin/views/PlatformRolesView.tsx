@@ -53,7 +53,7 @@ function buildRoleColumns({ onEdit, onDelete }: RoleColumnHandlers) {
         <span className="text-body2 text-muted-foreground">{info.getValue().length}</span>
       ),
     }),
-    columnHelper.accessor('user_count', {
+    columnHelper.accessor('total_users', {
       header: 'Usuarios',
       cell: (info) => <span className="text-body2">{info.getValue()}</span>,
     }),

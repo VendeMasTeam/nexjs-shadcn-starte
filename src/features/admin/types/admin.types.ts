@@ -156,46 +156,60 @@ export interface TenantErrorByTenant {
 
 export interface PlatformPermission {
   uid: string;
-  name: string;
+  key: string;
+  module: string;
+  action: string;
   description: string;
-  group: string;
 }
 
-export type PlatformUserStatus = 'ACTIVO' | 'INACTIVO' | 'BLOQUEADO';
+export type PlatformUserStatus = 'ACTIVO' | 'INACTIVO';
+
+export interface PlatformAdminRole {
+  uid: string;
+  name: string;
+  key: string;
+  description?: string;
+  is_system: boolean;
+  permissions?: PlatformPermission[];
+}
 
 export interface PlatformUser {
   uid: string;
   name: string;
   email: string;
-  role: string;
-  role_uid: string;
-  status: PlatformUserStatus;
+  is_platform_admin: boolean;
+  avatar_url: string | null;
+  two_factor_enabled: boolean;
   last_login_at: string | null;
-  created_at: string;
+  is_active: boolean;
+  status: PlatformUserStatus;
+  admin_roles: PlatformAdminRole[];
 }
 
 export interface PlatformRole {
   uid: string;
   name: string;
+  key: string;
   description: string;
   is_system: boolean;
-  permissions: string[];
-  user_count: number;
+  total_users: number;
+  permissions: PlatformPermission[];
   created_at: string;
+  updated_at?: string;
 }
 
 export type PlatformUserPayload = {
   name: string;
   email: string;
   password?: string;
-  role_uid: string;
-  status?: PlatformUserStatus;
+  admin_role_uids?: string[];
 };
 
 export type PlatformRolePayload = {
   name: string;
-  description: string;
-  permissions: string[];
+  key: string;
+  description?: string;
+  permission_uids?: string[];
 };
 
 // --- Payload types ---

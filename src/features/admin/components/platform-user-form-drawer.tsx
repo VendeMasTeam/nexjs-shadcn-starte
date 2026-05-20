@@ -2,10 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Button } from 'src/shared/components/ui/button';
+import { Checkbox } from 'src/shared/components/ui/checkbox';
 import { FormInput } from 'src/shared/components/ui/form-input';
-import { FormSelectField } from 'src/shared/components/ui/form-select-field';
 import {
   Sheet,
   SheetContent,
@@ -24,32 +24,19 @@ const createSchema = z.object({
   name: z.string().min(1, 'Requerido'),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
-  role_uid: z.string().min(1, 'Requerido'),
-  status: z.enum(['ACTIVO', 'INACTIVO']),
+  admin_role_uids: z.array(z.string()),
 });
 
 const editSchema = z.object({
   name: z.string().min(1, 'Requerido'),
   email: z.string().email('Email inválido'),
   password: z.string().optional(),
-  role_uid: z.string().min(1, 'Requerido'),
-  status: z.enum(['ACTIVO', 'INACTIVO']),
+  admin_role_uids: z.array(z.string()),
 });
 
 type UserFormData = z.infer<typeof editSchema>;
 
-const DEFAULTS: UserFormData = {
-  name: '',
-  email: '',
-  password: '',
-  role_uid: '',
-  status: 'ACTIVO',
-};
-
-const STATUS_OPTIONS = [
-  { value: 'ACTIVO', label: 'Activo' },
-  { value: 'INACTIVO', label: 'Inactivo' },
-];
+const DEFAULTS: UserFormData = { name: '', email: '', password: '', admin_role_uids: [] };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -69,11 +56,14 @@ export function PlatformUserFormDrawer({ open, user, roles, onClose, onCreate, o
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { isSubmitting },
   } = useForm<UserFormData>({
     resolver: zodResolver(isEditing ? editSchema : createSchema),
     defaultValues: DEFAULTS,
   });
+
+  const selectedRoles = useWatch({ control, name: 'admin_role_uids' });
 
   useEffect(() => {
     if (open) {
@@ -83,23 +73,26 @@ export function PlatformUserFormDrawer({ open, user, roles, onClose, onCreate, o
               name: user.name,
               email: user.email,
               password: '',
-              role_uid: user.role_uid,
-              status: user.status === 'BLOQUEADO' ? 'INACTIVO' : user.status,
+              admin_role_uids: user.admin_roles.map((r) => r.uid),
             }
           : DEFAULTS
       );
     }
   }, [open, user, reset]);
 
-  const roleOptions = roles.map((r) => ({ value: r.uid, label: r.name }));
+  const toggleRole = (uid: string) => {
+    setValue(
+      'admin_role_uids',
+      selectedRoles.includes(uid) ? selectedRoles.filter((x) => x !== uid) : [...selectedRoles, uid]
+    );
+  };
 
   const onSubmit = async (data: UserFormData) => {
     if (isEditing) {
       const payload: Partial<PlatformUserPayload> = {
         name: data.name,
         email: data.email,
-        role_uid: data.role_uid,
-        status: data.status,
+        admin_role_uids: data.admin_role_uids,
       };
       if (data.password) payload.password = data.password;
       await onUpdate(user.uid, payload);
@@ -108,8 +101,7 @@ export function PlatformUserFormDrawer({ open, user, roles, onClose, onCreate, o
         name: data.name,
         email: data.email,
         password: data.password!,
-        role_uid: data.role_uid,
-        status: data.status,
+        admin_role_uids: data.admin_role_uids,
       });
     }
     onClose();
@@ -126,7 +118,7 @@ export function PlatformUserFormDrawer({ open, user, roles, onClose, onCreate, o
         </SheetHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0">
             <FormInput
               control={control}
               name="name"
@@ -150,19 +142,35 @@ export function PlatformUserFormDrawer({ open, user, roles, onClose, onCreate, o
               required={!isEditing}
               placeholder={isEditing ? 'Dejar vacío para no cambiar' : 'Mínimo 8 caracteres'}
             />
-            <FormSelectField
-              control={control}
-              name="role_uid"
-              label="Rol"
-              options={roleOptions}
-              placeholder="Seleccioná un rol"
-            />
-            <FormSelectField
-              control={control}
-              name="status"
-              label="Estado"
-              options={STATUS_OPTIONS}
-            />
+
+            {roles.length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-2">Roles</p>
+                <div className="space-y-2">
+                  {roles.map((r) => (
+                    <div key={r.uid} className="flex items-start gap-2.5">
+                      <Checkbox
+                        id={`role-${r.uid}`}
+                        checked={selectedRoles.includes(r.uid)}
+                        onCheckedChange={() => toggleRole(r.uid)}
+                        className="mt-0.5"
+                      />
+                      <label
+                        htmlFor={`role-${r.uid}`}
+                        className="text-sm cursor-pointer leading-snug"
+                      >
+                        <span className="font-medium">{r.name}</span>
+                        {r.description && (
+                          <span className="block text-xs text-muted-foreground">
+                            {r.description}
+                          </span>
+                        )}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <SheetFooter className="border-t border-border/40 px-6 py-4">

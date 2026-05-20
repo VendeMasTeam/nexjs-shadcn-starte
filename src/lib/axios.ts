@@ -129,8 +129,9 @@ export const endpoints = {
         show: (uid: string) => `/admin/platform/users/${uid}`,
         update: (uid: string) => `/admin/platform/users/${uid}`,
         delete: (uid: string) => `/admin/platform/users/${uid}`,
-        lock: (uid: string) => `/admin/platform/users/${uid}/lock`,
-        unlock: (uid: string) => `/admin/platform/users/${uid}/unlock`,
+        assignRole: (uid: string) => `/admin/platform/users/${uid}/roles`,
+        removeRole: (uid: string, roleUid: string) =>
+          `/admin/platform/users/${uid}/roles/${roleUid}`,
       },
       roles: {
         list: '/admin/platform/roles',
@@ -138,9 +139,8 @@ export const endpoints = {
         show: (uid: string) => `/admin/platform/roles/${uid}`,
         update: (uid: string) => `/admin/platform/roles/${uid}`,
         delete: (uid: string) => `/admin/platform/roles/${uid}`,
-        syncPermissions: (uid: string) => `/admin/platform/roles/${uid}/permissions`,
       },
-      permissions: '/admin/platform/permissions',
+      permissions: '/admin/platform/roles/permissions',
     },
     tenants: {
       list: '/admin/tenants',

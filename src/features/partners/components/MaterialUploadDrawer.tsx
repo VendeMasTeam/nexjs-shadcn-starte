@@ -28,7 +28,10 @@ interface Props {
   onClose: () => void;
   onUpload: (formData: FormData) => Promise<boolean>;
   material?: PortalMaterial | null;
-  onUpdate?: (uid: string, data: { title?: string; description?: string; type?: string; is_active?: boolean }) => Promise<void>;
+  onUpdate?: (
+    uid: string,
+    data: { title?: string; description?: string; type?: string; is_active?: boolean }
+  ) => Promise<void>;
 }
 
 export function MaterialUploadDrawer({ open, onClose, onUpload, material, onUpdate }: Props) {
@@ -225,7 +228,9 @@ export function MaterialUploadDrawer({ open, onClose, onUpload, material, onUpda
                   className="rounded-xl border border-dashed border-border/60 p-8 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:bg-muted/20 transition-colors w-full"
                 >
                   <Icon name="Upload" size={28} className="text-muted-foreground" />
-                  <p className="text-body2 text-muted-foreground font-medium">Seleccionar archivo</p>
+                  <p className="text-body2 text-muted-foreground font-medium">
+                    Seleccionar archivo
+                  </p>
                   <p className="text-caption text-muted-foreground">
                     PDF, PPTX, XLSX, imágenes — máx. 50 MB
                   </p>

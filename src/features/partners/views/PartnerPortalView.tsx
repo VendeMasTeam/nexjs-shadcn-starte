@@ -20,8 +20,14 @@ import { MATERIAL_TYPE_CONFIG } from '../types';
 // ─── Main View ────────────────────────────────────────────────────────────────
 
 export function PartnerPortalView() {
-  const { materials, materialStats, materialPagination, createMaterial, updateMaterial, removeMaterial } =
-    usePartners();
+  const {
+    materials,
+    materialStats,
+    materialPagination,
+    createMaterial,
+    updateMaterial,
+    removeMaterial,
+  } = usePartners();
 
   const [filterType, setFilterType] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -69,7 +75,14 @@ export function PartnerPortalView() {
         title="Portal de Partners"
         subtitle="Materiales de venta, capacitación y recursos para aliados comerciales"
         action={
-          <Button color="primary" size="sm" onClick={() => { setEditTarget(null); setDrawerOpen(true); }}>
+          <Button
+            color="primary"
+            size="sm"
+            onClick={() => {
+              setEditTarget(null);
+              setDrawerOpen(true);
+            }}
+          >
             <Icon name="Upload" size={16} />
             Subir material
           </Button>

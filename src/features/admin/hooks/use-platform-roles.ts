@@ -55,13 +55,6 @@ export function usePlatformRoles() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformRoles }),
   });
 
-  const syncPermissionsMutation = useMutation({
-    mutationFn: ({ uid, permissions: perms }: { uid: string; permissions: string[] }) =>
-      platformRolesService.syncPermissions(uid, perms),
-    meta: { successMessage: 'Permisos actualizados' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformRoles }),
-  });
-
   return {
     roles,
     permissions,
@@ -74,9 +67,6 @@ export function usePlatformRoles() {
     },
     deleteRole: async (uid: string): Promise<void> => {
       await deleteMutation.mutateAsync(uid);
-    },
-    syncPermissions: async (uid: string, perms: string[]): Promise<void> => {
-      await syncPermissionsMutation.mutateAsync({ uid, permissions: perms });
     },
     pagination: {
       page: pagination.page,

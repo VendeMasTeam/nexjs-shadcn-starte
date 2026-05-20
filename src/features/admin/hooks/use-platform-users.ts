@@ -11,7 +11,7 @@ import type { PlatformUser, PlatformUserPayload } from '../types/admin.types';
 const EMPTY_USERS: PlatformUser[] = [];
 
 interface PlatformUserFilters {
-  role_uid?: string;
+  admin_role_uid?: string;
   status?: string;
 }
 
@@ -21,7 +21,7 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
 
   const queryParams = {
     ...pagination.params,
-    ...(filters.role_uid && { role_uid: filters.role_uid }),
+    ...(filters.admin_role_uid && { admin_role_uid: filters.admin_role_uid }),
     ...(filters.status && { status: filters.status }),
   };
 
@@ -59,15 +59,17 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
   });
 
-  const lockMutation = useMutation({
-    mutationFn: (uid: string) => platformUsersService.lock(uid),
-    meta: { successMessage: 'Usuario bloqueado' },
+  const assignRoleMutation = useMutation({
+    mutationFn: ({ uid, roleUid }: { uid: string; roleUid: string }) =>
+      platformUsersService.assignRole(uid, roleUid),
+    meta: { successMessage: 'Rol asignado' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
   });
 
-  const unlockMutation = useMutation({
-    mutationFn: (uid: string) => platformUsersService.unlock(uid),
-    meta: { successMessage: 'Usuario desbloqueado' },
+  const removeRoleMutation = useMutation({
+    mutationFn: ({ uid, roleUid }: { uid: string; roleUid: string }) =>
+      platformUsersService.removeRole(uid, roleUid),
+    meta: { successMessage: 'Rol removido' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
   });
 
@@ -83,11 +85,11 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     deleteUser: async (uid: string): Promise<void> => {
       await deleteMutation.mutateAsync(uid);
     },
-    lockUser: async (uid: string): Promise<void> => {
-      await lockMutation.mutateAsync(uid);
+    assignRole: async (uid: string, roleUid: string): Promise<void> => {
+      await assignRoleMutation.mutateAsync({ uid, roleUid });
     },
-    unlockUser: async (uid: string): Promise<void> => {
-      await unlockMutation.mutateAsync(uid);
+    removeRole: async (uid: string, roleUid: string): Promise<void> => {
+      await removeRoleMutation.mutateAsync({ uid, roleUid });
     },
     pagination: {
       page: pagination.page,

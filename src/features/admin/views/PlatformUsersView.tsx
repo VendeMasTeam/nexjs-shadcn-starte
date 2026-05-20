@@ -43,7 +43,6 @@ const STATUS_CONFIG: Record<
 > = {
   ACTIVO: { label: 'Activo', color: 'success' },
   INACTIVO: { label: 'Inactivo', color: 'default' },
-  BLOQUEADO: { label: 'Bloqueado', color: 'error' },
 };
 
 // ─── Column helper ────────────────────────────────────────────────────────────
@@ -53,10 +52,9 @@ const columnHelper = createColumnHelper<PlatformUser>();
 interface UserColumnHandlers {
   onEdit: (user: PlatformUser) => void;
   onDelete: (user: PlatformUser) => void;
-  onLock: (user: PlatformUser) => void;
 }
 
-function buildUserColumns({ onEdit, onDelete, onLock }: UserColumnHandlers) {
+function buildUserColumns({ onEdit, onDelete }: UserColumnHandlers) {
   return [
     columnHelper.accessor('name', {
       header: 'Usuario',
@@ -67,13 +65,21 @@ function buildUserColumns({ onEdit, onDelete, onLock }: UserColumnHandlers) {
         </div>
       ),
     }),
-    columnHelper.accessor('role', {
-      header: 'Rol',
-      cell: (info) => (
-        <Badge variant="outline" className="text-xs">
-          {info.getValue()}
-        </Badge>
-      ),
+    columnHelper.accessor('admin_roles', {
+      header: 'Roles',
+      cell: (info) => {
+        const roles = info.getValue();
+        if (!roles.length) return <span className="text-muted-foreground text-xs">—</span>;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {roles.map((r) => (
+              <Badge key={r.uid} variant="outline" className="text-xs">
+                {r.name}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
     }),
     columnHelper.accessor('status', {
       header: 'Estado',
@@ -97,30 +103,13 @@ function buildUserColumns({ onEdit, onDelete, onLock }: UserColumnHandlers) {
         </span>
       ),
     }),
-    columnHelper.accessor('created_at', {
-      header: 'Creado',
-      cell: (info) => (
-        <span className="text-body2 text-muted-foreground">{formatDate(info.getValue())}</span>
-      ),
-    }),
     columnHelper.display({
       id: 'actions',
       header: 'Acciones',
       cell: (info) => {
         const user = info.row.original;
-        const isBlocked = user.status === 'BLOQUEADO';
         return (
           <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              color={isBlocked ? 'success' : 'warning'}
-              variant="soft"
-              className="h-6 text-[11px] px-2"
-              onClick={() => onLock(user)}
-              title={isBlocked ? 'Desbloquear' : 'Bloquear'}
-            >
-              <Icon name={isBlocked ? 'UserCheck' : 'UserX'} size={12} />
-            </Button>
             <EditButton onClick={() => onEdit(user)} />
             <DeleteButton onClick={() => onDelete(user)} />
           </div>
@@ -136,11 +125,10 @@ export function PlatformUsersView() {
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const { users, isLoading, createUser, updateUser, deleteUser, lockUser, unlockUser, pagination } =
-    usePlatformUsers({
-      role_uid: filterRole !== 'all' ? filterRole : undefined,
-      status: filterStatus !== 'all' ? filterStatus : undefined,
-    });
+  const { users, isLoading, createUser, updateUser, deleteUser, pagination } = usePlatformUsers({
+    admin_role_uid: filterRole !== 'all' ? filterRole : undefined,
+    status: filterStatus !== 'all' ? filterStatus : undefined,
+  });
 
   const { roles } = usePlatformRoles();
 
@@ -156,15 +144,8 @@ export function PlatformUsersView() {
           setDrawerOpen(true);
         },
         onDelete: (user) => setDeleteTarget(user),
-        onLock: (user) => {
-          if (user.status === 'BLOQUEADO') {
-            unlockUser(user.uid);
-          } else {
-            lockUser(user.uid);
-          }
-        },
       }),
-    [lockUser, unlockUser]
+    []
   );
 
   const { table, dense, onChangeDense } = useTable({
@@ -178,7 +159,7 @@ export function PlatformUsersView() {
   });
 
   const activeCount = users.filter((u) => u.status === 'ACTIVO').length;
-  const blockedCount = users.filter((u) => u.status === 'BLOQUEADO').length;
+  const inactiveCount = users.filter((u) => u.status === 'INACTIVO').length;
 
   const statsCards = [
     {
@@ -198,11 +179,11 @@ export function PlatformUsersView() {
       trendUp: true,
     },
     {
-      title: 'Bloqueados',
-      value: blockedCount,
+      title: 'Inactivos',
+      value: inactiveCount,
       icon: <Icon name="UserX" size={18} />,
-      iconClassName: 'bg-error/10 text-error',
-      trend: 'acceso suspendido',
+      iconClassName: 'bg-warning/10 text-warning',
+      trend: 'sin acceso',
       trendUp: false,
     },
     {
@@ -224,7 +205,6 @@ export function PlatformUsersView() {
     { value: 'all', label: 'Todos los estados' },
     { value: 'ACTIVO', label: 'Activo' },
     { value: 'INACTIVO', label: 'Inactivo' },
-    { value: 'BLOQUEADO', label: 'Bloqueado' },
   ];
 
   return (
@@ -292,7 +272,7 @@ export function PlatformUsersView() {
             <TableBody dense={dense}>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                     Cargando...
                   </TableCell>
                 </TableRow>

@@ -26,12 +26,6 @@ export const platformRolesService = {
   async delete(uid: string): Promise<void> {
     await axiosInstance.delete(endpoints.admin.platform.roles.delete(uid));
   },
-  async syncPermissions(uid: string, permissions: string[]): Promise<PlatformRole> {
-    const res = await axiosInstance.put(endpoints.admin.platform.roles.syncPermissions(uid), {
-      permissions,
-    });
-    return res.data.data;
-  },
   async getPermissions(): Promise<PlatformPermission[]> {
     const res = await axiosInstance.get(endpoints.admin.platform.permissions);
     return res.data.data ?? [];

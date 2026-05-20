@@ -255,8 +255,13 @@ export function usePartners(filters: PartnersFilters = {}) {
   // ── Materials mutations ─────────────────────────────────────────────────
 
   const updateMaterialMutation = useMutation({
-    mutationFn: ({ uid, data }: { uid: string; data: { title?: string; description?: string; type?: string; is_active?: boolean } }) =>
-      partnersService.materials.update(uid, data),
+    mutationFn: ({
+      uid,
+      data,
+    }: {
+      uid: string;
+      data: { title?: string; description?: string; type?: string; is_active?: boolean };
+    }) => partnersService.materials.update(uid, data),
     meta: { successMessage: 'Material actualizado correctamente' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.partners.materials.list });

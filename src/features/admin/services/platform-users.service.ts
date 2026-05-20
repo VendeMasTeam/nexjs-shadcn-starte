@@ -22,12 +22,14 @@ export const platformUsersService = {
   async delete(uid: string): Promise<void> {
     await axiosInstance.delete(endpoints.admin.platform.users.delete(uid));
   },
-  async lock(uid: string): Promise<PlatformUser> {
-    const res = await axiosInstance.post(endpoints.admin.platform.users.lock(uid));
+  async assignRole(uid: string, roleUid: string): Promise<PlatformUser> {
+    const res = await axiosInstance.post(endpoints.admin.platform.users.assignRole(uid), {
+      role_uid: roleUid,
+    });
     return res.data.data;
   },
-  async unlock(uid: string): Promise<PlatformUser> {
-    const res = await axiosInstance.post(endpoints.admin.platform.users.unlock(uid));
+  async removeRole(uid: string, roleUid: string): Promise<PlatformUser> {
+    const res = await axiosInstance.delete(endpoints.admin.platform.users.removeRole(uid, roleUid));
     return res.data.data;
   },
 };

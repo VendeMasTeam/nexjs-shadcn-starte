@@ -22,13 +22,17 @@ import type { PlatformPermission, PlatformRole, PlatformRolePayload } from '../t
 
 const roleSchema = z.object({
   name: z.string().min(1, 'Requerido'),
-  description: z.string().min(1, 'Requerido'),
-  permissions: z.array(z.string()),
+  key: z
+    .string()
+    .min(1, 'Requerido')
+    .regex(/^[a-z0-9_]+$/, 'Solo minúsculas, números y _'),
+  description: z.string().optional(),
+  permission_uids: z.array(z.string()),
 });
 
 type RoleFormData = z.infer<typeof roleSchema>;
 
-const DEFAULTS: RoleFormData = { name: '', description: '', permissions: [] };
+const DEFAULTS: RoleFormData = { name: '', key: '', description: '', permission_uids: [] };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -59,38 +63,48 @@ export function PlatformRoleFormDrawer({
     formState: { isSubmitting },
   } = useForm<RoleFormData>({ resolver: zodResolver(roleSchema), defaultValues: DEFAULTS });
 
-  const selected = useWatch({ control, name: 'permissions' });
+  const selectedUids = useWatch({ control, name: 'permission_uids' });
 
   useEffect(() => {
     if (open) {
       reset(
         role
-          ? { name: role.name, description: role.description, permissions: role.permissions }
+          ? {
+              name: role.name,
+              key: role.key,
+              description: role.description ?? '',
+              permission_uids: role.permissions.map((p) => p.uid),
+            }
           : DEFAULTS
       );
     }
   }, [open, role, reset]);
 
+  // Group permissions by module
   const grouped = useMemo(() => {
     const map = new Map<string, PlatformPermission[]>();
     for (const p of permissions) {
-      const list = map.get(p.group) ?? [];
+      const list = map.get(p.module) ?? [];
       list.push(p);
-      map.set(p.group, list);
+      map.set(p.module, list);
     }
     return Array.from(map.entries());
   }, [permissions]);
 
   const toggle = (uid: string) => {
     setValue(
-      'permissions',
-      selected.includes(uid) ? selected.filter((x) => x !== uid) : [...selected, uid]
+      'permission_uids',
+      selectedUids.includes(uid) ? selectedUids.filter((x) => x !== uid) : [...selectedUids, uid]
     );
   };
 
   const onSubmit = async (data: RoleFormData) => {
     if (isEditing) {
-      await onUpdate(role.uid, data);
+      await onUpdate(role.uid, {
+        name: data.name,
+        description: data.description,
+        permission_uids: data.permission_uids,
+      });
     } else {
       await onCreate(data);
     }
@@ -119,9 +133,16 @@ export function PlatformRoleFormDrawer({
               />
               <FormInput
                 control={control}
+                name="key"
+                label="Clave (key)"
+                required
+                placeholder="Ej. support_n1"
+                disabled={isEditing}
+              />
+              <FormInput
+                control={control}
                 name="description"
                 label="Descripción"
-                required
                 placeholder="Descripción del rol"
               />
             </div>
@@ -130,22 +151,22 @@ export function PlatformRoleFormDrawer({
               <div>
                 <h3 className="text-sm font-semibold mb-3">Permisos</h3>
                 <div className="space-y-5">
-                  {grouped.map(([group, perms]) => (
-                    <div key={group}>
+                  {grouped.map(([module, perms]) => (
+                    <div key={module}>
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        {group}
+                        {module}
                       </p>
                       <div className="grid grid-cols-1 gap-2">
                         {perms.map((p) => (
                           <div key={p.uid} className="flex items-start gap-2.5">
                             <Checkbox
                               id={p.uid}
-                              checked={selected.includes(p.uid)}
+                              checked={selectedUids.includes(p.uid)}
                               onCheckedChange={() => toggle(p.uid)}
                               className="mt-0.5"
                             />
                             <label htmlFor={p.uid} className="text-sm cursor-pointer leading-snug">
-                              <span className="font-medium">{p.name}</span>
+                              <span className="font-medium">{p.action}</span>
                               {p.description && (
                                 <span className="block text-xs text-muted-foreground">
                                   {p.description}

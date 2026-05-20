@@ -83,12 +83,7 @@ export function MaterialCard({ material, onEdit, onDelete }: Props) {
         Descargar
       </Button>
       {onEdit && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full mt-1"
-          onClick={onEdit}
-        >
+        <Button variant="outline" size="sm" className="w-full mt-1" onClick={onEdit}>
           <Icon name="Pencil" size={14} />
           Editar
         </Button>
