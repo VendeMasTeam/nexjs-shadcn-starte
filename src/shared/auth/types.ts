@@ -19,8 +19,16 @@ export type Module = {
   permissions: string[];
 };
 
+export type TenantInfo = {
+  uid: string;
+  name: string;
+  plan: string;
+  logo_url: string | null;
+};
+
 export type AuthState = {
   user: UserType;
+  tenant: TenantInfo | null;
   loading: boolean;
   permissions: string[];
   modules: Module[];
@@ -28,6 +36,7 @@ export type AuthState = {
 
 export type AuthContextValue = {
   user: UserType;
+  tenant: TenantInfo | null;
   loading: boolean;
   authenticated: boolean;
   unauthenticated: boolean;
@@ -47,7 +56,7 @@ export type InitPermissions = {
 /** Full payload shape returned by POST /auth/init */
 export type InitPayload = {
   user: NonNullable<UserType> & { uid: string }; // user is guaranteed present on success
-  tenant?: Record<string, unknown>;
+  tenant?: TenantInfo;
   modules: Module[];
   localization?: {
     currency?: string;

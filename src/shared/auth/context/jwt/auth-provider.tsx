@@ -3,7 +3,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { init } from 'src/features/auth/services/auth.service';
 import { setCurrencyPreferences } from 'src/lib/currency';
-import type { AuthState, Module } from 'src/shared/auth/types';
+import type { AuthState, Module, TenantInfo } from 'src/shared/auth/types';
 
 import { AuthContext } from '../auth-context';
 import { isValidToken, setSession } from './utils';
@@ -18,6 +18,7 @@ function derivePermissions(modules: Module[]): string[] {
 export function AuthProvider({ children }: Props) {
   const [state, setState] = useState<AuthState>({
     user: null,
+    tenant: null,
     loading: true,
     permissions: [],
     modules: [],
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: Props) {
 
         const data = await init();
         const payload = data?.data ?? data;
-        const { user, modules, localization: loc, permissions: permsPayload } = payload;
+        const { user, modules, localization: loc, permissions: permsPayload, tenant } = payload;
 
         if (user) {
           // Set currency preferences from auth/init localization
@@ -49,6 +50,10 @@ export function AuthProvider({ children }: Props) {
             ? permsPayload.effective
             : derivePermissions(modules);
 
+          const tenantInfo: TenantInfo | null = tenant
+            ? { uid: tenant.uid, name: tenant.name, plan: tenant.plan, logo_url: tenant.logo_url }
+            : null;
+
           setState({
             user: {
               uid: user.uid,
@@ -56,26 +61,27 @@ export function AuthProvider({ children }: Props) {
               email: user.email ?? '',
               role: user.role,
               tenant_uid: user.tenant_uid,
-              tenant_plan: payload.tenant?.plan ?? '',
+              tenant_plan: tenant?.plan ?? '',
               two_factor_enabled: user.two_factor_enabled,
               permissions,
             },
+            tenant: tenantInfo,
             permissions,
             modules,
             loading: false,
           });
           return { permissions, modules, role: user.role };
         } else {
-          setState({ user: null, loading: false, permissions: [], modules: [] });
+          setState({ user: null, tenant: null, loading: false, permissions: [], modules: [] });
         }
       } else {
-        setState({ user: null, loading: false, permissions: [], modules: [] });
+        setState({ user: null, tenant: null, loading: false, permissions: [], modules: [] });
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.warn('[Auth] Session check failed:', (error as Error)?.message ?? 'Unknown error');
       }
-      setState({ user: null, loading: false, permissions: [], modules: [] });
+      setState({ user: null, tenant: null, loading: false, permissions: [], modules: [] });
     }
     return { permissions: [], modules: [], role: undefined };
   }, []);
@@ -95,6 +101,7 @@ export function AuthProvider({ children }: Props) {
   const memoizedValue = useMemo(
     () => ({
       user: state.user,
+      tenant: state.tenant,
       loading: state.loading,
       permissions: state.permissions,
       modules: state.modules,
@@ -103,7 +110,15 @@ export function AuthProvider({ children }: Props) {
       unauthenticated: state.user === null,
       checkUserSession,
     }),
-    [state.user, state.loading, state.permissions, state.modules, hasPermission, checkUserSession]
+    [
+      state.user,
+      state.tenant,
+      state.loading,
+      state.permissions,
+      state.modules,
+      hasPermission,
+      checkUserSession,
+    ]
   );
 
   return <AuthContext.Provider value={memoizedValue}>{children}</AuthContext.Provider>;
