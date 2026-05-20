@@ -16,7 +16,7 @@ type Props = {
 
 export function NavVertical({ navData, onClose }: Props) {
   const { navLayout, setNavLayout } = useUiStore();
-  const { user, tenant } = useAuthContext();
+  const { user } = useAuthContext();
   const initials = user?.name
     ? user.name
         .split(' ')
@@ -66,35 +66,6 @@ export function NavVertical({ navData, onClose }: Props) {
           </button>
         )}
       </div>
-
-      {/* Tenant info */}
-      {tenant && (
-        <div
-          className={`shrink-0 border-b border-sidebar-border ${isMini ? 'flex justify-center py-2 px-2' : 'flex items-center gap-2 px-4 py-2.5'}`}
-        >
-          {isMini ? (
-            <span className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-widest">
-              {tenant.name.slice(0, 2).toUpperCase()}
-            </span>
-          ) : (
-            <>
-              <div className="size-6 rounded bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-primary">
-                  {tenant.name.slice(0, 2).toUpperCase()}
-                </span>
-              </div>
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-xs font-semibold text-sidebar-foreground truncate leading-tight">
-                  {tenant.name}
-                </span>
-              </div>
-              <span className="text-[10px] font-semibold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0 uppercase tracking-wide">
-                {tenant.plan}
-              </span>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Nav Links */}
       <div className="flex-1 min-h-0 w-full relative">

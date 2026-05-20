@@ -29,7 +29,11 @@ function normalizeActivity(raw: Record<string, unknown>): Activity {
   };
 }
 
-export function useActivities(contactUid?: string, filters?: { status?: string; search?: string }) {
+export function useActivities(
+  contactUid?: string,
+  filters?: { status?: string; search?: string },
+  entityType?: 'contact' | 'account'
+) {
   const queryClient = useQueryClient();
   const pagination = usePaginationParams();
 
@@ -46,7 +50,7 @@ export function useActivities(contactUid?: string, filters?: { status?: string; 
   const { data: activities = [], isLoading } = useQuery({
     queryKey: [...queryKey, serverParams],
     queryFn: async () => {
-      const res = await productivityService.listActivities(contactUid, serverParams);
+      const res = await productivityService.listActivities(contactUid, serverParams, entityType);
       const meta = extractPaginationMeta(res);
       if (meta) pagination.setTotal(meta.total);
       const raw = ((res as unknown as { data?: Record<string, unknown>[] }).data ?? []) as Record<

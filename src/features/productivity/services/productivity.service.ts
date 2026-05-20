@@ -26,10 +26,20 @@ export interface ActivityUpdatePayload {
 export const productivityService = {
   // ─── Activities ─────────────────────────────────────────────────────────
 
-  listActivities: async (contactUid?: string, params?: PaginationParams): Promise<Activity[]> => {
+  listActivities: async (
+    contactUid?: string,
+    params?: PaginationParams,
+    entityType?: 'contact' | 'account'
+  ): Promise<Activity[]> => {
     const url = endpoints.productivity.activities.list;
+    const entityParams =
+      contactUid && entityType
+        ? { entity_type: entityType, entity_uid: contactUid }
+        : contactUid
+          ? { entity_type: 'contact', entity_uid: contactUid }
+          : {};
     const res = await axiosInstance.get(url, {
-      params: { ...(contactUid ? { contact_uid: contactUid } : {}), ...params },
+      params: { ...entityParams, ...params },
     });
     return res.data; // full response — callers extract .data for the array
   },

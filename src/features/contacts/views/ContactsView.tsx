@@ -50,16 +50,6 @@ export const ContactsView = () => {
 
   const empresas = useMemo(() => contactos.filter((c) => c.type === 'company'), [contactos]);
 
-  const counts = useMemo(
-    () => ({
-      ALL: contactos.length,
-      company: contactos.filter((c) => c.type === 'company').length,
-      person: contactos.filter((c) => c.type === 'person').length,
-      government: contactos.filter((c) => c.type === 'government').length,
-    }),
-    [contactos]
-  );
-
   const handleOpenNew = () => {
     setSelectedContacto(null);
     setIsDrawerOpen(true);
@@ -132,13 +122,11 @@ export const ContactsView = () => {
             }`}
           >
             {label}
-            <span
-              className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${
-                tab === value ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {counts[value]}
-            </span>
+            {tab === value && (
+              <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                {pagination.total}
+              </span>
+            )}
           </button>
         ))}
       </div>

@@ -15,11 +15,17 @@ import type { ActivityStatus, ActivityType } from '../types/productivity.types';
 export const ActivitiesTab = ({
   contactoId,
   contactoNombre,
+  entityType = 'contact',
 }: {
   contactoId: string;
   contactoNombre: string;
+  entityType?: 'contact' | 'account';
 }) => {
-  const { data, isLoading, addActivity, updateStatus } = useActivities(contactoId);
+  const { data, isLoading, addActivity, updateStatus } = useActivities(
+    contactoId,
+    undefined,
+    entityType
+  );
   const [type, setType] = useState<ActivityType>('task');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

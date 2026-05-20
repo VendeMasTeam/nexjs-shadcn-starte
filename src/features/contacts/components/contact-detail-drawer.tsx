@@ -63,7 +63,11 @@ export const ContactDetailDrawer: React.FC<ContactDetailDrawerProps> = ({
 
           {tab === 'actividades' && contacto && (
             <div className="-mx-6 -my-5 h-[calc(100%+40px)]">
-              <ActivitiesTab contactoId={contacto.uid} contactoNombre={contacto.name} />
+              <ActivitiesTab
+                contactoId={contacto.uid}
+                contactoNombre={contacto.name}
+                entityType={contacto.type === 'company' ? 'account' : 'contact'}
+              />
             </div>
           )}
 

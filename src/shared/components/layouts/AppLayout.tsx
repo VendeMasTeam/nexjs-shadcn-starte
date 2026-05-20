@@ -10,6 +10,7 @@ import { useUiStore } from 'src/store/ui.store';
 import { SettingsDrawer } from '../settings';
 import { LayoutSection } from './core/layout-section';
 import { HeaderSection } from './dashboard/header-section';
+import { HeaderTenantButton } from './dashboard/header-tenant-button';
 import { HeaderUserButton } from './dashboard/header-user-button';
 import { NavMobile } from './dashboard/nav-mobile';
 import { NavVertical } from './dashboard/nav-vertical';
@@ -19,7 +20,7 @@ type Props = {
 };
 
 export function AppLayout({ children }: Props) {
-  const { user } = useAuthContext();
+  const { user, tenant } = useAuthContext();
   const { isMobileNavOpen, toggleMobileNav } = useUiStore();
   const pathname = usePathname();
 
@@ -39,7 +40,7 @@ export function AppLayout({ children }: Props) {
       headerSection={
         <HeaderSection
           slots={{
-            left: null,
+            left: <HeaderTenantButton tenant={tenant} />,
             right: (
               <div className="flex items-center gap-2">
                 <SettingsDrawer />
