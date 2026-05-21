@@ -80,6 +80,7 @@ export interface ContactPayload {
   industry?: string;
   company_size?: CompanySize;
   website?: string;
+  address?: string;
   // Person
   id_number?: string;
   job_title?: string;

@@ -79,11 +79,11 @@ export const contactsService = {
 
   addRelacion: async (entityAUid: string, entityBUid: string, role?: string): Promise<void> => {
     await axiosInstance.post(endpoints.relations.create, {
-      parent_type: 'contact',
-      parent_uid: entityAUid,
-      child_type: 'contact',
-      child_uid: entityBUid,
-      role: role ?? null,
+      from_type: 'contact',
+      from_uid: entityAUid,
+      to_type: 'contact',
+      to_uid: entityBUid,
+      relation_type: role ?? 'related',
     });
   },
 };

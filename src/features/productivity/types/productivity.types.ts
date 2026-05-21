@@ -84,12 +84,14 @@ export interface Document {
 // ─── Payload types (for create/update operations) ──────────────────────────────
 
 export interface ActivityPayload {
-  contact_uid?: string;
-  contact_name?: string;
   type: ActivityType;
   title: string;
   description?: string;
   due_date: string;
+  status?: string;
+  entity_type?: 'contact' | 'account';
+  entity_uid?: string;
+  contact_uid?: string; // legacy — maps to entity_type=contact in service
   assigned_to_name?: string;
   source?: ActivitySource;
   source_uid?: string;

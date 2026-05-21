@@ -50,8 +50,18 @@ export const productivityService = {
   },
 
   createActivity: async (payload: ActivityPayload): Promise<Activity> => {
-    const body = { ...payload, scheduled_at: payload.due_date };
-    delete (body as Record<string, unknown>).due_date;
+    const body: Record<string, unknown> = {
+      type: payload.type,
+      title: payload.title,
+      description: payload.description,
+      scheduled_at: payload.due_date,
+      status: payload.status ?? 'pending',
+      ...(payload.entity_type && payload.entity_uid
+        ? { entity_type: payload.entity_type, entity_uid: payload.entity_uid }
+        : payload.contact_uid
+          ? { entity_type: 'contact', entity_uid: payload.contact_uid }
+          : {}),
+    };
     const res = await axiosInstance.post(endpoints.productivity.activities.create, body);
     return (res.data?.data ?? res.data) as Activity;
   },

@@ -14,11 +14,9 @@ import type { ActivityStatus, ActivityType } from '../types/productivity.types';
 
 export const ActivitiesTab = ({
   contactoId,
-  contactoNombre,
   entityType = 'contact',
 }: {
   contactoId: string;
-  contactoNombre: string;
   entityType?: 'contact' | 'account';
 }) => {
   const { data, isLoading, addActivity, updateStatus } = useActivities(
@@ -39,8 +37,8 @@ export const ActivitiesTab = ({
       title: title.trim(),
       description: description.trim() || undefined,
       type,
-      contact_uid: contactoId,
-      contact_name: contactoNombre,
+      entity_type: entityType,
+      entity_uid: contactoId,
       due_date: dueDate,
     });
     setIsSubmitting(false);

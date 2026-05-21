@@ -17,14 +17,19 @@ function normalizeContact(raw: Record<string, unknown>): Contact {
   const type: ContactType =
     (raw.type as string) === 'company'
       ? 'company'
-      : (raw.type as string) === 'government'
+      : (raw.is_public_entity as boolean) === true || (raw.type as string) === 'government'
         ? 'government'
         : 'person';
+
+  // Contacts return first_name + last_name; accounts return name directly
+  const name =
+    (raw.name as string) ||
+    `${(raw.first_name as string) ?? ''} ${(raw.last_name as string) ?? ''}`.trim();
 
   const base = {
     uid: raw.uid as string,
     type,
-    name: (raw.name as string) ?? '',
+    name,
     email: (raw.email as string) ?? '',
     phone: raw.phone as string | undefined,
     country: (raw.country as string) ?? '',
@@ -38,7 +43,7 @@ function normalizeContact(raw: Record<string, unknown>): Contact {
     return {
       ...base,
       type: 'company' as const,
-      tax_id: raw.tax_id as string | undefined,
+      tax_id: (raw.document as string) ?? (raw.tax_id as string) ?? undefined,
       industry: raw.industry as string | undefined,
       company_size: raw.company_size as string | undefined,
       website: raw.website as string | undefined,
@@ -59,8 +64,8 @@ function normalizeContact(raw: Record<string, unknown>): Contact {
     ...base,
     type: 'person' as const,
     id_number: raw.id_number as string | undefined,
-    job_title: raw.job_title as string | undefined,
-    company_uid: raw.company_uid as string | undefined,
+    job_title: (raw.job_title as string) ?? (raw.position as string) ?? undefined,
+    company_uid: (raw.account_uid as string) ?? (raw.company_uid as string) ?? undefined,
     company_name: raw.company_name as string | undefined,
   } as unknown as Contact;
 }
@@ -77,15 +82,14 @@ const resolveApi = (type: ContactType): 'accounts' | 'contacts' =>
 export function buildCompanyPayload(form: ContactPayload): Record<string, unknown> {
   return {
     name: form.name,
+    document: form.tax_id, // required by backend; tax_id is accepted as alias
     email: form.email,
-    phone: form.phone,
-    country: form.country,
-    city: form.city,
+    phone: form.phone || undefined,
     status: form.status,
-    tax_id: form.tax_id,
-    industry: form.industry,
-    company_size: form.company_size,
-    website: form.website,
+    industry: form.industry || undefined,
+    website: form.website || undefined,
+    address: form.address || undefined,
+    // country, city, company_size ignored by backend — omitted intentionally
   };
 }
 

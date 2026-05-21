@@ -36,18 +36,26 @@ const NAV_CONFIG: StaticSection[] = [
     moduleKey: 'dashboard',
     subheader: 'General',
     order: 1,
-    items: [{ title: 'Dashboard', path: paths.dashboard.root, icon: 'LayoutDashboard' }],
+    items: [
+      {
+        title: 'Dashboard',
+        path: paths.dashboard.root,
+        icon: 'LayoutDashboard',
+        itemKey: 'dashboard',
+      },
+    ],
   },
   {
     moduleKey: 'inventory',
     subheader: 'Inventario',
     order: 2,
     items: [
-      { title: 'Productos', path: paths.inventory.products, icon: 'Package' },
+      { title: 'Productos', path: paths.inventory.products, icon: 'Package', itemKey: 'products' },
       {
         title: 'Bodegas',
         path: paths.inventory.warehouses.root,
         icon: 'Warehouse',
+        itemKey: 'warehouses',
         children: [
           {
             title: 'Vista General',
@@ -61,7 +69,12 @@ const NAV_CONFIG: StaticSection[] = [
           },
         ],
       },
-      { title: 'Stock & Disponibilidad', path: paths.inventory.stock, icon: 'BarChart2' },
+      {
+        title: 'Stock & Disponibilidad',
+        path: paths.inventory.stock,
+        icon: 'BarChart2',
+        itemKey: 'stock',
+      },
       { title: 'Categorías', path: paths.inventory.categories, icon: 'Tag' },
     ],
   },
@@ -70,13 +83,38 @@ const NAV_CONFIG: StaticSection[] = [
     subheader: 'Ventas',
     order: 3,
     items: [
-      { title: 'Pipeline', path: paths.sales.pipeline, icon: 'KanbanSquare' },
-      { title: 'Catálogo', path: paths.sales.catalog, icon: 'BookOpen' },
-      { title: 'Dashboard Financiero', path: paths.sales.finance.root, icon: 'PieChart' },
-      { title: 'Cotizaciones', path: paths.sales.finance.quotation, icon: 'FileText' },
-      { title: 'Facturas', path: paths.sales.finance.invoice, icon: 'Receipt' },
-      { title: 'Reglas de Crédito', path: paths.sales.finance.creditRules, icon: 'ShieldCheck' },
-      { title: 'Multimoneda', path: paths.sales.finance.multiCurrency, icon: 'DollarSign' },
+      { title: 'Pipeline', path: paths.sales.pipeline, icon: 'KanbanSquare', itemKey: 'pipeline' },
+      { title: 'Catálogo', path: paths.sales.catalog, icon: 'BookOpen', itemKey: 'catalog' },
+      {
+        title: 'Dashboard Financiero',
+        path: paths.sales.finance.root,
+        icon: 'PieChart',
+        itemKey: 'finance-dashboard',
+      },
+      {
+        title: 'Cotizaciones',
+        path: paths.sales.finance.quotation,
+        icon: 'FileText',
+        itemKey: 'quotations',
+      },
+      {
+        title: 'Facturas',
+        path: paths.sales.finance.invoice,
+        icon: 'Receipt',
+        itemKey: 'invoices',
+      },
+      {
+        title: 'Reglas de Crédito',
+        path: paths.sales.finance.creditRules,
+        icon: 'ShieldCheck',
+        itemKey: 'credit-rules',
+      },
+      {
+        title: 'Multimoneda',
+        path: paths.sales.finance.multiCurrency,
+        icon: 'DollarSign',
+        itemKey: 'multi-currency',
+      },
     ],
   },
   {
@@ -84,8 +122,13 @@ const NAV_CONFIG: StaticSection[] = [
     subheader: 'Reportes',
     order: 4,
     items: [
-      { title: 'Inventario', path: paths.reports.inventory, icon: 'LayoutDashboard' },
-      { title: 'Ventas', path: paths.reports.sales, icon: 'PieChart' },
+      {
+        title: 'Inventario',
+        path: paths.reports.inventory,
+        icon: 'LayoutDashboard',
+        itemKey: 'inventory-report',
+      },
+      { title: 'Ventas', path: paths.reports.sales, icon: 'PieChart', itemKey: 'sales-report' },
     ],
   },
   {
@@ -93,34 +136,82 @@ const NAV_CONFIG: StaticSection[] = [
     subheader: 'Incentivos y Comisiones',
     order: 5,
     items: [
-      { title: 'Planes de Comisión', path: paths.hr.commissions.plans, icon: 'ClipboardList' },
+      {
+        title: 'Planes de Comisión',
+        path: paths.hr.commissions.plans,
+        icon: 'ClipboardList',
+        itemKey: 'plans',
+      },
       {
         title: 'Asignación a Vendedores',
         path: paths.hr.commissions.assignment,
         icon: 'UserCheck',
+        itemKey: 'assignment',
       },
-      { title: 'Mi Dashboard', path: paths.hr.commissions.dashboard, icon: 'LayoutDashboard' },
-      { title: 'Simulador', path: paths.hr.commissions.simulator, icon: 'Calculator' },
-      { title: 'Historial y Liquidación', path: paths.hr.commissions.history, icon: 'History' },
+      {
+        title: 'Mi Dashboard',
+        path: paths.hr.commissions.dashboard,
+        icon: 'LayoutDashboard',
+        itemKey: 'dashboard',
+      },
+      {
+        title: 'Simulador',
+        path: paths.hr.commissions.simulator,
+        icon: 'Calculator',
+        itemKey: 'simulator',
+      },
+      {
+        title: 'Historial y Liquidación',
+        path: paths.hr.commissions.history,
+        icon: 'History',
+        itemKey: 'history',
+      },
     ],
   },
   {
     moduleKey: 'projects',
     subheader: 'Proyectos',
     order: 6,
-    items: [{ title: 'Todos los Proyectos', path: paths.projects.root, icon: 'FolderKanban' }],
+    items: [
+      {
+        title: 'Todos los Proyectos',
+        path: paths.projects.root,
+        icon: 'FolderKanban',
+        itemKey: 'projects',
+      },
+    ],
   },
   {
     moduleKey: 'settings',
     subheader: 'Configuración',
     order: 7,
     items: [
-      { title: 'Usuarios', path: paths.settings.users, icon: 'Users' },
-      { title: 'Roles y Permisos', path: paths.settings.roles, icon: 'ShieldCheck' },
-      { title: 'Equipos y Cartera', path: paths.settings.teams, icon: 'UsersRound' },
-      { title: 'Campos Personalizados', path: paths.settings.customFields, icon: 'Sliders' },
-      { title: 'Localización', path: paths.settings.localization, icon: 'Globe' },
-      { title: 'Etiquetas (Tags)', path: paths.settings.tags, icon: 'Tag' },
+      { title: 'Usuarios', path: paths.settings.users, icon: 'Users', itemKey: 'users' },
+      {
+        title: 'Roles y Permisos',
+        path: paths.settings.roles,
+        icon: 'ShieldCheck',
+        itemKey: 'roles',
+      },
+      {
+        title: 'Equipos y Cartera',
+        path: paths.settings.teams,
+        icon: 'UsersRound',
+        itemKey: 'teams',
+      },
+      {
+        title: 'Campos Personalizados',
+        path: paths.settings.customFields,
+        icon: 'Sliders',
+        itemKey: 'custom-fields',
+      },
+      {
+        title: 'Localización',
+        path: paths.settings.localization,
+        icon: 'Globe',
+        itemKey: 'localization',
+      },
+      { title: 'Etiquetas (Tags)', path: paths.settings.tags, icon: 'Tag', itemKey: 'tags' },
       { title: 'Tipos de Documento', path: paths.settings.documentTypes, icon: 'FileText' },
     ],
   },
@@ -129,9 +220,19 @@ const NAV_CONFIG: StaticSection[] = [
     subheader: 'CRM',
     order: 8,
     items: [
-      { title: 'Directorio', path: paths.contacts.root, icon: 'Users' },
-      { title: 'Segmentación Dinámica', path: paths.contacts.segments, icon: 'Filter' },
-      { title: 'Agenda & Productividad', path: paths.schedule.root, icon: 'Calendar' },
+      { title: 'Directorio', path: paths.contacts.root, icon: 'Users', itemKey: 'contacts' },
+      {
+        title: 'Segmentación Dinámica',
+        path: paths.contacts.segments,
+        icon: 'Filter',
+        itemKey: 'segments',
+      },
+      {
+        title: 'Agenda & Productividad',
+        path: paths.schedule.root,
+        icon: 'Calendar',
+        itemKey: 'schedule',
+      },
       { title: 'Tareas', path: paths.schedule.tasks, icon: 'CheckSquare', gatedByModule: 'tasks' },
     ],
   },
@@ -151,8 +252,13 @@ const NAV_CONFIG: StaticSection[] = [
     subheader: 'Canales & Partners',
     order: 9,
     items: [
-      { title: 'Partners', path: paths.partners.root, icon: 'Handshake' },
-      { title: 'Oportunidades', path: paths.partners.opportunities, icon: 'ClipboardList' },
+      { title: 'Partners', path: paths.partners.root, icon: 'Handshake', itemKey: 'partners' },
+      {
+        title: 'Oportunidades',
+        path: paths.partners.opportunities,
+        icon: 'ClipboardList',
+        itemKey: 'opportunities',
+      },
       {
         title: 'Portal de Materiales',
         path: paths.partners.portal,
@@ -179,8 +285,18 @@ const NAV_CONFIG: StaticSection[] = [
     subheader: 'Inteligencia Competitiva',
     order: 12,
     items: [
-      { title: 'Battlecards', path: paths.intelligence.battlecards, icon: 'Swords' },
-      { title: 'Razones de Pérdida', path: paths.intelligence.lostReasons, icon: 'TrendingDown' },
+      {
+        title: 'Battlecards',
+        path: paths.intelligence.battlecards,
+        icon: 'Swords',
+        itemKey: 'battlecards',
+      },
+      {
+        title: 'Razones de Pérdida',
+        path: paths.intelligence.lostReasons,
+        icon: 'TrendingDown',
+        itemKey: 'lost-reasons',
+      },
     ],
   },
   {
