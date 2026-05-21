@@ -7,7 +7,64 @@
 // Used by RouteGuard to determine if a user can access a given path.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Module } from './types';
+import type { Module, ModuleItem } from './types';
+
+type ItemGate = { moduleKey: string; itemKey: string };
+
+/**
+ * Maps specific paths to their module + item key for item-level gating.
+ * Paths are matched longest-first so /sales/finance/multi-currency beats /sales/finance.
+ */
+const ROUTE_ITEM_GATE: Record<string, ItemGate> = {
+  '/sales/finance/multi-currency': { moduleKey: 'sales', itemKey: 'multi-currency' },
+  '/sales/finance/credit-rules': { moduleKey: 'sales', itemKey: 'credit-rules' },
+  '/sales/finance/quotation': { moduleKey: 'sales', itemKey: 'quotations' },
+  '/sales/finance/invoice': { moduleKey: 'sales', itemKey: 'invoices' },
+  '/sales/finance': { moduleKey: 'sales', itemKey: 'finance-dashboard' },
+  '/sales/pipeline': { moduleKey: 'sales', itemKey: 'pipeline' },
+  '/sales/catalog': { moduleKey: 'sales', itemKey: 'catalog' },
+  '/inventory/products': { moduleKey: 'inventory', itemKey: 'products' },
+  '/inventory/warehouses': { moduleKey: 'inventory', itemKey: 'warehouses' },
+  '/inventory/stock': { moduleKey: 'inventory', itemKey: 'stock' },
+  '/contacts/segments': { moduleKey: 'crm', itemKey: 'segments' },
+  '/contacts': { moduleKey: 'crm', itemKey: 'contacts' },
+  '/schedule': { moduleKey: 'crm', itemKey: 'schedule' },
+  '/hr/commissions/plans': { moduleKey: 'incentives', itemKey: 'plans' },
+  '/hr/commissions/assignment': { moduleKey: 'incentives', itemKey: 'assignment' },
+  '/hr/commissions/dashboard': { moduleKey: 'incentives', itemKey: 'dashboard' },
+  '/hr/commissions/simulator': { moduleKey: 'incentives', itemKey: 'simulator' },
+  '/hr/commissions/history': { moduleKey: 'incentives', itemKey: 'history' },
+  '/reports/inventory': { moduleKey: 'reports', itemKey: 'inventory-report' },
+  '/reports/sales': { moduleKey: 'reports', itemKey: 'sales-report' },
+  '/settings/users': { moduleKey: 'settings', itemKey: 'users' },
+  '/settings/roles': { moduleKey: 'settings', itemKey: 'roles' },
+  '/settings/teams': { moduleKey: 'settings', itemKey: 'teams' },
+  '/settings/custom-fields': { moduleKey: 'settings', itemKey: 'custom-fields' },
+  '/settings/localization': { moduleKey: 'settings', itemKey: 'localization' },
+  '/settings/tags': { moduleKey: 'settings', itemKey: 'tags' },
+  '/partners/opportunities': { moduleKey: 'partners', itemKey: 'opportunities' },
+  '/partners/portal': { moduleKey: 'partners', itemKey: 'portal' },
+  '/partners': { moduleKey: 'partners', itemKey: 'partners' },
+  '/intelligence/battlecards': { moduleKey: 'intelligence', itemKey: 'battlecards' },
+  '/intelligence/lost-reasons': { moduleKey: 'intelligence', itemKey: 'lost-reasons' },
+  '/automation/rules': { moduleKey: 'automation', itemKey: 'rules' },
+  '/automation/assignment': { moduleKey: 'automation', itemKey: 'assignment' },
+  '/purchases': { moduleKey: 'purchases', itemKey: 'orders' },
+};
+
+function getItemGateForPath(path: string): ItemGate | undefined {
+  const keys = Object.keys(ROUTE_ITEM_GATE).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (path.startsWith(key)) return ROUTE_ITEM_GATE[key];
+  }
+  return undefined;
+}
+
+function isItemEnabled(items: ModuleItem[] | undefined, itemKey: string): boolean {
+  if (!items?.length) return true;
+  const item = items.find((i) => i.key === itemKey);
+  return item ? item.enabled : true;
+}
 
 /** Maps a route path prefix to the backend module key */
 const ROUTE_MODULE_MAP: Record<string, string> = {
@@ -101,7 +158,13 @@ export function canAccessPath(path: string, modules: Module[], userRole?: string
   if (!moduleKey) return false;
 
   const mod = modules.find((m) => m.key === moduleKey);
-  return mod?.enabled === true;
+  if (mod?.enabled !== true) return false;
+
+  // Item-level check — if the path maps to a specific item, verify it's enabled too
+  const gate = getItemGateForPath(path);
+  if (gate) return isItemEnabled(mod.items, gate.itemKey);
+
+  return true;
 }
 
 /**
