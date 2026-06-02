@@ -7,6 +7,9 @@
     "node": ">=24",
     "pnpm": ">=11"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["msw", "sharp", "unrs-resolver"]
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
