@@ -84,6 +84,23 @@ export function formatCompact(
   }
 }
 
+export function formatCompactNumber(
+  value: number,
+  options?: { locale?: string; scope?: CurrencyScope }
+): string {
+  const prefs = getCurrencyPreferences(options?.scope ?? 'tenant');
+  const locale = options?.locale ?? prefs.locale;
+
+  try {
+    return new Intl.NumberFormat(locale, {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(value ?? 0);
+  } catch {
+    return `${value ?? 0}`;
+  }
+}
+
 export function formatMoney(
   value: number,
   options?: {

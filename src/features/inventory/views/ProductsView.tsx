@@ -3,6 +3,7 @@
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { endpoints } from 'src/lib/axios';
+import { formatCompactNumber } from 'src/lib/currency';
 import { downloadExport } from 'src/lib/export-service';
 import { cn } from 'src/lib/utils';
 import { ExportDropdown } from 'src/shared/components/export/ExportDropdown';
@@ -105,7 +106,7 @@ export function ProductsView() {
         },
         {
           title: 'Stock físico total',
-          value: summary.total_physical_stock?.toLocaleString() ?? '0',
+          value: formatCompactNumber(summary.total_physical_stock ?? 0),
           badge: 'unidades en sistema',
           icon: <Icon name="Box" size={18} />,
           iconClassName: 'bg-info/10 text-info',
@@ -163,10 +164,7 @@ export function ProductsView() {
       columnHelper.accessor('is_active', {
         header: 'Activo',
         cell: (info) => (
-          <Badge
-            variant={info.getValue() ? 'soft' : 'outline'}
-            color={info.getValue() ? 'success' : 'default'}
-          >
+          <Badge variant="soft" color={info.getValue() ? 'success' : 'default'}>
             {info.getValue() ? 'Activo' : 'Inactivo'}
           </Badge>
         ),

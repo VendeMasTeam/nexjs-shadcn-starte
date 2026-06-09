@@ -31,7 +31,7 @@ export function useCategories(filters?: { search?: string; per_page?: number }) 
   });
 
   const createCategory = useMutation({
-    mutationFn: (payload: { name: string; key: string; description?: string }) =>
+    mutationFn: (payload: { name: string; description?: string }) =>
       inventoryStockService.createCategory(payload),
     meta: { successMessage: 'Categoría creada' },
     onSuccess: () => {
@@ -45,7 +45,7 @@ export function useCategories(filters?: { search?: string; per_page?: number }) 
       payload,
     }: {
       uid: string;
-      payload: { name?: string; key?: string; description?: string };
+      payload: { name?: string; description?: string };
     }) => inventoryStockService.updateCategory(uid, payload),
     meta: { successMessage: 'Categoría actualizada' },
     onSuccess: () => {

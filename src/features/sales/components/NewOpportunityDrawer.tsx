@@ -19,6 +19,7 @@ import {
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
 import { Textarea } from 'src/shared/components/ui/textarea';
+import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
 
 // ─── Minimal creation payload — matches backend POST opportunity ──────────────
 export interface NewOpportunityPayload {
@@ -29,6 +30,7 @@ export interface NewOpportunityPayload {
   description?: string;
   currency?: string;
   email?: string;
+  lead_origin?: string;
   entity_type?: string;
   entity_uid?: string;
 }
@@ -41,6 +43,7 @@ interface EditOpportunityData {
   expected_close_date: string;
   description?: string;
   email?: string;
+  lead_origin?: string;
   custom_fields?: {
     custom_field_uid: string;
     key: string;
@@ -70,6 +73,11 @@ export function NewOpportunityDrawer({
 }: NewOpportunityDrawerProps) {
   const activeStages = stages.filter((s) => s.is_active && !s.is_won && !s.is_lost);
   const defaultStageUid = activeStages[0]?.uid ?? '';
+  const { leadOrigins } = useTenantOptions();
+  const leadOriginOptions = (leadOrigins.data ?? []).map((o: { key: string; name: string }) => ({
+    value: o.key,
+    label: o.name,
+  }));
 
   // Initialize form from editing data — runs once per drawer open via key remount
   const initialForm =
@@ -81,6 +89,7 @@ export function NewOpportunityDrawer({
           expected_close_date: editingData.expected_close_date || '',
           description: editingData.description || '',
           email: editingData.email || '',
+          lead_origin: editingData.lead_origin || '',
         }
       : {
           title: '',
@@ -89,6 +98,7 @@ export function NewOpportunityDrawer({
           expected_close_date: '',
           description: '',
           email: '',
+          lead_origin: '',
         };
 
   const customFieldsRef = useRef<CustomFieldsSectionHandle>(null);
@@ -131,6 +141,7 @@ export function NewOpportunityDrawer({
         stage_uid: form.stage_uid || activeStages[0]?.uid,
         description: form.description.trim() || undefined,
         email: form.email.trim() || undefined,
+        lead_origin: form.lead_origin || undefined,
       };
 
       if (isEditing && editingData) {
@@ -192,6 +203,15 @@ export function NewOpportunityDrawer({
                 value={form.email}
                 onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                 error={errors.email}
+              />
+
+              <SelectField
+                label="Origen del Lead (Opcional)"
+                options={leadOriginOptions}
+                value={form.lead_origin}
+                onChange={(v) => setForm((p) => ({ ...p, lead_origin: v as string }))}
+                placeholder="¿Cómo llegó este lead?"
+                clearable
               />
             </div>
 

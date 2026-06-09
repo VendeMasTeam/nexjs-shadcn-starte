@@ -103,7 +103,13 @@ export function SelectField({
         </label>
       )}
 
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) onSearch?.('');
+        }}
+      >
         <PopoverTrigger asChild disabled={disabled}>
           <button
             id={id}

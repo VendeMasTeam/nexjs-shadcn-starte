@@ -4,6 +4,7 @@ export interface Opportunity {
   uid: string;
   title: string;
   email?: string;
+  lead_origin?: string;
   amount: number;
   currency?: string;
   expected_close_date: string;

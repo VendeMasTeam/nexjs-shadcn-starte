@@ -388,6 +388,15 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
               <span className="text-foreground font-medium">{opportunity.email}</span>
             </div>
           )}
+          {opportunity.lead_origin && (
+            <div className="flex items-center gap-2 text-body2">
+              <Icon name="Radio" size={13} className="text-muted-foreground shrink-0" />
+              <span className="text-muted-foreground">Origen:</span>
+              <span className="text-foreground font-medium capitalize">
+                {opportunity.lead_origin.replace(/_/g, ' ')}
+              </span>
+            </div>
+          )}
         </div>
         {!isTerminal && (
           <Button
@@ -602,6 +611,7 @@ export function OpportunityPanel({
                 expected_close_date: editingOpportunity.expected_close_date,
                 description: editingOpportunity.description,
                 email: editingOpportunity.email,
+                lead_origin: editingOpportunity.lead_origin,
                 custom_fields: editingOpportunity.custom_fields,
               }
             : null

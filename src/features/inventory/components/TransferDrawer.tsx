@@ -17,34 +17,92 @@ import { Input } from 'src/shared/components/ui';
 import { useDebounce } from 'use-debounce';
 
 import { useProducts } from '../hooks/use-products';
+import { useWarehouses } from '../hooks/use-warehouses';
 import { inventoryStockService } from '../services/inventory-stock.service';
-import type { Warehouse } from '../types/inventory.types';
+import type { InventoryMasterItem } from '../types/inventory.types';
 
 interface TransferDrawerProps {
   open: boolean;
   onClose: () => void;
-  warehouses: Warehouse[];
   onSuccess?: () => void;
 }
 
-export function TransferDrawer({ open, onClose, warehouses, onSuccess }: TransferDrawerProps) {
+export function TransferDrawer({ open, onClose, onSuccess }: TransferDrawerProps) {
   const [productUid, setProductUid] = useState('');
+  const [productCache, setProductCache] = useState<InventoryMasterItem | null>(null);
   const [fromWarehouseUid, setFromWarehouseUid] = useState('');
+  const [fromWarehouseLabel, setFromWarehouseLabel] = useState('');
   const [toWarehouseUid, setToWarehouseUid] = useState('');
+  const [toWarehouseLabel, setToWarehouseLabel] = useState('');
   const [quantity, setQuantity] = useState('');
   const [comment, setComment] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [debouncedProductSearch] = useDebounce(productSearch, 400);
+  const [warehouseSearch, setWarehouseSearch] = useState('');
+  const [debouncedWarehouseSearch] = useDebounce(warehouseSearch, 400);
 
   const { items: products } = useProducts({
     search: debouncedProductSearch || undefined,
     per_page: 15,
   });
 
-  const activeWarehouses = warehouses.filter((w) => w.is_active);
-  const selectedProduct = products.find((p) => p.uid === productUid);
+  const { items: warehouseItems } = useWarehouses({
+    search: debouncedWarehouseSearch || undefined,
+    per_page: 15,
+  });
+  const activeWarehouses = warehouseItems.filter((w) => w.is_active);
+
+  const getWarehouseOptions = (excludeUid?: string, cachedUid?: string, cachedLabel?: string) => {
+    const base = activeWarehouses
+      .filter((w) => w.uid !== excludeUid)
+      .map((w) => {
+        const stock = selectedProduct?.stocks.find((s) => s.warehouse_uid === w.uid);
+        return {
+          value: w.uid,
+          label: `${w.name}${stock ? ` — ${stock.available_stock} disp.` : ''}`,
+        };
+      });
+    if (cachedUid && cachedLabel && !base.find((o) => o.value === cachedUid)) {
+      return [{ value: cachedUid, label: cachedLabel }, ...base];
+    }
+    return base;
+  };
+
+  const buildWarehouseLabel = (uid: string) => {
+    const w = activeWarehouses.find((w) => w.uid === uid);
+    if (!w) return '';
+    const stock = selectedProduct?.stocks.find((s) => s.warehouse_uid === w.uid);
+    return `${w.name}${stock ? ` — ${stock.available_stock} disp.` : ''}`;
+  };
+
+  const handleFromSelect = (uid: string) => {
+    setFromWarehouseLabel(buildWarehouseLabel(uid));
+    setWarehouseSearch('');
+    setFromWarehouseUid(uid);
+    if (toWarehouseUid === uid) setToWarehouseUid('');
+  };
+
+  const handleToSelect = (uid: string) => {
+    setToWarehouseLabel(buildWarehouseLabel(uid));
+    setWarehouseSearch('');
+    setToWarehouseUid(uid);
+  };
+
+  const handleProductSelect = (uid: string) => {
+    const product = products.find((p) => p.uid === uid);
+    if (product) setProductCache(product);
+    setProductSearch('');
+    setProductUid(uid);
+    setFromWarehouseUid('');
+    setToWarehouseUid('');
+  };
+
+  const selectedProduct =
+    productUid && productCache?.uid === productUid
+      ? productCache
+      : products.find((p) => p.uid === productUid);
   const fromStock = selectedProduct?.stocks.find((s) => s.warehouse_uid === fromWarehouseUid);
   const toStock = selectedProduct?.stocks.find((s) => s.warehouse_uid === toWarehouseUid);
   const qty = Number(quantity) || 0;
@@ -88,12 +146,16 @@ export function TransferDrawer({ open, onClose, warehouses, onSuccess }: Transfe
 
   const handleClose = () => {
     setProductUid('');
+    setProductCache(null);
     setFromWarehouseUid('');
+    setFromWarehouseLabel('');
     setToWarehouseUid('');
+    setToWarehouseLabel('');
     setQuantity('');
     setComment('');
     setErrors({});
     setProductSearch('');
+    setWarehouseSearch('');
     onClose();
   };
 
@@ -106,7 +168,7 @@ export function TransferDrawer({ open, onClose, warehouses, onSuccess }: Transfe
 
         <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
           <SelectField
-            label="Producto *"
+            label="Producto"
             required
             searchable
             onSearch={setProductSearch}
@@ -114,55 +176,38 @@ export function TransferDrawer({ open, onClose, warehouses, onSuccess }: Transfe
               .filter((p) => p.is_active)
               .map((p) => ({ value: p.uid, label: `${p.name} — ${p.sku}` }))}
             value={productUid}
-            onChange={(v) => {
-              setProductUid(v as string);
-              setFromWarehouseUid('');
-              setToWarehouseUid('');
-            }}
+            onChange={(v) => handleProductSelect(v as string)}
             placeholder="Seleccionar producto..."
             error={errors.product}
           />
 
           <SelectField
-            label="Bodega origen *"
+            label="Bodega origen"
             required
-            options={activeWarehouses.map((w) => {
-              const stock = selectedProduct?.stocks.find((s) => s.warehouse_uid === w.uid);
-              return {
-                value: w.uid,
-                label: `${w.name}${stock ? ` — ${stock.available_stock} disp.` : ''}`,
-              };
-            })}
+            searchable
+            onSearch={setWarehouseSearch}
+            options={getWarehouseOptions(toWarehouseUid, fromWarehouseUid, fromWarehouseLabel)}
             value={fromWarehouseUid}
-            onChange={(v) => {
-              setFromWarehouseUid(v as string);
-              if (toWarehouseUid === v) setToWarehouseUid('');
-            }}
+            onChange={(v) => handleFromSelect(v as string)}
             placeholder="Seleccionar origen..."
             error={errors.from}
           />
 
           <SelectField
-            label="Bodega destino *"
+            label="Bodega destino"
             required
-            options={activeWarehouses
-              .filter((w) => w.uid !== fromWarehouseUid)
-              .map((w) => {
-                const stock = selectedProduct?.stocks.find((s) => s.warehouse_uid === w.uid);
-                return {
-                  value: w.uid,
-                  label: `${w.name}${stock ? ` — ${stock.available_stock} disp.` : ''}`,
-                };
-              })}
+            searchable
+            onSearch={setWarehouseSearch}
+            options={getWarehouseOptions(fromWarehouseUid, toWarehouseUid, toWarehouseLabel)}
             value={toWarehouseUid}
-            onChange={(v) => setToWarehouseUid(v as string)}
+            onChange={(v) => handleToSelect(v as string)}
             placeholder="Seleccionar destino..."
             error={errors.to}
           />
 
           <div>
             <Input
-              label="Cantidad *"
+              label="Cantidad"
               required
               type="number"
               min={1}

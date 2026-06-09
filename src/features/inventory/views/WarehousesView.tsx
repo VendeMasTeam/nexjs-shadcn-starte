@@ -2,6 +2,7 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
+import { formatCompact, formatCompactNumber } from 'src/lib/currency';
 import { cn } from 'src/lib/utils';
 import {
   PageContainer,
@@ -19,7 +20,7 @@ import {
   TableRow,
   useTable,
 } from 'src/shared/components/table';
-import { Button, EditButton, Icon } from 'src/shared/components/ui';
+import { Badge, Button, EditButton, Icon } from 'src/shared/components/ui';
 import { useDebounce } from 'use-debounce';
 
 import { GoodsReceiptDrawer } from '../components/GoodsReceiptDrawer';
@@ -51,7 +52,7 @@ export function WarehousesView() {
     pagination,
   } = useWarehouses({
     search: debouncedSearch || undefined,
-    has_stock: filterStock === 'has_stock' ? true : undefined,
+    has_stock: filterStock === 'with_stock' ? true : undefined,
   });
   const [warehouseDrawerOpen, setWarehouseDrawerOpen] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null);
@@ -75,21 +76,21 @@ export function WarehousesView() {
         },
         {
           title: 'Stock físico total',
-          value: totalPhysical.toLocaleString(),
+          value: formatCompactNumber(totalPhysical),
           badge: 'unidades en sistema',
           icon: <Icon name="Package" size={18} />,
           iconClassName: 'bg-info/10 text-info',
         },
         {
           title: 'Disponible total',
-          value: totalAvailable.toLocaleString(),
+          value: formatCompactNumber(totalAvailable),
           badge: 'para despacho',
           icon: <Icon name="CheckCircle" size={18} />,
           iconClassName: 'bg-success/10 text-success',
         },
         {
           title: 'Valor en stock',
-          value: totalValue > 0 ? `$${totalValue.toLocaleString('es-AR')}` : '—',
+          value: totalValue > 0 ? formatCompact(totalValue) : '—',
           badge: 'costo de inventario',
           icon: <Icon name="DollarSign" size={18} />,
           iconClassName: 'bg-warning/10 text-warning',
@@ -194,16 +195,14 @@ export function WarehousesView() {
       columnHelper.accessor('warehouse', {
         id: 'status',
         header: 'Estado',
-        cell: (info) => (
-          <span
-            className={cn(
-              'text-xs font-semibold',
-              info.getValue().is_active ? 'text-success' : 'text-muted-foreground'
-            )}
-          >
-            {info.getValue().is_active ? 'Activa' : 'Inactiva'}
-          </span>
-        ),
+        cell: (info) => {
+          const active = info.getValue().is_active;
+          return (
+            <Badge variant="soft" color={active ? 'success' : 'inherit'}>
+              {active ? 'Activa' : 'Inactiva'}
+            </Badge>
+          );
+        },
       }),
       columnHelper.display({
         id: 'actions',
@@ -253,7 +252,7 @@ export function WarehousesView() {
         title="Vista General de Bodegas"
         subtitle="Estado actual del stock por bodega"
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -333,13 +332,11 @@ export function WarehousesView() {
       <TransferDrawer
         open={transferOpen}
         onClose={() => setTransferOpen(false)}
-        warehouses={warehouses}
         onSuccess={refetch}
       />
       <GoodsReceiptDrawer
         open={receiptOpen}
         onClose={() => setReceiptOpen(false)}
-        warehouses={warehouses}
         onSuccess={refetch}
       />
     </PageContainer>

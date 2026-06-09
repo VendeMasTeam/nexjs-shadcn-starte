@@ -11,16 +11,23 @@ import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
-export function useWarehouses(filters?: { search?: string; has_stock?: boolean }) {
+export function useWarehouses(filters?: {
+  search?: string;
+  has_stock?: boolean;
+  per_page?: number;
+}) {
   const queryClient = useQueryClient();
   const pagination = usePaginationParams();
 
+  const { per_page, ...restFilters } = filters ?? {};
+  const paginationParams = per_page ? { ...pagination.params, per_page } : pagination.params;
+
   const { data: result } = useQuery({
-    queryKey: [...queryKeys.inventory.warehouses, pagination.params, filters],
+    queryKey: [...queryKeys.inventory.warehouses, paginationParams, restFilters],
     staleTime: 0,
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const raw = await inventoryWarehouseService.listRaw({ ...pagination.params, ...filters });
+      const raw = await inventoryWarehouseService.listRaw({ ...paginationParams, ...restFilters });
       const meta = extractPaginationMeta(raw);
       if (meta) pagination.setTotal(meta.total);
       return {

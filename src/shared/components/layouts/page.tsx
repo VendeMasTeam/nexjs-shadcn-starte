@@ -46,8 +46,13 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, action, className }: PageHeaderProps) {
   return (
-    <div className={cn('flex items-start justify-between gap-4', className)}>
-      <div>
+    <div
+      className={cn(
+        'flex flex-col gap-3 md:flex-row md:items-center md:justify-between',
+        className
+      )}
+    >
+      <div className="min-w-0">
         <h1 className="text-h4 text-foreground mb-1">{title}</h1>
         {subtitle && <p className="text-body2 text-muted-foreground">{subtitle}</p>}
       </div>

@@ -31,7 +31,7 @@ export function StockFilters({
 }: StockFiltersProps) {
   return (
     <div className="flex flex-wrap items-end gap-3 px-5 py-4">
-      <div className="flex-1 min-w-48">
+      <div className="w-full sm:flex-1 sm:min-w-48">
         <Input
           label="Buscar"
           placeholder="Buscar por nombre o SKU..."
@@ -50,6 +50,7 @@ export function StockFilters({
         ]}
         value={filterCategory}
         onChange={(v) => onFilterCategory(v as string)}
+        className="w-full sm:w-auto"
       />
       <SelectField
         label="Estado"
@@ -61,6 +62,7 @@ export function StockFilters({
         ]}
         value={filterStatus}
         onChange={(v) => onFilterStatus(v as string)}
+        className="w-full sm:w-auto"
       />
       <SelectField
         label="Bodega"
@@ -72,6 +74,7 @@ export function StockFilters({
         ]}
         value={filterWarehouse}
         onChange={(v) => onFilterWarehouse(v as string)}
+        className="w-full sm:w-auto"
       />
     </div>
   );

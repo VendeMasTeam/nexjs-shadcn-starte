@@ -141,7 +141,7 @@ export function StockAdjustmentDrawer({
             </div>
           ) : (
             <SelectField
-              label="Producto *"
+              label="Producto"
               required
               searchable
               onSearch={setProductSearch}
@@ -161,7 +161,7 @@ export function StockAdjustmentDrawer({
           {/* Bodega */}
           <div>
             <SelectField
-              label="Bodega *"
+              label="Bodega"
               required
               options={warehouses
                 .filter((w) => w.is_active)
@@ -181,7 +181,9 @@ export function StockAdjustmentDrawer({
 
           {/* Tipo de ajuste */}
           <div className="space-y-2">
-            <p className="text-sm font-medium">Tipo de ajuste *</p>
+            <p className="text-sm font-medium">
+              Tipo de ajuste <span className="text-destructive">*</span>
+            </p>
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setOperation('in')}
@@ -234,7 +236,7 @@ export function StockAdjustmentDrawer({
           {/* Cantidad */}
           <div>
             <Input
-              label="Cantidad *"
+              label="Cantidad"
               required
               type="number"
               min={1}

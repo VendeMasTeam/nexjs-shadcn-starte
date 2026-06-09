@@ -77,7 +77,6 @@ export function CategoriesView() {
   const [editing, setEditing] = useState<InventoryCategory | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<InventoryCategory | null>(null);
   const [name, setName] = useState('');
-  const [key, setKey] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -94,7 +93,6 @@ export function CategoriesView() {
   function handleEdit(cat: InventoryCategory) {
     setEditing(cat);
     setName(cat.name);
-    setKey(cat.key);
     setDescription(cat.description ?? '');
     setDrawerOpen(true);
   }
@@ -102,13 +100,12 @@ export function CategoriesView() {
   function openCreate() {
     setEditing(null);
     setName('');
-    setKey('');
     setDescription('');
     setDrawerOpen(true);
   }
 
   async function handleSave() {
-    if (!name.trim() || !key.trim()) return;
+    if (!name.trim()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -116,14 +113,12 @@ export function CategoriesView() {
           uid: editing.uid,
           payload: {
             name: name.trim(),
-            key: key.trim(),
             description: description.trim() || undefined,
           },
         });
       } else {
         await createCategory.mutateAsync({
           name: name.trim(),
-          key: key.trim(),
           description: description.trim() || undefined,
         });
       }
@@ -219,12 +214,6 @@ export function CategoriesView() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: Materia Prima"
             />
-            <Input
-              label="Key"
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder="Ej: materia_prima"
-            />
             <Textarea
               label="Descripción"
               value={description}
@@ -238,11 +227,7 @@ export function CategoriesView() {
             <Button variant="outline" onClick={() => setDrawerOpen(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button
-              color="primary"
-              onClick={handleSave}
-              disabled={saving || !name.trim() || !key.trim()}
-            >
+            <Button color="primary" onClick={handleSave} disabled={saving || !name.trim()}>
               {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear'}
             </Button>
           </SheetFooter>

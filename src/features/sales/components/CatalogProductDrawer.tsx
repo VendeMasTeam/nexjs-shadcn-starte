@@ -89,6 +89,16 @@ export function CatalogProductDrawer({
     return Object.keys(next).length === 0;
   };
 
+  const handleDiscountChange = (raw: string) => {
+    if (raw === '') {
+      setDefaultDiscount('');
+      return;
+    }
+    const num = Number(raw);
+    if (isNaN(num)) return;
+    setDefaultDiscount(String(Math.min(100, Math.max(0, num))));
+  };
+
   const handleSave = async () => {
     if (!validate()) return;
     if (customFieldsRef.current && !customFieldsRef.current.validate()) return;
@@ -182,7 +192,7 @@ export function CatalogProductDrawer({
               max={100}
               step={0.1}
               value={defaultDiscount}
-              onChange={(e) => setDefaultDiscount(e.target.value)}
+              onChange={(e) => handleDiscountChange(e.target.value)}
               placeholder="0"
             />
           </div>

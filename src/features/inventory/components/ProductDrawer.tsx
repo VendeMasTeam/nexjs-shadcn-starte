@@ -73,10 +73,24 @@ export function ProductDrawer({
     setErrors({});
   }, [open, product, warehouses]);
 
+  const handleDiscountChange = (raw: string) => {
+    if (raw === '') {
+      setDiscountPercent('');
+      return;
+    }
+    const num = Number(raw);
+    if (isNaN(num)) return;
+    setDiscountPercent(String(Math.min(100, Math.max(0, num))));
+  };
+
   const validate = () => {
     const next: Record<string, string> = {};
     if (!name.trim()) next.name = 'El nombre es requerido';
     if (!sku.trim()) next.sku = 'El SKU es requerido';
+    warehouseStocks.forEach((s, i) => {
+      if (!s.warehouse_uid) next[`ws_${i}_uid`] = 'Seleccioná una bodega';
+      if (Number(s.quantity) < 1) next[`ws_${i}_qty`] = 'Mínimo 1 unidad';
+    });
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -176,7 +190,7 @@ export function ProductDrawer({
               max={100}
               step={0.1}
               value={discountPercent}
-              onChange={(e) => setDiscountPercent(e.target.value)}
+              onChange={(e) => handleDiscountChange(e.target.value)}
               placeholder="0"
             />
           </div>
@@ -212,7 +226,7 @@ export function ProductDrawer({
                   (w) => !usedUids.has(w.uid) || w.uid === entry.warehouse_uid
                 );
                 return (
-                  <div key={index} className="flex items-end gap-2">
+                  <div key={index} className="flex items-start gap-2">
                     <div className="flex-1">
                       <SelectField
                         options={availableOptions.map((w) => ({ value: w.uid, label: w.name }))}
@@ -225,12 +239,13 @@ export function ProductDrawer({
                           )
                         }
                         placeholder="Bodega..."
+                        error={errors[`ws_${index}_uid`]}
                       />
                     </div>
                     <div className="w-24">
                       <Input
                         type="number"
-                        min={0}
+                        min={1}
                         value={entry.quantity}
                         onChange={(e) =>
                           setWarehouseStocks((prev) =>
@@ -240,13 +255,14 @@ export function ProductDrawer({
                           )
                         }
                         placeholder="Cant."
+                        error={errors[`ws_${index}_qty`]}
                       />
                     </div>
                     <button
                       onClick={() =>
                         setWarehouseStocks((prev) => prev.filter((_, i) => i !== index))
                       }
-                      className="mb-0.5 text-muted-foreground hover:text-error transition-colors p-1"
+                      className="mt-1 text-muted-foreground hover:text-error transition-colors p-1"
                     >
                       <Icon name="Trash2" size={15} />
                     </button>

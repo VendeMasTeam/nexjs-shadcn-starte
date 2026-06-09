@@ -2,6 +2,7 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { Fragment, useMemo, useState } from 'react';
+import { formatCompactNumber } from 'src/lib/currency';
 import { cn } from 'src/lib/utils';
 import {
   PageContainer,
@@ -27,7 +28,6 @@ import { InventoryPageSkeleton } from '../components/InventoryPageSkeleton';
 import { MovementFilters } from '../components/MovementFilters';
 import { TransferDrawer } from '../components/TransferDrawer';
 import { useMovements } from '../hooks/use-movements';
-import { useWarehouses } from '../hooks/use-warehouses';
 import type { InventoryMovement, MovementType } from '../types/inventory.types';
 
 const MOVEMENT_TYPE_CONFIG: Record<
@@ -85,8 +85,6 @@ export function MovementsView() {
     search: debouncedSearch || undefined,
   });
 
-  const { items: warehouses } = useWarehouses();
-
   const toggleRow = (uid: string) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
@@ -100,7 +98,7 @@ export function MovementsView() {
     ? [
         {
           title: 'Movimientos este mes',
-          value: summary.total,
+          value: formatCompactNumber(summary.total),
           trend: 'este período',
           trendUp: true,
           icon: <Icon name="ArrowLeftRight" size={18} />,
@@ -108,7 +106,7 @@ export function MovementsView() {
         },
         {
           title: 'Entradas',
-          value: summary.entries,
+          value: formatCompactNumber(summary.entries),
           trend: 'este período',
           trendUp: true,
           icon: <Icon name="PackagePlus" size={18} />,
@@ -116,7 +114,7 @@ export function MovementsView() {
         },
         {
           title: 'Traslados',
-          value: summary.transfers,
+          value: formatCompactNumber(summary.transfers),
           trend: 'este mes',
           trendUp: true,
           icon: <Icon name="ArrowLeftRight" size={18} />,
@@ -124,7 +122,7 @@ export function MovementsView() {
         },
         {
           title: 'Ajustes manuales',
-          value: summary.adjustments,
+          value: formatCompactNumber(summary.adjustments),
           trend: 'este mes',
           trendUp: false,
           icon: <Icon name="SlidersHorizontal" size={18} />,
@@ -359,13 +357,11 @@ export function MovementsView() {
       <TransferDrawer
         open={transferOpen}
         onClose={() => setTransferOpen(false)}
-        warehouses={warehouses}
         onSuccess={refetch}
       />
       <GoodsReceiptDrawer
         open={receiptOpen}
         onClose={() => setReceiptOpen(false)}
-        warehouses={warehouses}
         onSuccess={refetch}
       />
     </PageContainer>

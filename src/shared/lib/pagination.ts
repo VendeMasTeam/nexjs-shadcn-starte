@@ -27,7 +27,7 @@ export interface PaginationParams {
 
 /** Valores por defecto — usados por usePaginationParams() */
 export const DEFAULT_PAGE = 1;
-export const DEFAULT_PER_PAGE = 25;
+export const DEFAULT_PER_PAGE = 10;
 export const PER_PAGE_OPTIONS = [10, 25, 50, 100] as const;
 
 /**
