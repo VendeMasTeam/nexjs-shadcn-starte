@@ -39,7 +39,6 @@ export const inventoryStockService = {
 
   async createCategory(payload: {
     name: string;
-    key: string;
     description?: string;
   }): Promise<InventoryCategory> {
     const res = await axiosInstance.post(endpoints.inventory.categories, payload);

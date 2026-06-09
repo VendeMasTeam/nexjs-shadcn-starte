@@ -390,7 +390,7 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
           )}
           {opportunity.lead_origin && (
             <div className="flex items-center gap-2 text-body2">
-              <Icon name="Radio" size={13} className="text-muted-foreground shrink-0" />
+              <Icon name="Globe" size={13} className="text-muted-foreground shrink-0" />
               <span className="text-muted-foreground">Origen:</span>
               <span className="text-foreground font-medium capitalize">
                 {opportunity.lead_origin.replace(/_/g, ' ')}
