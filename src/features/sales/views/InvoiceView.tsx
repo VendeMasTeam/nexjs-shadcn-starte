@@ -190,7 +190,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
 
             <div className="h-px bg-border/50 my-6" />
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase mb-1">
                   Cotización origen

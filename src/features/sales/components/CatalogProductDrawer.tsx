@@ -67,7 +67,14 @@ export function CatalogProductDrawer({
     Object.fromEntries((product?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
   );
 
+  const prevOpenRef = useRef(false);
+
+  // Hidrata todos los campos solo cuando el drawer abre por primera vez
   useEffect(() => {
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+    if (!justOpened) return;
+
     setName(product?.name ?? '');
     setSku(product?.sku ?? '');
     setType(product?.type ?? 'product');
@@ -79,7 +86,27 @@ export function CatalogProductDrawer({
     setInventoryProductUid(product?.inventory_product_uid ?? '');
     setActive(product ? product.status === 'active' : true);
     setErrors({});
+    setCustomFieldValues(
+      Object.fromEntries((product?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
+    );
   }, [open, product]);
+
+  // Cuando llega el detalle completo en background, enriquece solo campos vacíos
+  useEffect(() => {
+    if (!open || !product) return;
+    if (!description && product.description) setDescription(product.description);
+    if (!defaultDiscount && product.default_discount_percent != null)
+      setDefaultDiscount(String(product.default_discount_percent));
+    if (!inventoryProductUid && product.inventory_product_uid)
+      setInventoryProductUid(product.inventory_product_uid);
+    if (product.custom_fields?.length) {
+      setCustomFieldValues((prev) => {
+        if (Object.keys(prev).length > 0) return prev;
+        return Object.fromEntries(product.custom_fields!.map((f) => [f.custom_field_uid, f.value]));
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product]);
 
   const validate = () => {
     const next: Record<string, string> = {};

@@ -87,13 +87,19 @@ export function CatalogView() {
     }
   };
 
-  const handleDeactivate = async (product: CatalogProduct) => {
+  const handleToggleStatus = async (product: CatalogProduct) => {
+    const isActive = product.status === 'active';
     try {
-      await catalogService.deactivate(product.uid);
-      notify.success('Producto desactivado');
+      if (isActive) {
+        await catalogService.deactivate(product.uid);
+        notify.success('Producto desactivado');
+      } else {
+        await catalogService.update(product.uid, { status: 'active' });
+        notify.success('Producto activado');
+      }
       refetch();
     } catch {
-      notify.error('Error al desactivar el producto');
+      notify.error(`Error al ${isActive ? 'desactivar' : 'activar'} el producto`);
     }
   };
 
@@ -102,10 +108,13 @@ export function CatalogView() {
     setDrawerOpen(true);
   };
 
-  const openEdit = async (product: CatalogProduct) => {
-    const detail = await catalogService.getOne(product.uid);
-    setSelected(detail);
+  const openEdit = (product: CatalogProduct) => {
+    setSelected(product);
     setDrawerOpen(true);
+    catalogService
+      .getOne(product.uid)
+      .then(setSelected)
+      .catch(() => {});
   };
 
   const columns = useMemo(
@@ -179,15 +188,20 @@ export function CatalogView() {
         cell: ({ row }) => {
           const p = row.original;
           return (
-            <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-              <EditButton onClick={() => openEdit(p)} />
+            <div className="flex justify-end gap-1">
+              <EditButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openEdit(p);
+                }}
+              />
               <MoreActionsMenu
                 items={[
                   {
                     label: p.status === 'active' ? 'Desactivar' : 'Activar',
                     icon: <Icon name={p.status === 'active' ? 'EyeOff' : 'Eye'} size={14} />,
                     color: p.status === 'active' ? 'error' : 'primary',
-                    onClick: () => handleDeactivate(p),
+                    onClick: () => handleToggleStatus(p),
                   },
                 ]}
               />
@@ -223,32 +237,32 @@ export function CatalogView() {
         }
       />
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <Input
-          label="Buscar"
-          placeholder="Buscar por nombre o SKU..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          leftIcon={<Icon name="Search" size={15} />}
-          className="sm:max-w-xs"
-        />
-        <SelectField
-          label="Tipo"
-          value={typeFilter}
-          onChange={(v) => setTypeFilter(v as string)}
-          options={TYPE_OPTIONS}
-          className="sm:w-48"
-        />
-        <SelectField
-          label="Estado"
-          value={statusFilter}
-          onChange={(v) => setStatusFilter(v as string)}
-          options={STATUS_OPTIONS}
-          className="sm:w-48"
-        />
-      </div>
-
       <SectionCard noPadding>
+        <div className="flex flex-wrap items-end gap-3 px-5 py-4 border-b border-border/60">
+          <div className="w-full sm:flex-1 sm:min-w-48">
+            <Input
+              label="Buscar"
+              placeholder="Buscar por nombre o SKU..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              leftIcon={<Icon name="Search" size={15} />}
+            />
+          </div>
+          <SelectField
+            label="Tipo"
+            value={typeFilter}
+            onChange={(v) => setTypeFilter(v as string)}
+            options={TYPE_OPTIONS}
+            className="w-full sm:w-auto"
+          />
+          <SelectField
+            label="Estado"
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v as string)}
+            options={STATUS_OPTIONS}
+            className="w-full sm:w-auto"
+          />
+        </div>
         <TableContainer>
           {isLoading ? (
             <div className="flex items-center justify-center h-48">

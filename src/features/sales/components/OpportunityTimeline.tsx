@@ -60,6 +60,8 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
+  const [editingType, setEditingType] = useState<ActivityType>('llamada');
+  const [editingDate, setEditingDate] = useState('');
   const [deleteItem, setDeleteItem] = useState<{
     uid: string;
     type: ActivityType;
@@ -89,9 +91,16 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
   // ─── Update mutation ─────────────────────────────────────────────────────────
 
   const updateMutation = useMutation({
-    mutationFn: (payload: { activityUid: string; content: string }) =>
+    mutationFn: (payload: {
+      activityUid: string;
+      content: string;
+      type: ActivityType;
+      date: string;
+    }) =>
       opportunityService.updateActivity(uid, payload.activityUid, {
         content: payload.content,
+        type: payload.type,
+        date: payload.date,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.opportunityActivities(uid) });
@@ -115,14 +124,22 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
-  const startEdit = (id: string, content: string | undefined) => {
+  const startEdit = (id: string, content: string | undefined, type: ActivityType, date: Date) => {
     setEditingId(id);
     setEditingContent(content || '');
+    setEditingType(type);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    setEditingDate(local.toISOString().slice(0, 16));
   };
 
   const handleUpdate = (activityUid: string) => {
-    if (!editingContent.trim()) return;
-    updateMutation.mutate({ activityUid, content: editingContent.trim() });
+    if (!editingDate) return;
+    updateMutation.mutate({
+      activityUid,
+      content: editingContent.trim(),
+      type: editingType,
+      date: new Date(editingDate).toISOString(),
+    });
     setEditingId(null);
   };
 
@@ -235,6 +252,8 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
                 type="datetime-local"
                 value={newActivity.date}
                 onChange={(e) => setNewActivity((p) => ({ ...p, date: e.target.value }))}
+                rightIcon={<Icon name="Clock" size={16} />}
+                inputClassName="[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
               />
             </div>
             <Textarea
@@ -312,7 +331,7 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
                       {/* Actions on hover */}
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => startEdit(item.uid, item.content)}
+                          onClick={() => startEdit(item.uid, item.content, item.type, item.date)}
                           className="p-1 text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded transition-colors"
                           title="Editar"
                         >
@@ -329,14 +348,38 @@ export function OpportunityTimeline({ opportunity }: OpportunityTimelineProps) {
                     </div>
 
                     {editingId === item.uid ? (
-                      <div className="mt-2">
+                      <div className="mt-2 space-y-3">
+                        {!isNote && (
+                          <div className="grid grid-cols-2 gap-3">
+                            <SelectField
+                              label="Tipo"
+                              options={[
+                                { value: 'llamada', label: 'Llamada' },
+                                { value: 'email', label: 'Email' },
+                                { value: 'reunion', label: 'Reunión' },
+                                { value: 'demo', label: 'Demostración' },
+                                { value: 'seguimiento', label: 'Seguimiento' },
+                              ]}
+                              value={editingType}
+                              onChange={(v) => setEditingType(v as ActivityType)}
+                            />
+                            <Input
+                              label="Fecha y hora"
+                              type="datetime-local"
+                              value={editingDate}
+                              onChange={(e) => setEditingDate(e.target.value)}
+                              rightIcon={<Icon name="Clock" size={16} />}
+                              inputClassName="[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                            />
+                          </div>
+                        )}
                         <Textarea
                           value={editingContent}
                           onChange={(e) => setEditingContent(e.target.value)}
                           className="bg-background min-h-[80px] text-sm"
                           autoFocus
                         />
-                        <div className="flex justify-end gap-2 mt-2">
+                        <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"
                             size="sm"

@@ -7,6 +7,8 @@ import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/la
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
+import { SelectField } from 'src/shared/components/ui/select-field';
+import { useLeadOrigins } from 'src/shared/hooks/useTenantOptions';
 
 import { ImportLeadsDrawer } from '../components/ImportLeadsDrawer';
 import {
@@ -28,11 +30,27 @@ export function PipelineView() {
   const [pendingMove, setPendingMove] = useState<{ oppUid: string } | null>(null);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
 
-  const { stages, opportunitiesByStage, scoredOpportunities, search, setSearch, refresh } =
-    usePipeline();
+  const {
+    stages,
+    opportunitiesByStage,
+    scoredOpportunities,
+    search,
+    setSearch,
+    origin,
+    setOrigin,
+    refresh,
+  } = usePipeline();
   const { addOpportunity, moveOpportunity, refreshOpportunities, opportunities } =
     useSalesContext();
   const { competitors = [] } = useIntelligence();
+  const leadOrigins = useLeadOrigins();
+  const originOptions = [
+    { value: '', label: 'Todos los orígenes' },
+    ...(leadOrigins.data ?? []).map((o: { key: string; name: string }) => ({
+      value: o.key,
+      label: o.name,
+    })),
+  ];
   const { selectedId, isOpen, openPanel, closePanel, daysInStage, agingLevel, opportunity } =
     useOpportunityPanel(scoredOpportunities);
 
@@ -104,8 +122,8 @@ export function PipelineView() {
 
       {/* Filtros */}
       <SectionCard className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-          <div className="flex-1 w-full">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="flex-1 min-w-48">
             <Input
               label="Buscar"
               placeholder="Buscar por cliente o contacto..."
@@ -114,6 +132,13 @@ export function PipelineView() {
               leftIcon={<Icon name="Search" size={16} />}
             />
           </div>
+          <SelectField
+            label="Origen"
+            value={origin ?? ''}
+            onChange={(v) => setOrigin((v as string) || undefined)}
+            options={originOptions}
+            className="w-full sm:w-48"
+          />
         </div>
       </SectionCard>
 

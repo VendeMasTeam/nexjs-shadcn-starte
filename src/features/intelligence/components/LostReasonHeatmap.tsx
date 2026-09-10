@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { cn } from 'src/lib/utils';
 import { SectionCard } from 'src/shared/components/layouts/page';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useLostReasonCategories } from 'src/shared/hooks/useTenantOptions';
 
 import type { Competitor, HeatmapCell } from '../types';
 
@@ -20,7 +20,7 @@ function getCellIntensity(count: number, max: number): string {
 }
 
 export function LostReasonHeatmap({ data, competitors }: Props) {
-  const { lostReasonCategories } = useTenantOptions();
+  const lostReasonCategories = useLostReasonCategories();
 
   const reasons = useMemo(() => {
     const cats = lostReasonCategories.data as

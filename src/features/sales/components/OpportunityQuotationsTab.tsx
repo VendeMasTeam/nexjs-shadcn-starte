@@ -58,7 +58,7 @@ export function OpportunityQuotationsTab({ opportunity, stages }: OpportunityQuo
             <Button
               size="sm"
               color="primary"
-              onClick={() => router.push(paths.sales.quotation(opportunity.uid))}
+              onClick={() => router.push(paths.sales.quotationNew(opportunity.uid))}
             >
               <Icon name="Plus" size={14} />
               Crear cotización
@@ -109,7 +109,7 @@ export function OpportunityQuotationsTab({ opportunity, stages }: OpportunityQuo
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={() => router.push(paths.sales.quotation(opportunity.uid))}
+              onClick={() => router.push(paths.sales.quotationNew(opportunity.uid))}
             >
               <Icon name="Plus" size={14} />
               Nueva cotización

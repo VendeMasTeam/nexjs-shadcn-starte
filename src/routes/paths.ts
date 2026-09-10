@@ -62,6 +62,8 @@ export const paths = {
     pipeline: `${ROOTS.SALES}/pipeline`,
     catalog: `${ROOTS.SALES}/catalog`,
     quotation: (id: string) => `${ROOTS.SALES}/quotation/${id}`,
+    quotationNew: (opportunityUid: string) =>
+      `${ROOTS.SALES}/quotation/new?opportunity_uid=${opportunityUid}`,
     invoice: (id: string) => `${ROOTS.SALES}/invoice/${id}`,
     finance: {
       root: `${ROOTS.SALES}/finance`,

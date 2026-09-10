@@ -563,10 +563,13 @@ export function OpportunityPanel({
                 <ResumenTab
                   opportunity={opportunity}
                   stages={stages}
-                  onEdit={async (opp) => {
-                    const detail = await opportunityService.getOne(opp.uid);
-                    setEditingOpportunity(detail);
+                  onEdit={(opp) => {
+                    setEditingOpportunity(opp);
                     setEditDrawerOpen(true);
+                    opportunityService
+                      .getOne(opp.uid)
+                      .then(setEditingOpportunity)
+                      .catch(() => {});
                   }}
                   onOutcome={() => setOutcomeDialogOpen(true)}
                 />

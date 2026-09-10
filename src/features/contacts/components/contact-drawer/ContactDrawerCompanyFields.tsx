@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import type { Control } from 'react-hook-form';
 import { FormInput } from 'src/shared/components/ui/form-input';
 import { FormSelectField } from 'src/shared/components/ui/form-select-field';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useCompanySizes } from 'src/shared/hooks/useTenantOptions';
 
 import type { ContactDrawerFormData } from './contact-drawer.types';
 
@@ -13,7 +13,7 @@ interface ContactDrawerCompanyFieldsProps {
 }
 
 export function ContactDrawerCompanyFields({ control }: ContactDrawerCompanyFieldsProps) {
-  const { companySizes } = useTenantOptions();
+  const companySizes = useCompanySizes();
 
   const sizeOptions = useMemo(() => {
     const data = companySizes.data as { uid: string; name: string }[] | undefined;

@@ -22,7 +22,7 @@ import {
 } from 'src/shared/components/table';
 import { Badge, Button, Icon, Input, SelectField } from 'src/shared/components/ui';
 import { ConfirmDialog } from 'src/shared/components/ui/confirm-dialog';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useLostReasonCategories } from 'src/shared/hooks/useTenantOptions';
 
 import { LostReasonDrawer } from '../components/LostReasonDrawer';
 import { LostReasonHeatmap } from '../components/LostReasonHeatmap';
@@ -51,7 +51,7 @@ export function LostReasonsView() {
   const [editing, setEditing] = useState<LostReason | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LostReason | null>(null);
 
-  const { lostReasonCategories } = useTenantOptions();
+  const lostReasonCategories = useLostReasonCategories();
 
   const reasonOptions = useMemo(() => {
     const data = lostReasonCategories.data as

@@ -19,7 +19,7 @@ import {
   SheetTitle,
 } from 'src/shared/components/ui';
 import { Textarea } from 'src/shared/components/ui';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useLostReasonCategories } from 'src/shared/hooks/useTenantOptions';
 
 import { type LostReasonFormData, lostReasonSchema } from '../schemas/lost-reason.schema';
 import type { Competitor, LostReason, LostReasonCategory } from '../types';
@@ -53,7 +53,7 @@ const DEFAULT_VALUES: LostReasonFormData = {
 export function LostReasonDrawer({ open, item, competitors, onClose, onCreate, onUpdate }: Props) {
   const isEdit = !!item;
 
-  const { lostReasonCategories } = useTenantOptions();
+  const lostReasonCategories = useLostReasonCategories();
   const { userOptions } = useUsers();
 
   const { data: currencyOptions = [] } = useQuery({

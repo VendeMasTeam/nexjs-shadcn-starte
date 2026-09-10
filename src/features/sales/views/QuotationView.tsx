@@ -15,6 +15,7 @@ import { PageContainer } from 'src/shared/components/layouts/page';
 import { Badge } from 'src/shared/components/ui/badge';
 import { Button } from 'src/shared/components/ui/button';
 import { Card, CardContent } from 'src/shared/components/ui/card';
+import { DateInput } from 'src/shared/components/ui/date-input';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
@@ -51,49 +52,57 @@ const STATUS_COLORS: Record<string, string> = {
 
 // ─── View ─────────────────────────────────────────────────────────────────────
 
-interface QuotationViewProps {
-  quotationId: string;
-}
+type QuotationViewProps =
+  | { mode: 'create'; opportunityUid: string }
+  | { mode: 'edit'; quotationId: string };
 
-export function QuotationView({ quotationId }: QuotationViewProps) {
+export function QuotationView(props: QuotationViewProps) {
   const router = useRouter();
   const { saveQuotation, convertQuotationToInvoice, invoices, opportunities } = useSalesContext();
+
+  const isCreate = props.mode === 'create';
+  const opportunityUid = isCreate ? props.opportunityUid : '';
+  const quotationId = isCreate ? '' : props.quotationId;
 
   // Track if a draft has been saved and redirected to a new URL
   const [savedDraft, setSavedDraft] = useState<Quotation | null>(null);
 
-  // Use saved draft if URL matches the saved draft UID, otherwise fetch from API
+  // In create mode we never fetch — there is no quotation yet.
+  // In edit mode, skip the fetch only when we already have the saved draft in memory.
   const { quotation: byIdQuotation } = useQuotationById(
-    savedDraft?.uid === quotationId ? '' : quotationId
+    isCreate || savedDraft?.uid === quotationId ? '' : quotationId
   );
 
   // Sync API result or saved draft into local state
   const [localQuotation, setLocalQuotation] = useState<Quotation | null>(() => {
+    if (isCreate) {
+      const opp = opportunities.find((o) => o.uid === opportunityUid);
+      return {
+        uid: '',
+        quote_number: '',
+        title: opp?.title ?? '',
+        status: 'draft',
+        currency: '',
+        subtotal: 0,
+        discount_total: 0,
+        total: 0,
+        owner_user_uid: '',
+        created_by_user_uid: '',
+        items: [],
+        entity_type: 'opportunity',
+        entity_uid: opportunityUid,
+        notes: '',
+        created_at: new Date().toISOString().split('T')[0],
+        updated_at: new Date().toISOString(),
+      };
+    }
     if (savedDraft?.uid === quotationId) return savedDraft;
     if (byIdQuotation) return byIdQuotation;
-    const opp = opportunities.find((o) => o.uid === quotationId);
-    return {
-      uid: '',
-      quote_number: '',
-      title: opp?.title ?? '',
-      status: 'draft',
-      currency: '',
-      subtotal: 0,
-      discount_total: 0,
-      total: 0,
-      owner_user_uid: '',
-      created_by_user_uid: '',
-      items: [],
-      entity_type: 'opportunity',
-      entity_uid: quotationId,
-      notes: '',
-      created_at: new Date().toISOString().split('T')[0],
-      updated_at: new Date().toISOString(),
-    };
+    return null;
   });
 
-  // When API returns quotation, update local state
-  if (byIdQuotation && byIdQuotation.uid !== localQuotation?.uid && !savedDraft) {
+  // When API returns quotation (edit mode), update local state
+  if (!isCreate && byIdQuotation && byIdQuotation.uid !== localQuotation?.uid && !savedDraft) {
     setLocalQuotation(byIdQuotation);
   }
 
@@ -139,14 +148,32 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
   }, [defaultCurrency, quotation?.uid]); // only on mount / first render
 
   // Find linked opportunity for timeline
-  const opp =
-    opportunities.find((o) => o.uid === quotationId) ??
-    (byIdQuotation ? opportunities.find((o) => o.uid === byIdQuotation.quoteable_uid) : undefined);
+  const opp = isCreate
+    ? opportunities.find((o) => o.uid === opportunityUid)
+    : byIdQuotation
+      ? opportunities.find((o) => o.uid === byIdQuotation.quoteable_uid)
+      : undefined;
 
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+
+  // ── Validation ───────────────────────────────────────────────────────────────
+  const [titleError, setTitleError] = useState('');
+  const [validUntilError, setValidUntilError] = useState('');
+  type LineError = { sku?: string; quantity?: string; price?: string };
+  const [lineErrors, setLineErrors] = useState<Record<number, LineError>>({});
+
+  const clearLineError = useCallback((index: number, field: keyof LineError) => {
+    setLineErrors((prev) => {
+      if (!prev[index]?.[field]) return prev;
+      const next = { ...prev, [index]: { ...prev[index] } };
+      delete next[index][field];
+      if (!Object.keys(next[index]).length) delete next[index];
+      return next;
+    });
+  }, []);
 
   // ── Items ────────────────────────────────────────────────────────────────────
 
@@ -199,10 +226,40 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
 
   const handleSave = async () => {
     if (!quotation) return;
+
+    // ── Validate ────────────────────────────────────────────────────────────
+    let valid = true;
+
     if (!quotation.title?.trim()) {
-      notify.error('El título es requerido');
-      return;
+      setTitleError('El título es requerido');
+      valid = false;
+    } else {
+      setTitleError('');
     }
+
+    const createdAt = toInputDate(quotation.created_at);
+    const validUntil = toInputDate(quotation.valid_until);
+    if (validUntil && createdAt && validUntil < createdAt) {
+      setValidUntilError('No puede ser anterior a la fecha de creación');
+      valid = false;
+    } else {
+      setValidUntilError('');
+    }
+
+    const newLineErrors: Record<number, LineError> = {};
+    quotation.items.forEach((item, i) => {
+      const e: LineError = {};
+      if (!item.sku) e.sku = 'Selecciona un producto';
+      if (!item.quantity || item.quantity < 1) e.quantity = 'Mínimo 1';
+      if (!item.list_unit_price || item.list_unit_price <= 0) e.price = 'Requerido';
+      if (Object.keys(e).length) newLineErrors[i] = e;
+    });
+    setLineErrors(newLineErrors);
+    if (Object.keys(newLineErrors).length) valid = false;
+
+    if (!valid) return;
+    // ────────────────────────────────────────────────────────────────────────
+
     setIsSaving(true);
     try {
       const saved = await saveQuotation(quotation);
@@ -284,11 +341,16 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
   const handleConvert = async () => {
     if (!quotation) return;
     setIsConverting(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const invoice = await convertQuotationToInvoice(quotation.uid);
-    saveQuotation({ ...quotation, status: 'cancelled' });
-    if (invoice) {
-      router.push(paths.sales.invoice(invoice.uid));
+    try {
+      const invoice = await convertQuotationToInvoice(quotation.uid);
+      saveQuotation({ ...quotation, status: 'cancelled' });
+      if (invoice) {
+        router.push(paths.sales.invoice(invoice.uid));
+      }
+    } catch {
+      // error already notified by SalesContext
+    } finally {
+      setIsConverting(false);
     }
   };
 
@@ -320,8 +382,8 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
   return (
     <PageContainer fluid className="pb-10">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
-        <div>
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6 min-w-0">
+        <div className="min-w-0">
           <button
             onClick={() => router.push(paths.sales.pipeline)}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
@@ -346,7 +408,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0">
+        <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto min-w-0 mt-2 md:mt-0">
           <Button
             variant="ghost"
             className="text-muted-foreground mr-1 hover:bg-muted/10 transition-colors"
@@ -363,8 +425,8 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
             </Button>
           )}
 
-          {/* Send — always available once saved */}
-          {quotation.uid && (
+          {/* Send — draft, sent (resend), approved */}
+          {quotation.uid && (isDraft || isSent || isApproved) && (
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
               onClick={handleSend}
@@ -383,24 +445,29 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                 <Icon name="Save" size={16} />
                 Guardar borrador
               </Button>
-              <Button
-                variant="outline"
-                className="border-red-300 text-red-500 hover:bg-red-500/10"
-                onClick={handleReject}
-              >
-                <Icon name="XCircle" size={16} />
-                Rechazar
-              </Button>
-              <Button
-                variant="outline"
-                className="border-emerald-400 text-emerald-600 hover:bg-emerald-500/10"
-                onClick={handleApprove}
-                loading={isApproving}
-                disabled={quotation.items.length === 0}
-              >
-                <Icon name="CheckCircle2" size={16} />
-                Aprobar
-              </Button>
+              {/* Rechazar/Aprobar only make sense once the quotation exists */}
+              {quotation.uid && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="border-red-300 text-red-500 hover:bg-red-500/10"
+                    onClick={handleReject}
+                  >
+                    <Icon name="XCircle" size={16} />
+                    Rechazar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-emerald-400 text-emerald-600 hover:bg-emerald-500/10"
+                    onClick={handleApprove}
+                    loading={isApproving}
+                    disabled={quotation.items.length === 0}
+                  >
+                    <Icon name="CheckCircle2" size={16} />
+                    Aprobar
+                  </Button>
+                </>
+              )}
             </>
           )}
 
@@ -471,16 +538,18 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                 </div>
                 <h2 className="text-sm font-bold text-foreground">Información General</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-5">
                 <Input
                   label="Título"
                   required
                   value={quotation.title}
-                  onChange={(e) =>
-                    setLocalQuotation((p) => ({ ...p, title: e.target.value }) as Quotation)
-                  }
+                  onChange={(e) => {
+                    if (titleError) setTitleError('');
+                    setLocalQuotation((p) => ({ ...p, title: e.target.value }) as Quotation);
+                  }}
                   placeholder="Título de la cotización"
                   disabled={!isEditable}
+                  error={titleError}
                 />
                 <SelectField
                   label="Moneda"
@@ -490,24 +559,29 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                   }
                   options={currencyOptions}
                   disabled={!isEditable}
+                  searchable
                 />
-                <Input
+                <DateInput
                   label="Fecha de creación"
-                  type="date"
                   value={toInputDate(quotation.created_at)}
-                  onChange={(e) =>
-                    setLocalQuotation((p) => ({ ...p, created_at: e.target.value }) as Quotation)
-                  }
+                  onChange={(e) => {
+                    if (validUntilError) setValidUntilError('');
+                    setLocalQuotation((p) => ({ ...p, created_at: e.target.value }) as Quotation);
+                  }}
                   disabled={!isEditable}
                 />
-                <Input
+                <DateInput
                   label="Válido hasta"
-                  type="date"
                   value={toInputDate(quotation.valid_until)}
-                  onChange={(e) =>
-                    setLocalQuotation((p) => ({ ...p, valid_until: e.target.value }) as Quotation)
+                  onChange={(e) => {
+                    if (validUntilError) setValidUntilError('');
+                    setLocalQuotation((p) => ({ ...p, valid_until: e.target.value }) as Quotation);
+                  }}
+                  minDate={
+                    quotation.created_at ? new Date(toInputDate(quotation.created_at)) : undefined
                   }
                   disabled={!isEditable}
+                  error={validUntilError}
                 />
               </div>
             </CardContent>
@@ -540,7 +614,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                     <th className="px-4 py-4 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest w-24">
                       Cantidad
                     </th>
-                    <th className="px-4 py-4 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest w-32">
+                    <th className="px-4 py-4 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest w-40">
                       Precio Unit.
                     </th>
                     <th className="px-4 py-4 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest w-24">
@@ -576,6 +650,7 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                           <SelectField
                             value={item.sku ?? ''}
                             onChange={(val) => {
+                              clearLineError(i, 'sku');
                               const product = catalogProducts.find((p) => p.sku === val);
                               if (product) {
                                 updateLine(i, 'description', product.name);
@@ -612,28 +687,55 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                             placeholder="Seleccionar producto..."
                             searchable
                             disabled={!isEditable}
+                            error={lineErrors[i]?.sku}
                           />
                         </td>
                         <td className="px-4 py-4">
-                          <div className="flex justify-center">
+                          <div className="flex flex-col items-center gap-1">
                             <input
-                              className="w-16 text-center border border-border/50 rounded-lg py-1.5 text-sm font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+                              className={`w-16 text-center border rounded-lg py-1.5 text-sm font-medium focus:ring-1 outline-none transition-all ${lineErrors[i]?.quantity ? 'border-destructive focus:border-destructive focus:ring-destructive/30' : 'border-border/50 focus:border-indigo-500 focus:ring-indigo-500'}`}
                               type="number"
                               min={1}
                               value={item.quantity}
-                              onChange={(e) => updateLine(i, 'quantity', e.target.value)}
+                              onChange={(e) => {
+                                clearLineError(i, 'quantity');
+                                updateLine(i, 'quantity', e.target.value);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === '-') e.preventDefault();
+                              }}
+                              disabled={!isEditable}
                             />
+                            {lineErrors[i]?.quantity && (
+                              <p className="text-[0.7rem] text-destructive leading-tight text-center">
+                                {lineErrors[i].quantity}
+                              </p>
+                            )}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-center">
-                          <input
-                            className="w-full bg-transparent border-none outline-none text-sm text-center font-medium text-foreground focus:ring-0"
-                            type="number"
-                            min={0}
-                            step={0.01}
-                            value={item.list_unit_price}
-                            onChange={(e) => updateLine(i, 'list_unit_price', e.target.value)}
-                          />
+                        <td className="px-4 py-4 text-center min-w-[140px]">
+                          <div className="flex flex-col items-center gap-1">
+                            <input
+                              className={`w-full text-center text-sm font-medium text-foreground outline-none transition-all rounded px-1 ${lineErrors[i]?.price ? 'bg-destructive/5 ring-1 ring-destructive/50' : 'bg-transparent border-none focus:ring-0'}`}
+                              type="number"
+                              min={0}
+                              step={0.01}
+                              value={item.list_unit_price}
+                              onChange={(e) => {
+                                clearLineError(i, 'price');
+                                updateLine(i, 'list_unit_price', e.target.value);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === '-') e.preventDefault();
+                              }}
+                              disabled={!isEditable}
+                            />
+                            {lineErrors[i]?.price && (
+                              <p className="text-[0.7rem] text-destructive leading-tight text-center">
+                                {lineErrors[i].price}
+                              </p>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center justify-center gap-1">
@@ -643,7 +745,14 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                               min={0}
                               max={100}
                               value={item.discount_percent}
-                              onChange={(e) => updateLine(i, 'discount_percent', e.target.value)}
+                              onChange={(e) => {
+                                const clamped = Math.min(100, Math.max(0, Number(e.target.value)));
+                                updateLine(i, 'discount_percent', String(clamped));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === '-') e.preventDefault();
+                              }}
+                              disabled={!isEditable}
                             />
                             <span className="text-muted-foreground text-xs">%</span>
                           </div>
@@ -697,9 +806,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                 <h2 className="text-sm font-bold text-foreground">Resumen</h2>
               </div>
               <div className="space-y-4">
-                <div className="flex justify-between items-center gap-3 text-sm">
+                <div className="flex justify-between items-baseline gap-3 text-sm">
                   <span className="text-muted-foreground shrink-0">Subtotal</span>
-                  <span className="font-semibold text-foreground text-right tabular-nums">
+                  <span className="font-semibold text-foreground text-right tabular-nums break-all min-w-0">
                     {formatMoney(totals.subtotal, {
                       scope: 'tenant',
                       minimumFractionDigits: 2,
@@ -707,9 +816,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                     })}
                   </span>
                 </div>
-                <div className="flex justify-between items-center gap-3 text-sm">
+                <div className="flex justify-between items-baseline gap-3 text-sm">
                   <span className="text-muted-foreground shrink-0">Descuento Total</span>
-                  <span className="font-semibold text-emerald-500 text-right tabular-nums">
+                  <span className="font-semibold text-emerald-500 text-right tabular-nums break-all min-w-0">
                     -
                     {formatMoney(totals.discount, {
                       scope: 'tenant',
@@ -718,9 +827,9 @@ export function QuotationView({ quotationId }: QuotationViewProps) {
                     })}
                   </span>
                 </div>
-                <div className="border-t border-border/40 pt-4 mt-2 flex justify-between items-center gap-3">
+                <div className="border-t border-border/40 pt-4 mt-2 flex justify-between items-baseline gap-3">
                   <span className="font-bold text-foreground shrink-0">Total Final</span>
-                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400 text-right tabular-nums">
+                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400 text-right tabular-nums break-all min-w-0">
                     {formatMoney(totals.total, {
                       scope: 'tenant',
                       minimumFractionDigits: 2,

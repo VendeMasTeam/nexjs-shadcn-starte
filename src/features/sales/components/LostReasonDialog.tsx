@@ -14,7 +14,7 @@ import {
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import { Textarea } from 'src/shared/components/ui/textarea';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useLostReasonCategories } from 'src/shared/hooks/useTenantOptions';
 
 import type { LostReasonInfo } from '../types/sales.types';
 
@@ -41,7 +41,7 @@ export function LostReasonDialog({
   const [newCompetitorName, setNewCompetitorName] = useState('');
   const [error, setError] = useState('');
 
-  const { lostReasonCategories } = useTenantOptions();
+  const lostReasonCategories = useLostReasonCategories();
 
   const reasonOptions = useMemo(() => {
     const data = lostReasonCategories.data as

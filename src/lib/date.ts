@@ -8,7 +8,35 @@ function toDate(value: string | number | Date): Date {
   if (value instanceof Date) return value;
   if (typeof value === 'number') return new Date(value);
   if (!value) return new Date();
-  // Truncate microseconds to milliseconds: "2026-05-04T03:06:06.000000Z" → "2026-05-04T03:06:06.000Z"
+
+  // BUG PREVENTION: date-only strings must be parsed as LOCAL, not UTC.
+  //
+  // `new Date("2026-07-30")` and `new Date("2026-07-30T00:00:00Z")` both
+  // produce midnight UTC. In UTC-3 that becomes 2026-07-29 21:00 local time,
+  // so any display function (toLocaleDateString, date-fns format) shows the
+  // PREVIOUS day — one day off.
+  //
+  // The fix: extract YYYY-MM-DD and build the date with new Date(y, m-1, d),
+  // which always uses the local timezone. This applies to:
+  //   • Pure date strings:  "2026-07-30"
+  //   • Laravel date-only:  "2026-07-30T00:00:00.000000Z"  (time is always
+  //     midnight UTC because Laravel doesn't store a real hour for date fields)
+  //
+  // Real timestamps like "2026-07-30T03:06:06.000000Z" have a non-zero time
+  // and fall through to the UTC path below — correct behavior for those.
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [y, m, d] = value.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  const dateOnly = value.match(/^(\d{4}-\d{2}-\d{2})T00:00:00(?:\.\d+)?Z$/);
+  if (dateOnly) {
+    const [y, m, d] = dateOnly[1].split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  // Real timestamps: truncate microseconds → milliseconds
   const safe = value.replace(/\.(\d{3})\d{3}Z$/, '.$1Z');
   return new Date(safe);
 }

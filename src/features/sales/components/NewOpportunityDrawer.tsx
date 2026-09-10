@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PipelineStage } from 'src/features/sales/types/sales.types';
 import { customFieldsService } from 'src/features/settings/services/custom-fields.service';
 import { Button } from 'src/shared/components/ui/button';
@@ -8,6 +8,7 @@ import {
   CustomFieldsSection,
   type CustomFieldsSectionHandle,
 } from 'src/shared/components/ui/custom-fields-section';
+import { DateInput } from 'src/shared/components/ui/date-input';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import {
@@ -19,7 +20,7 @@ import {
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
 import { Textarea } from 'src/shared/components/ui/textarea';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useLeadOrigins } from 'src/shared/hooks/useTenantOptions';
 
 // ─── Minimal creation payload — matches backend POST opportunity ──────────────
 export interface NewOpportunityPayload {
@@ -73,7 +74,8 @@ export function NewOpportunityDrawer({
 }: NewOpportunityDrawerProps) {
   const activeStages = stages.filter((s) => s.is_active && !s.is_won && !s.is_lost);
   const defaultStageUid = activeStages[0]?.uid ?? '';
-  const { leadOrigins } = useTenantOptions();
+  const toDateInput = (v?: string) => (v ? v.substring(0, 10) : '');
+  const leadOrigins = useLeadOrigins();
   const leadOriginOptions = (leadOrigins.data ?? []).map((o: { key: string; name: string }) => ({
     value: o.key,
     label: o.name,
@@ -86,7 +88,7 @@ export function NewOpportunityDrawer({
           title: editingData.title || '',
           amount: editingData.amount ? String(editingData.amount) : '',
           stage_uid: editingData.stage_uid || defaultStageUid,
-          expected_close_date: editingData.expected_close_date || '',
+          expected_close_date: toDateInput(editingData.expected_close_date),
           description: editingData.description || '',
           email: editingData.email || '',
           lead_origin: editingData.lead_origin || '',
@@ -108,6 +110,29 @@ export function NewOpportunityDrawer({
     Object.fromEntries((editingData?.custom_fields ?? []).map((f) => [f.custom_field_uid, f.value]))
   );
   const [isSaving, setIsSaving] = useState(false);
+
+  // Enrich empty fields when detail arrives after optimistic open
+  useEffect(() => {
+    if (!open || !editingData) return;
+    setForm((prev) => ({
+      title: prev.title || editingData.title || '',
+      amount: prev.amount || (editingData.amount ? String(editingData.amount) : ''),
+      stage_uid: prev.stage_uid || editingData.stage_uid || defaultStageUid,
+      expected_close_date: prev.expected_close_date || toDateInput(editingData.expected_close_date),
+      description: prev.description || editingData.description || '',
+      email: prev.email || editingData.email || '',
+      lead_origin: prev.lead_origin || editingData.lead_origin || '',
+    }));
+    if (editingData.custom_fields?.length) {
+      setCustomFieldValues((prev) => {
+        if (Object.keys(prev).length > 0) return prev;
+        return Object.fromEntries(
+          editingData.custom_fields!.map((f) => [f.custom_field_uid, f.value])
+        );
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingData]);
 
   const stageOptions = activeStages.map((s) => ({
     value: s.uid,
@@ -164,7 +189,7 @@ export function NewOpportunityDrawer({
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" className="sm:max-w-[540px] flex flex-col p-0">
+      <SheetContent side="right" className="sm:max-w-[680px] flex flex-col p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/40">
           <SheetTitle className="text-h6">
             {isEditing ? 'Editar Lead / Oportunidad' : 'Crear Nuevo Lead u Oportunidad'}
@@ -244,9 +269,8 @@ export function NewOpportunityDrawer({
                 />
               </div>
 
-              <Input
+              <DateInput
                 label="Fecha esperada de cierre (Opcional)"
-                type="date"
                 value={form.expected_close_date}
                 onChange={(e) => setForm((p) => ({ ...p, expected_close_date: e.target.value }))}
               />

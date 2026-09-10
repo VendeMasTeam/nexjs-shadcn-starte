@@ -6,7 +6,7 @@ import { extractApiError } from 'src/lib/api-errors';
 import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useLostReasonCategories } from 'src/shared/hooks/useTenantOptions';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
 import { intelligenceService } from '../services/intelligence.service';
@@ -38,7 +38,7 @@ export function useIntelligence(filters: IntelligenceFilters = {}) {
 
   // ─── Tenant-driven categories (fetched from backend) ──────────────────────
 
-  const { lostReasonCategories: lostReasonQuery } = useTenantOptions();
+  const lostReasonQuery = useLostReasonCategories();
 
   const reasonCategories: LostReasonCategory[] = useMemo(
     () => (lostReasonQuery.data ?? []).map((c: { key: string }) => c.key as LostReasonCategory),

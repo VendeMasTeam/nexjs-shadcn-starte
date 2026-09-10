@@ -9,7 +9,7 @@ import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
-import { useTenantOptions } from 'src/shared/hooks/useTenantOptions';
+import { useActivityTypes } from 'src/shared/hooks/useTenantOptions';
 
 import { useUsers } from '../hooks/useUsers';
 import type { RuleFormData } from '../schemas/rule.schema';
@@ -28,7 +28,7 @@ export function ActionBlock({ form, assignmentRules }: ActionBlockProps) {
   });
 
   const { userOptions } = useUsers();
-  const { activityTypes } = useTenantOptions();
+  const activityTypes = useActivityTypes();
 
   const { data: actionOptions = [] } = useQuery({
     queryKey: ['automation', 'actions'],

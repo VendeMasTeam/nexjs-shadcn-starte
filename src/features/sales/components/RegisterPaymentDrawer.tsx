@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Payment } from 'src/features/sales/types/sales.types';
 import { formatMoney, getCurrencyPreferences } from 'src/lib/currency';
 import { Button } from 'src/shared/components/ui/button';
+import { DateInput } from 'src/shared/components/ui/date-input';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import {
@@ -119,10 +120,9 @@ export function RegisterPaymentDrawer({
           />
 
           {/* Fecha de pago */}
-          <Input
+          <DateInput
             label="Fecha de Pago"
             required
-            type="date"
             value={form.payment_date}
             onChange={(e) => setForm((p) => ({ ...p, payment_date: e.target.value }))}
             error={errors.date ?? errors.payment_date}
@@ -148,7 +148,8 @@ export function RegisterPaymentDrawer({
             value={form.amount}
             onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
             error={errors.amount}
-            leftIcon={<span className="text-sm text-muted-foreground">{currency}</span>}
+            leftIcon={<span className="text-sm font-medium text-muted-foreground">{currency}</span>}
+            inputClassName="pl-14"
           />
         </div>
 

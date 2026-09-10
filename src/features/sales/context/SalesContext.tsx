@@ -164,7 +164,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     async (uid: string, data: Partial<Opportunity>): Promise<Opportunity> => {
       try {
         const updated = await opportunityService.update(uid, data);
-        await refreshOpportunities();
+        refreshOpportunities(); // fire and forget — board updates in background
         return updated;
       } catch (error) {
         notify.error(extractApiError(error));
@@ -176,15 +176,25 @@ export function SalesProvider({ children }: { children: ReactNode }) {
 
   const moveOpportunity = useCallback(
     async (uid: string, stageUid: string) => {
+      // Move card instantly in the cache — user sees it immediately
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.sales.board, exact: false },
+        (old: Opportunity[] | undefined) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((opp) => (opp.uid === uid ? { ...opp, stage_uid: stageUid } : opp));
+        }
+      );
       try {
         await opportunityService.update(uid, { stage_uid: stageUid });
         await refreshOpportunities();
       } catch (error) {
+        // Revert on failure
+        await refreshOpportunities();
         notify.error(extractApiError(error));
         throw error;
       }
     },
-    [refreshOpportunities]
+    [queryClient, refreshOpportunities]
   );
 
   // ─── Quotation mutations ────────────────────────────────────────────────────

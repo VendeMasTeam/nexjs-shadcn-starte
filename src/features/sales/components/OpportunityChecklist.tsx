@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { taskService } from 'src/features/tasks/services/task.service';
 import type { Task } from 'src/features/tasks/types/task.types';
 import { cn } from 'src/lib/utils';
 import { Button } from 'src/shared/components/ui/button';
@@ -33,6 +34,14 @@ export function OpportunityChecklist({ opportunity }: OpportunityChecklistProps)
         title,
         status: 'pending',
         priority: 'medium',
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: (task: Task) =>
+      taskService.update(task.uid, {
+        status: task.status === 'completed' ? 'pending' : 'completed',
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
@@ -91,16 +100,19 @@ export function OpportunityChecklist({ opportunity }: OpportunityChecklistProps)
               key={task.uid}
               className="flex items-center gap-2.5 group rounded-lg px-2 py-1.5 hover:bg-muted/30 transition-colors"
             >
-              <div
+              <button
+                type="button"
+                onClick={() => toggleMutation.mutate(task)}
+                disabled={toggleMutation.isPending}
                 className={cn(
-                  'w-4 h-4 rounded border flex items-center justify-center shrink-0',
+                  'w-4 h-4 rounded border flex items-center justify-center shrink-0 cursor-pointer transition-colors',
                   task.status === 'completed'
                     ? 'bg-success border-success text-white'
-                    : 'border-border'
+                    : 'border-border hover:border-primary'
                 )}
               >
                 {task.status === 'completed' && <Icon name="Check" size={10} strokeWidth={3} />}
-              </div>
+              </button>
               <span
                 className={cn(
                   'flex-1 text-body2 transition-colors',
