@@ -71,6 +71,12 @@ export const signOut = async () => {
   await axiosInstance.post(endpoints.auth.logout);
 };
 
+// Corta la sesión de soporte activa (llamar con el support token todavía activo)
+export const stopSupportSession = async () => {
+  const res = await axiosInstance.post(endpoints.supportSession.stop);
+  return res.data;
+};
+
 export const forgotPassword = async (email: string) => {
   await axiosInstance.post(endpoints.auth.forgotPassword, { email });
 };

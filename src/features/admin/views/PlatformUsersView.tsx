@@ -187,9 +187,9 @@ export function PlatformUsersView() {
   });
 
   const { roles } = usePlatformRoles();
-  const { hasPermission } = usePermissions();
+  const { hasAdminPermission } = usePermissions();
   const { user: currentUser } = useAuthContext();
-  const canPurge = hasPermission('admin.tenants.purge');
+  const canPurge = hasAdminPermission('admin.tenants.purge');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);

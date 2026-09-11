@@ -6,9 +6,10 @@ import { Tenant } from 'src/features/admin/types/admin.types';
 import { formatMoney } from 'src/lib/currency';
 import { formatRelative } from 'src/lib/date';
 import { formatDate as formatDateLib } from 'src/lib/date';
-import { EditButton, ViewButton } from 'src/shared/components/ui/action-buttons';
+import { EditButton, IconActionButton, ViewButton } from 'src/shared/components/ui/action-buttons';
 import { Avatar, AvatarFallback } from 'src/shared/components/ui/avatar';
 import { Badge } from 'src/shared/components/ui/badge';
+import { Icon } from 'src/shared/components/ui/icon';
 
 function getInitials(nombre: string) {
   return (nombre ?? '')
@@ -34,9 +35,16 @@ const columnHelper = createColumnHelper<Tenant>();
 export interface TenantColumnHandlers {
   onEdit: (tenant: Tenant) => void;
   onViewDetail: (tenant: Tenant) => void;
+  onSupportLogin: (tenant: Tenant) => void;
+  canSupport: boolean;
 }
 
-export function buildTenantColumns({ onEdit, onViewDetail }: TenantColumnHandlers) {
+export function buildTenantColumns({
+  onEdit,
+  onViewDetail,
+  onSupportLogin,
+  canSupport,
+}: TenantColumnHandlers) {
   return [
     columnHelper.accessor('nombre', {
       header: 'Cliente',
@@ -120,6 +128,15 @@ export function buildTenantColumns({ onEdit, onViewDetail }: TenantColumnHandler
           <div className="flex items-center gap-1">
             <ViewButton onClick={() => onViewDetail(tenant)} />
             <EditButton onClick={() => onEdit(tenant)} />
+            {canSupport && tenant.estado === 'ACTIVO' && (
+              <IconActionButton
+                tooltip="Ingresar al tenant (soporte)"
+                className="hover:text-indigo-600 hover:bg-indigo-50"
+                onClick={() => onSupportLogin(tenant)}
+              >
+                <Icon name="LogIn" size={14} />
+              </IconActionButton>
+            )}
           </div>
         );
       },

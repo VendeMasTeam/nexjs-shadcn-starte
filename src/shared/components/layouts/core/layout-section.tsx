@@ -10,9 +10,17 @@ type Props = {
   headerSection?: ReactNode;
   sidebarSection?: ReactNode;
   footerSection?: ReactNode;
+  /** Franja opcional que se pega arriba del header (banner de modo soporte, etc.) */
+  topBanner?: ReactNode;
 };
 
-export function LayoutSection({ children, headerSection, sidebarSection, footerSection }: Props) {
+export function LayoutSection({
+  children,
+  headerSection,
+  sidebarSection,
+  footerSection,
+  topBanner,
+}: Props) {
   const { navLayout, navColor } = useUiStore();
 
   const isNavMini = navLayout === 'mini';
@@ -60,18 +68,24 @@ export function LayoutSection({ children, headerSection, sidebarSection, footerS
           onScroll={handleScroll}
           className="flex-1 overflow-x-hidden overflow-y-auto min-h-0 min-w-0"
         >
-          {/* Header floats over content using sticky inside the scroll container */}
-          {headerSection && (
-            <header
-              className={`
-                h-[72px] sticky top-0 z-10 flex items-center px-4 w-full
-                transition-[background-color,backdrop-filter] duration-200
-                ${isScrolled ? 'bg-background/80 backdrop-blur-xs' : 'bg-transparent'}
-                ${layoutClasses.header}
-              `}
-            >
-              {headerSection}
-            </header>
+          {/* Banner + header flotan juntos sobre el contenido, pegados como una sola
+              unidad sticky — así el banner nunca queda tapado por el header ni al revés. */}
+          {(topBanner || headerSection) && (
+            <div className="sticky top-0 z-10">
+              {topBanner}
+              {headerSection && (
+                <header
+                  className={`
+                    h-[72px] flex items-center px-4 w-full
+                    transition-[background-color,backdrop-filter] duration-200
+                    ${isScrolled ? 'bg-background/80 backdrop-blur-xs' : 'bg-transparent'}
+                    ${layoutClasses.header}
+                  `}
+                >
+                  {headerSection}
+                </header>
+              )}
+            </div>
           )}
 
           {/* Page content */}

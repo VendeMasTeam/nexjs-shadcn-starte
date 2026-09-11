@@ -80,8 +80,8 @@ export function TenantDetailDrawer({
   onPurge,
   onCreateUser,
 }: TenantDetailDrawerProps) {
-  const { hasPermission } = usePermissions();
-  const canPurge = hasPermission('admin.tenants.purge');
+  const { hasAdminPermission } = usePermissions();
+  const canPurge = hasAdminPermission('admin.tenants.purge');
 
   const [confirmandoSuspension, setConfirmandoSuspension] = useState(false);
   const [textoConfirmacion, setTextoConfirmacion] = useState('');

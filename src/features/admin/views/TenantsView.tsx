@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { SupportLoginDialog } from 'src/features/admin/components/support-login-dialog';
 import { TenantDetailDrawer } from 'src/features/admin/components/tenant-detail-drawer';
 import { TenantFormDrawer } from 'src/features/admin/components/tenant-form-drawer';
 import { TenantsTable } from 'src/features/admin/components/tenants-table';
 import { usePlansAdmin } from 'src/features/admin/hooks/use-plans-admin';
 import { useTenants } from 'src/features/admin/hooks/use-tenants';
 import { Tenant } from 'src/features/admin/types/admin.types';
+import { usePermissions } from 'src/shared/auth/hooks/use-permissions';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
@@ -35,10 +37,13 @@ export const TenantsView = () => {
   } = useTenants({ search: debouncedSearch, plan_uid: filterPlan, estado: filterEstado });
 
   const { planes } = usePlansAdmin();
+  const { hasAdminPermission } = usePermissions();
+  const canSupport = hasAdminPermission('admin.tenants.support');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [supportLoginTarget, setSupportLoginTarget] = useState<Tenant | null>(null);
   const [prevTenants, setPrevTenants] = useState(tenants);
 
   // Mantiene el drawer abierto sincronizado con la lista: cada vez que una acción
@@ -152,6 +157,8 @@ export const TenantsView = () => {
           isLoading={isLoading}
           onEdit={handleOpenEdit}
           onViewDetail={handleOpenDetail}
+          onSupportLogin={(t) => setSupportLoginTarget(t)}
+          canSupport={canSupport}
           total={pagination.total}
           pageIndex={pagination.page - 1}
           pageSize={pagination.rowsPerPage}
@@ -179,6 +186,8 @@ export const TenantsView = () => {
         onPurge={(t, confirmation) => purgeTenant(t.uid, confirmation)}
         onCreateUser={createTenantUser}
       />
+
+      <SupportLoginDialog tenant={supportLoginTarget} onClose={() => setSupportLoginTarget(null)} />
     </PageContainer>
   );
 };

@@ -14,6 +14,7 @@ import { HeaderTenantButton } from './dashboard/header-tenant-button';
 import { HeaderUserButton } from './dashboard/header-user-button';
 import { NavMobile } from './dashboard/nav-mobile';
 import { NavVertical } from './dashboard/nav-vertical';
+import { SupportModeBanner } from './SupportModeBanner';
 
 type Props = {
   children: ReactNode;
@@ -36,6 +37,7 @@ export function AppLayout({ children }: Props) {
 
   return (
     <LayoutSection
+      topBanner={<SupportModeBanner />}
       sidebarSection={<NavVertical navData={navData} />}
       headerSection={
         <HeaderSection

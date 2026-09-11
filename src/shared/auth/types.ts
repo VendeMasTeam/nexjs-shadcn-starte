@@ -40,13 +40,31 @@ export type TenantInfo = {
   logo_url: string | null;
 };
 
+// ─── Support mode (impersonation de plataforma) ──────────────────────────────
+
+export type SupportMode = {
+  active: boolean;
+  tenant_uid?: string;
+  tenant_name?: string;
+  mode?: string;
+  readonly?: boolean;
+  expires_at?: string | null;
+};
+
+export const SUPPORT_MODE_INACTIVE: SupportMode = { active: false };
+
 export type AuthState = {
   user: UserType;
   tenant: TenantInfo | null;
   loading: boolean;
+  // Permisos de TENANT (permissions.effective en /auth/init) — módulos del tenant.
   permissions: string[];
+  // Permisos de PLATAFORMA/superadmin/soporte (admin_permissions en /auth/init).
+  // Nunca se mezcla con `permissions` — son dos dominios de autorización distintos.
+  adminPermissions: string[];
   modules: Module[];
   features: PlanFeatures;
+  supportMode: SupportMode;
 };
 
 export type AuthContextValue = {
@@ -56,9 +74,14 @@ export type AuthContextValue = {
   authenticated: boolean;
   unauthenticated: boolean;
   permissions: string[];
+  adminPermissions: string[];
   modules: Module[];
   features: PlanFeatures;
+  supportMode: SupportMode;
+  /** Chequea permisos de TENANT (permissions.effective) */
   hasPermission: (key: string) => boolean;
+  /** Chequea permisos de PLATAFORMA (admin_permissions) — botones de admin/superadmin/soporte */
+  hasAdminPermission: (key: string) => boolean;
   hasFeature: (key: string) => boolean;
   checkUserSession: () => Promise<{ permissions: string[]; modules: Module[]; role?: string }>;
 };
@@ -82,5 +105,8 @@ export type InitPayload = {
     [key: string]: unknown;
   };
   permissions: InitPermissions;
+  // Permisos de plataforma/superadmin/soporte — siempre presente, vacío para usuarios de tenant
+  admin_permissions?: string[];
   features?: PlanFeatures;
+  support_mode?: SupportMode;
 };

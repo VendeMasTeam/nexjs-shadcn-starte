@@ -41,6 +41,14 @@ export const tenantsService = {
     const res = await axiosInstance.post(endpoints.admin.tenants.restore(uid));
     return res.data.data;
   },
+  // POST .../support-login — inicia sesión de soporte de solo lectura sobre el tenant
+  async supportLogin(
+    uid: string,
+    reason: string
+  ): Promise<{ token: string; expires_at: string; session: Record<string, unknown> }> {
+    const res = await axiosInstance.post(endpoints.admin.tenants.supportLogin(uid), { reason });
+    return res.data.data;
+  },
   // DELETE /admin/tenants/{uid}/purge — borrado FÍSICO e irreversible (schema incluido)
   async purge(uid: string, confirmation: string, deleteSchema = true): Promise<unknown> {
     const res = await axiosInstance.delete(endpoints.admin.tenants.purge(uid), {

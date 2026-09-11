@@ -74,6 +74,9 @@ export const endpoints = {
       disable: '/2fa', // DELETE { password }
     },
   },
+  supportSession: {
+    stop: '/support-session/stop', // POST — sin body, corta la sesión de soporte activa
+  },
   users: {
     list: '/users',
     create: '/users',
@@ -160,6 +163,7 @@ export const endpoints = {
       activate: (uid: string) => `/admin/tenants/${uid}/activate`,
       archive: (uid: string) => `/admin/tenants/${uid}/archive`,
       restore: (uid: string) => `/admin/tenants/${uid}/restore`,
+      supportLogin: (uid: string) => `/admin/tenants/${uid}/support-login`,
       lockUser: (uid: string, userUid: string) => `/admin/tenants/${uid}/users/${userUid}/lock`,
       unlockUser: (uid: string, userUid: string) => `/admin/tenants/${uid}/users/${userUid}/unlock`,
       createUser: (uid: string) => `/admin/tenants/${uid}/users`,

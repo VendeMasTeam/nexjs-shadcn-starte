@@ -15,11 +15,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tool
 
 // ─── Base icon button (cursor + hover + active scale) ─────────────────────────
 
-interface IconActionButtonProps extends Omit<ButtonProps, 'size' | 'variant'> {
+export interface IconActionButtonProps extends Omit<ButtonProps, 'size' | 'variant'> {
   tooltip?: string;
 }
 
-function IconActionButton({
+export function IconActionButton({
   tooltip,
   className,
   children,

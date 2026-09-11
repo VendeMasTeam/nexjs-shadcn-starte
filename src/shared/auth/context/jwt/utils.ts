@@ -88,3 +88,21 @@ export function setSession(accessToken: string | null) {
     delete axiosInstance.defaults.headers.common.Authorization;
   }
 }
+
+// ─── Modo soporte — swap temporal del token activo ───────────────────────────
+// Guarda el token de admin aparte y activa el token de soporte como el activo.
+// El intercambio es local: no toca el token real del admin en ningún otro lado.
+const SUPPORT_ADMIN_TOKEN_KEY = 'support_admin_token_backup';
+
+export function beginSupportSession(supportToken: string) {
+  const adminToken = sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  if (adminToken) sessionStorage.setItem(SUPPORT_ADMIN_TOKEN_KEY, adminToken);
+  setSession(supportToken);
+}
+
+/** Restaura el token de admin guardado y lo deja como activo. */
+export function endSupportSession() {
+  const adminToken = sessionStorage.getItem(SUPPORT_ADMIN_TOKEN_KEY);
+  sessionStorage.removeItem(SUPPORT_ADMIN_TOKEN_KEY);
+  setSession(adminToken);
+}

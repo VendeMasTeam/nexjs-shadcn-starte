@@ -3,7 +3,13 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { init } from 'src/features/auth/services/auth.service';
 import { setCurrencyPreferences } from 'src/lib/currency';
-import type { AuthState, Module, PlanFeatures, TenantInfo } from 'src/shared/auth/types';
+import {
+  type AuthState,
+  type Module,
+  type PlanFeatures,
+  SUPPORT_MODE_INACTIVE,
+  type TenantInfo,
+} from 'src/shared/auth/types';
 
 import { AuthContext } from '../auth-context';
 import { isValidToken, setSession } from './utils';
@@ -28,8 +34,10 @@ export function AuthProvider({ children }: Props) {
     tenant: null,
     loading: true,
     permissions: [],
+    adminPermissions: [],
     modules: [],
     features: FEATURES_FALLBACK,
+    supportMode: SUPPORT_MODE_INACTIVE,
   });
 
   const checkUserSession = useCallback(async () => {
@@ -47,8 +55,10 @@ export function AuthProvider({ children }: Props) {
           modules,
           localization: loc,
           permissions: permsPayload,
+          admin_permissions: adminPermissions,
           tenant,
           features,
+          support_mode: supportMode,
         } = payload;
 
         if (user) {
@@ -82,8 +92,10 @@ export function AuthProvider({ children }: Props) {
             },
             tenant: tenantInfo,
             permissions,
+            adminPermissions: adminPermissions ?? [],
             modules,
             features: features ?? FEATURES_FALLBACK,
+            supportMode: supportMode ?? SUPPORT_MODE_INACTIVE,
             loading: false,
           });
           return { permissions, modules, role: user.role };
@@ -93,8 +105,10 @@ export function AuthProvider({ children }: Props) {
             tenant: null,
             loading: false,
             permissions: [],
+            adminPermissions: [],
             modules: [],
             features: FEATURES_FALLBACK,
+            supportMode: SUPPORT_MODE_INACTIVE,
           });
         }
       } else {
@@ -103,8 +117,10 @@ export function AuthProvider({ children }: Props) {
           tenant: null,
           loading: false,
           permissions: [],
+          adminPermissions: [],
           modules: [],
           features: FEATURES_FALLBACK,
+          supportMode: SUPPORT_MODE_INACTIVE,
         });
       }
     } catch (error) {
@@ -116,8 +132,10 @@ export function AuthProvider({ children }: Props) {
         tenant: null,
         loading: false,
         permissions: [],
+        adminPermissions: [],
         modules: [],
         features: FEATURES_FALLBACK,
+        supportMode: SUPPORT_MODE_INACTIVE,
       });
     }
     return { permissions: [], modules: [], role: undefined };
@@ -135,6 +153,11 @@ export function AuthProvider({ children }: Props) {
     [state.permissions]
   );
 
+  const hasAdminPermission = useCallback(
+    (key: string) => state.adminPermissions.includes(key),
+    [state.adminPermissions]
+  );
+
   const hasFeature = useCallback((key: string) => state.features[key] ?? true, [state.features]);
 
   const memoizedValue = useMemo(
@@ -143,9 +166,12 @@ export function AuthProvider({ children }: Props) {
       tenant: state.tenant,
       loading: state.loading,
       permissions: state.permissions,
+      adminPermissions: state.adminPermissions,
       modules: state.modules,
       features: state.features,
+      supportMode: state.supportMode,
       hasPermission,
+      hasAdminPermission,
       hasFeature,
       authenticated: state.user !== null,
       unauthenticated: state.user === null,
@@ -156,9 +182,12 @@ export function AuthProvider({ children }: Props) {
       state.tenant,
       state.loading,
       state.permissions,
+      state.adminPermissions,
       state.modules,
       state.features,
+      state.supportMode,
       hasPermission,
+      hasAdminPermission,
       hasFeature,
       checkUserSession,
     ]
