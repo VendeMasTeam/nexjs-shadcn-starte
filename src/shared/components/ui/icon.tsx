@@ -125,6 +125,7 @@ import {
   Settings,
   Shield,
   ShieldCheck,
+  ShieldOff,
   Shirt,
   ShoppingCart,
   Sliders,
@@ -198,6 +199,7 @@ const icons = {
   Mail,
   Lock,
   ShieldCheck,
+  ShieldOff,
   User,
 
   // Negocio
