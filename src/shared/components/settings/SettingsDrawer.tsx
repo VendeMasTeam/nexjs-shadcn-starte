@@ -58,7 +58,9 @@ const NAV_COLORS: { value: NavColor; label: string; icon: string }[] = [
 
 const NAV_LAYOUTS: { value: NavLayout; label: string; icon: string }[] = [
   { value: 'vertical', label: 'Vertical', icon: 'PanelLeft' },
-  { value: 'horizontal', label: 'Horiz.', icon: 'PanelBottom' },
+  // Horizontal: comentado porque todavía no está integrado en layout-section.tsx
+  // (no hay rama que renderice un nav horizontal real, cae al vertical por defecto).
+  // { value: 'horizontal', label: 'Horiz.', icon: 'PanelBottom' },
   { value: 'mini', label: 'Mini', icon: 'StretchHorizontal' },
 ];
 
@@ -161,7 +163,7 @@ export function SettingsDrawer() {
       </SheetTrigger>
 
       {/* Contenido del panel */}
-      <SheetContent className="w-[400px] p-0 border-l border-border/50 shadow-dialog sm:max-w-[400px]">
+      <SheetContent className="w-full p-0 border-l border-border/50 shadow-dialog sm:max-w-[400px]">
         <SheetHeader className="px-5 py-4 border-b border-border/40 text-left">
           <SheetTitle className="text-sm font-semibold flex items-center gap-2">
             <Icon name="Settings" size={16} className="text-primary" />
@@ -226,7 +228,7 @@ export function SettingsDrawer() {
             {/* ── 3. Layout de Navegación ──────────────────────── */}
             <div className="px-5 py-5">
               <OptionLabel>Layout de Navegación</OptionLabel>
-              <div className="grid grid-cols-3 gap-1 p-1 bg-background rounded-xl">
+              <div className="grid grid-cols-2 gap-1 p-1 bg-background rounded-xl">
                 {NAV_LAYOUTS.map((nl) => (
                   <OptionCard
                     key={nl.value}

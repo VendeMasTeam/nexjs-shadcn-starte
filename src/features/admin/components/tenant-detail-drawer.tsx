@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TenantStatusBadge } from 'src/features/admin/components/tenant-status-badge';
+import { TenantUserEditDialog } from 'src/features/admin/components/tenant-user-edit-dialog';
 import { tenantsService } from 'src/features/admin/services/tenants.service';
 import {
   Tenant,
@@ -9,11 +10,23 @@ import {
   TenantFacturaItem,
   TenantUser,
 } from 'src/features/admin/types/admin.types';
+import { extractApiError } from 'src/lib/api-errors';
 import { formatMoney } from 'src/lib/currency';
 import { diffDays, formatDate, formatRelative } from 'src/lib/date';
+import { notify } from 'src/lib/notify';
+import { usePermissions } from 'src/shared/auth/hooks/use-permissions';
+import { DeleteButton, EditButton } from 'src/shared/components/ui/action-buttons';
 import { Avatar, AvatarFallback } from 'src/shared/components/ui/avatar';
 import { Badge } from 'src/shared/components/ui/badge';
 import { Button } from 'src/shared/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from 'src/shared/components/ui/dialog';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
 import { PaginationControl } from 'src/shared/components/ui/pagination-control';
@@ -27,15 +40,17 @@ import {
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from 'src/shared/components/ui/tabs';
+import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
 interface TenantDetailDrawerProps {
   tenant: Tenant | null;
   isOpen: boolean;
   onClose: () => void;
-  onSuspend?: (tenant: Tenant) => void;
-  onActivate?: (tenant: Tenant) => void;
-  onArchive?: (tenant: Tenant) => void;
-  onRestore?: (tenant: Tenant) => void;
+  onSuspend?: (tenant: Tenant) => void | Promise<void>;
+  onActivate?: (tenant: Tenant) => void | Promise<void>;
+  onArchive?: (tenant: Tenant) => void | Promise<void>;
+  onRestore?: (tenant: Tenant) => void | Promise<void>;
+  onPurge?: (tenant: Tenant, confirmation: string) => Promise<void>;
   onCreateUser: (
     tenantId: string,
     data: { name: string; email: string; role: string }
@@ -62,10 +77,18 @@ export function TenantDetailDrawer({
   onActivate,
   onArchive,
   onRestore,
+  onPurge,
   onCreateUser,
 }: TenantDetailDrawerProps) {
+  const { hasPermission } = usePermissions();
+  const canPurge = hasPermission('admin.tenants.purge');
+
   const [confirmandoSuspension, setConfirmandoSuspension] = useState(false);
   const [textoConfirmacion, setTextoConfirmacion] = useState('');
+  const [confirmandoPurga, setConfirmandoPurga] = useState(false);
+  const [textoConfirmacionPurga, setTextoConfirmacionPurga] = useState('');
+  const [isSuspending, setIsSuspending] = useState(false);
+  const [isPurging, setIsPurging] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [creatingUser, setCreatingUser] = useState(false);
@@ -77,6 +100,10 @@ export function TenantDetailDrawer({
   const [loadingTab, setLoadingTab] = useState<string | null>(null);
   const [lockingUser, setLockingUser] = useState<string | null>(null);
   const [resettingTwoFactor, setResettingTwoFactor] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<TenantUser | null>(null);
+  const [purgingUser, setPurgingUser] = useState<TenantUser | null>(null);
+  const [purgeUserConfirmText, setPurgeUserConfirmText] = useState('');
+  const [isPurgingUser, setIsPurgingUser] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
   const [usersTotal, setUsersTotal] = useState(0);
   const PER_PAGE = 5;
@@ -98,9 +125,9 @@ export function TenantDetailDrawer({
     setLoadingTab('usuarios');
     try {
       const payload = await tenantsService.getUsers(tenant.uid, page, PER_PAGE);
-      const data = Array.isArray(payload) ? payload : (payload?.data ?? []);
-      setUsuarios(data as TenantUser[]);
-      setUsersTotal(payload?.meta?.total ?? (Array.isArray(payload) ? payload.length : 0));
+      const meta = extractPaginationMeta(payload);
+      setUsuarios((payload?.data ?? []) as TenantUser[]);
+      setUsersTotal(meta?.total ?? 0);
       setUsersPage(page);
     } finally {
       setLoadingTab(null);
@@ -136,16 +163,51 @@ export function TenantDetailDrawer({
   const handleClose = () => {
     setConfirmandoSuspension(false);
     setTextoConfirmacion('');
+    setConfirmandoPurga(false);
+    setTextoConfirmacionPurga('');
     setNewUserName('');
     setNewUserEmail('');
     setUserCreatedMsg(null);
     onClose();
   };
-  const handleSuspend = () => {
-    onSuspend?.(tenant);
-    setConfirmandoSuspension(false);
-    setTextoConfirmacion('');
-    onClose();
+  const handleSuspend = async () => {
+    setIsSuspending(true);
+    try {
+      await onSuspend?.(tenant);
+    } finally {
+      setIsSuspending(false);
+      setConfirmandoSuspension(false);
+      setTextoConfirmacion('');
+    }
+  };
+  const handlePurgeTenant = async () => {
+    if (!onPurge) return;
+    setIsPurging(true);
+    try {
+      await onPurge(tenant, textoConfirmacionPurga);
+      setConfirmandoPurga(false);
+      setTextoConfirmacionPurga('');
+      onClose(); // el tenant ya no existe — no tiene sentido dejar el drawer abierto
+    } catch (error) {
+      notify.error(extractApiError(error));
+    } finally {
+      setIsPurging(false);
+    }
+  };
+  const handlePurgeUser = async () => {
+    if (!tenant || !purgingUser) return;
+    setIsPurgingUser(true);
+    try {
+      await tenantsService.purgeUser(tenant.uid, purgingUser.uid, purgeUserConfirmText);
+      notify.success('Usuario eliminado definitivamente');
+      setPurgingUser(null);
+      setPurgeUserConfirmText('');
+      await cargarUsuarios(usersPage);
+    } catch (error) {
+      notify.error(extractApiError(error));
+    } finally {
+      setIsPurgingUser(false);
+    }
   };
   const handleCreateUser = async () => {
     if (!newUserName.trim() || !newUserEmail.trim()) return;
@@ -172,7 +234,7 @@ export function TenantDetailDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent side="right" className="w-full sm:max-w-[520px] p-0 flex flex-col">
+      <SheetContent side="right" className="w-full sm:max-w-[760px] p-0 flex flex-col">
         <SheetHeader className="px-6 py-5 border-b border-border/40">
           <div className="flex items-start gap-4">
             <Avatar className="h-12 w-12 shrink-0">
@@ -204,285 +266,276 @@ export function TenantDetailDrawer({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto">
-          {confirmandoSuspension ? (
-            <div className="p-6">
-              <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <Icon name="AlertTriangle" className="h-6 w-6 text-red-600 shrink-0" />
-                  <h3 className="font-semibold text-red-700 text-body2">
-                    ¿Suspender a &quot;{tenant.nombre}&quot;?
-                  </h3>
-                </div>
-                <p className="text-body2 text-red-600 mb-5">
-                  Esta acción bloqueará el acceso de todos sus usuarios al sistema de forma
-                  inmediata.
-                </p>
-                <Input
-                  value={textoConfirmacion}
-                  onChange={(e) => setTextoConfirmacion(e.target.value)}
-                  label='Escribe "SUSPENDER" para confirmar:'
-                  placeholder="SUSPENDER"
-                />
-              </div>
-              <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={() => setConfirmandoSuspension(false)}>
-                  Cancelar
-                </Button>
-                <Button
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                  disabled={textoConfirmacion !== 'SUSPENDER'}
-                  onClick={handleSuspend}
-                >
-                  Confirmar Suspensión
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Tabs
-              defaultValue="resumen"
-              className="flex flex-col h-full"
-              onValueChange={(val) => {
-                if (val === 'usuarios') cargarUsuarios();
-                if (val === 'facturas')
-                  cargar(
-                    'facturas',
-                    () => tenantsService.getFacturas(tenant.uid),
-                    setFacturas as never,
-                    facturas
-                  );
-                if (val === 'actividad')
-                  cargar(
-                    'actividad',
-                    () => tenantsService.getActividad(tenant.uid),
-                    setActividad as never,
-                    actividad
-                  );
-              }}
-            >
-              <TabsList className="mx-6 mt-4 mb-2 w-auto self-start">
-                <TabsTrigger value="resumen">Resumen</TabsTrigger>
-                <TabsTrigger value="usuarios">Usuarios</TabsTrigger>
-                <TabsTrigger value="facturas">Facturas</TabsTrigger>
-                <TabsTrigger value="actividad">Actividad</TabsTrigger>
-              </TabsList>
+          <Tabs
+            defaultValue="resumen"
+            className="flex flex-col h-full"
+            onValueChange={(val) => {
+              if (val === 'usuarios') cargarUsuarios();
+              if (val === 'facturas')
+                cargar(
+                  'facturas',
+                  () => tenantsService.getFacturas(tenant.uid),
+                  setFacturas as never,
+                  facturas
+                );
+              if (val === 'actividad')
+                cargar(
+                  'actividad',
+                  () => tenantsService.getActividad(tenant.uid),
+                  setActividad as never,
+                  actividad
+                );
+            }}
+          >
+            <TabsList className="mx-6 mt-4 mb-2 w-auto self-start">
+              <TabsTrigger value="resumen">Resumen</TabsTrigger>
+              <TabsTrigger value="usuarios">Usuarios</TabsTrigger>
+              <TabsTrigger value="facturas">Facturas</TabsTrigger>
+              <TabsTrigger value="actividad">Actividad</TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="resumen" className="px-6 pb-6 space-y-5">
-                <div className="grid grid-cols-3 gap-3 mt-2">
-                  <div className="bg-muted/40 rounded-xl p-3 text-center">
-                    <div className="flex justify-center mb-1">
-                      <Icon name="Users" className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <p className="text-h6 font-bold text-foreground">{tenant.total_usuarios}</p>
-                    <p className="text-caption text-muted-foreground">Usuarios activos</p>
+            <TabsContent value="resumen" className="px-6 pb-6 space-y-5">
+              <div className="grid grid-cols-3 gap-3 mt-2">
+                <div className="bg-muted/40 rounded-xl p-3 text-center">
+                  <div className="flex justify-center mb-1">
+                    <Icon name="Users" className="h-4 w-4 text-blue-600" />
                   </div>
-                  <div className="bg-muted/40 rounded-xl p-3 text-center">
-                    <div className="flex justify-center mb-1">
-                      <Icon name="DollarSign" className="h-4 w-4 text-emerald-600" />
-                    </div>
-                    <p className="text-h6 font-bold text-foreground">
-                      {formatMoney(tenant.mrr, { scope: 'platform', maximumFractionDigits: 0 })}
-                    </p>
-                    <p className="text-caption text-muted-foreground">MRR</p>
-                  </div>
-                  <div className="bg-muted/40 rounded-xl p-3 text-center">
-                    <div className="flex justify-center mb-1">
-                      <Icon name="Calendar" className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <p className="text-h6 font-bold text-foreground">{dias}</p>
-                    <p className="text-caption text-muted-foreground">Días activo</p>
-                  </div>
+                  <p className="text-h6 font-bold text-foreground">{tenant.total_usuarios}</p>
+                  <p className="text-caption text-muted-foreground">Usuarios activos</p>
                 </div>
-                <div className="space-y-4">
-                  <h3 className="text-body2 font-semibold text-foreground">Uso de recursos</h3>
-                  <div>
-                    <div className="flex justify-between text-caption text-muted-foreground mb-1">
-                      <span className="flex items-center gap-1.5">
-                        <Icon name="Users" className="h-3.5 w-3.5" /> Usuarios
-                      </span>
-                      <span>
-                        {tenant.total_usuarios} / {tenant.limite_usuarios} ({userPct}%)
-                      </span>
-                    </div>
-                    <Progress value={userPct} className="h-2" />
+                <div className="bg-muted/40 rounded-xl p-3 text-center">
+                  <div className="flex justify-center mb-1">
+                    <Icon name="DollarSign" className="h-4 w-4 text-emerald-600" />
                   </div>
-                  <div>
-                    <div className="flex justify-between text-caption text-muted-foreground mb-1">
-                      <span className="flex items-center gap-1.5">
-                        <Icon name="HardDrive" className="h-3.5 w-3.5" /> Almacenamiento
-                      </span>
-                      <span>
-                        {tenant.almacenamiento_usado_gb} / {tenant.limite_almacenamiento_gb} GB (
-                        {storagePct}%)
-                      </span>
-                    </div>
-                    <Progress value={storagePct} className="h-2" />
-                  </div>
-                </div>
-                {(onSuspend || onActivate || onArchive || onRestore) && (
-                  <div className="pt-4 border-t border-border/40 flex flex-col gap-2">
-                    {tenant.estado === 'ARCHIVADO' ? (
-                      onRestore && (
-                        <Button
-                          variant="outline"
-                          className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
-                          onClick={() => onRestore(tenant)}
-                        >
-                          <Icon name="RefreshCw" className="h-4 w-4 mr-2" />
-                          Restaurar Tenant
-                        </Button>
-                      )
-                    ) : (
-                      <>
-                        {tenant.estado === 'SUSPENDIDO'
-                          ? onActivate && (
-                              <Button
-                                variant="outline"
-                                className="w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300"
-                                onClick={() => onActivate(tenant)}
-                              >
-                                <Icon name="CheckCircle" className="h-4 w-4 mr-2" />
-                                Activar Tenant
-                              </Button>
-                            )
-                          : onSuspend && (
-                              <Button
-                                variant="outline"
-                                className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                                onClick={() => setConfirmandoSuspension(true)}
-                              >
-                                <Icon name="AlertTriangle" className="h-4 w-4 mr-2" />
-                                Suspender Tenant
-                              </Button>
-                            )}
-                        {onArchive && (
-                          <Button
-                            variant="outline"
-                            className="w-full text-muted-foreground hover:text-foreground"
-                            onClick={() => onArchive(tenant)}
-                          >
-                            <Icon name="Minus" className="h-4 w-4 mr-2" />
-                            Archivar Tenant
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="usuarios" className="px-6 pb-6 space-y-4">
-                {userCreatedMsg && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 mt-2">
-                    <Icon name="CheckCircle2" className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <p className="text-body2 text-emerald-700">{userCreatedMsg}</p>
-                  </div>
-                )}
-                <div className="mt-2">
-                  <h3 className="text-body2 font-semibold text-foreground mb-1">Crear usuario</h3>
-                  <p className="text-caption text-muted-foreground mb-4">
-                    El usuario recibirá un email para establecer su contraseña.
+                  <p className="text-h6 font-bold text-foreground">
+                    {formatMoney(tenant.mrr, { scope: 'platform', maximumFractionDigits: 0 })}
                   </p>
-                  <div className="space-y-3 mb-6">
-                    <Input
-                      label="Nombre completo"
-                      placeholder="Juan Pérez"
-                      value={newUserName}
-                      onChange={(e) => setNewUserName(e.target.value)}
-                    />
-                    <Input
-                      label="Email"
-                      type="email"
-                      placeholder="juan@empresa.com"
-                      value={newUserEmail}
-                      onChange={(e) => setNewUserEmail(e.target.value)}
-                    />
-                    <Button
-                      className="w-full"
-                      disabled={!newUserName.trim() || !newUserEmail.trim() || creatingUser}
-                      onClick={handleCreateUser}
-                    >
-                      {creatingUser ? (
-                        <>
-                          <Icon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />
-                          Creando...
-                        </>
-                      ) : (
-                        <>
-                          <Icon name="UserPlus" className="h-4 w-4 mr-2" />
-                          Crear usuario
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <p className="text-caption text-muted-foreground">MRR</p>
                 </div>
-                <div className="border-t border-border/40 pt-4">
-                  <h3 className="text-body2 font-semibold text-foreground mb-3">
-                    Usuarios del tenant
-                  </h3>
-                  {loadingTab === 'usuarios' ? (
-                    <div className="flex items-center justify-center py-8 text-muted-foreground">
-                      <Icon name="Loader2" className="h-5 w-5 mr-2 animate-spin" />
-                      Cargando...
-                    </div>
-                  ) : usuarios.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-                      <Icon name="Users" className="h-8 w-8 opacity-30" />
-                      <p className="text-body2">Sin datos de usuarios</p>
-                      <p className="text-caption">No se encontraron usuarios en este tenant.</p>
-                    </div>
+                <div className="bg-muted/40 rounded-xl p-3 text-center">
+                  <div className="flex justify-center mb-1">
+                    <Icon name="Calendar" className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <p className="text-h6 font-bold text-foreground">{dias}</p>
+                  <p className="text-caption text-muted-foreground">Días activo</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-body2 font-semibold text-foreground">Uso de recursos</h3>
+                <div>
+                  <div className="flex justify-between text-caption text-muted-foreground mb-1">
+                    <span className="flex items-center gap-1.5">
+                      <Icon name="Users" className="h-3.5 w-3.5" /> Usuarios
+                    </span>
+                    <span>
+                      {tenant.total_usuarios} / {tenant.limite_usuarios} ({userPct}%)
+                    </span>
+                  </div>
+                  <Progress value={userPct} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between text-caption text-muted-foreground mb-1">
+                    <span className="flex items-center gap-1.5">
+                      <Icon name="HardDrive" className="h-3.5 w-3.5" /> Almacenamiento
+                    </span>
+                    <span>
+                      {tenant.almacenamiento_usado_gb} / {tenant.limite_almacenamiento_gb} GB (
+                      {storagePct}%)
+                    </span>
+                  </div>
+                  <Progress value={storagePct} className="h-2" />
+                </div>
+              </div>
+              {(onSuspend || onActivate || onArchive || onRestore || onPurge) && (
+                <div className="pt-4 border-t border-border/40 flex flex-col gap-2">
+                  {tenant.estado === 'ARCHIVADO' ? (
+                    onRestore && (
+                      <Button
+                        variant="outline"
+                        className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                        onClick={() => onRestore(tenant)}
+                      >
+                        <Icon name="RefreshCw" className="h-4 w-4 mr-2" />
+                        Restaurar Tenant
+                      </Button>
+                    )
                   ) : (
                     <>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-border/40">
-                              <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                                Usuario
-                              </th>
-                              <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                                Rol
-                              </th>
-                              <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                                Último acceso
-                              </th>
-                              <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                                Estado
-                              </th>
-                              <th className="py-2" />
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {usuarios.map((u) => {
-                              const isLocking = lockingUser === u.uid;
-                              const isActive = u.estado === 'Activo';
-                              return (
-                                <tr key={u.uid} className="border-b border-border/20">
-                                  <td className="py-2.5">
-                                    <p className="font-medium text-foreground text-body2">
-                                      {u.name}
-                                    </p>
-                                    <p className="text-caption text-muted-foreground">{u.email}</p>
-                                  </td>
-                                  <td className="py-2.5 text-body2 text-muted-foreground">
-                                    {u.rol}
-                                  </td>
-                                  <td className="py-2.5 text-body2 text-muted-foreground">
-                                    {formatRelative(u.ultimo_acceso)}
-                                  </td>
-                                  <td className="py-2.5">
-                                    <Badge
-                                      variant="soft"
-                                      className={
-                                        isActive
-                                          ? 'bg-emerald-100 text-emerald-700'
-                                          : 'bg-gray-100 text-gray-500'
-                                      }
-                                    >
-                                      {u.estado}
+                      {tenant.estado === 'SUSPENDIDO'
+                        ? onActivate && (
+                            <Button
+                              variant="outline"
+                              className="w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300"
+                              onClick={() => onActivate(tenant)}
+                            >
+                              <Icon name="CheckCircle" className="h-4 w-4 mr-2" />
+                              Activar Tenant
+                            </Button>
+                          )
+                        : onSuspend && (
+                            <Button
+                              variant="outline"
+                              className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                              onClick={() => setConfirmandoSuspension(true)}
+                            >
+                              <Icon name="AlertTriangle" className="h-4 w-4 mr-2" />
+                              Suspender Tenant
+                            </Button>
+                          )}
+                      {onArchive && (
+                        <Button
+                          variant="outline"
+                          className="w-full text-muted-foreground hover:text-foreground"
+                          onClick={() => onArchive(tenant)}
+                        >
+                          <Icon name="Archive" className="h-4 w-4 mr-2" />
+                          Archivar Tenant
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  {onPurge && canPurge && (
+                    <Button
+                      className="w-full bg-red-950 hover:bg-red-900 text-white border border-red-900"
+                      onClick={() => setConfirmandoPurga(true)}
+                    >
+                      <Icon name="Trash2" className="h-4 w-4 mr-2" />
+                      Eliminar definitivamente
+                    </Button>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="usuarios" className="px-6 pb-6 space-y-4">
+              {userCreatedMsg && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 mt-2">
+                  <Icon name="CheckCircle2" className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <p className="text-body2 text-emerald-700">{userCreatedMsg}</p>
+                </div>
+              )}
+              <div className="mt-2">
+                <h3 className="text-body2 font-semibold text-foreground mb-1">Crear usuario</h3>
+                <p className="text-caption text-muted-foreground mb-4">
+                  El usuario recibirá un email para establecer su contraseña.
+                </p>
+                <div className="space-y-3 mb-6">
+                  <Input
+                    label="Nombre completo"
+                    placeholder="Juan Pérez"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                  />
+                  <Input
+                    label="Email"
+                    type="email"
+                    placeholder="juan@empresa.com"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                  />
+                  <Button
+                    className="w-full"
+                    disabled={!newUserName.trim() || !newUserEmail.trim() || creatingUser}
+                    onClick={handleCreateUser}
+                  >
+                    {creatingUser ? (
+                      <>
+                        <Icon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />
+                        Creando...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                        Crear usuario
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="border-t border-border/40 pt-4">
+                <h3 className="text-body2 font-semibold text-foreground mb-3">
+                  Usuarios del tenant
+                </h3>
+                {loadingTab === 'usuarios' ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <Icon name="Loader2" className="h-5 w-5 mr-2 animate-spin" />
+                    Cargando...
+                  </div>
+                ) : usuarios.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+                    <Icon name="Users" className="h-8 w-8 opacity-30" />
+                    <p className="text-body2">Sin datos de usuarios</p>
+                    <p className="text-caption">No se encontraron usuarios en este tenant.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border/40">
+                            <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                              Usuario
+                            </th>
+                            <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                              Rol
+                            </th>
+                            <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                              Último acceso
+                            </th>
+                            <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                              Estado
+                            </th>
+                            <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                              2FA
+                            </th>
+                            <th className="py-2" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {usuarios.map((u) => {
+                            const isLocking = lockingUser === u.uid;
+                            const isActive = u.estado === 'Activo';
+                            return (
+                              <tr key={u.uid} className="border-b border-border/20">
+                                <td className="py-2.5">
+                                  <p className="font-medium text-foreground text-body2">{u.name}</p>
+                                  <p className="text-caption text-muted-foreground">{u.email}</p>
+                                </td>
+                                <td className="py-2.5 text-body2 text-muted-foreground">{u.rol}</td>
+                                <td className="py-2.5 text-body2 text-muted-foreground">
+                                  {formatRelative(u.ultimo_acceso)}
+                                </td>
+                                <td className="py-2.5">
+                                  <Badge
+                                    variant="soft"
+                                    className={
+                                      isActive
+                                        ? 'bg-emerald-100 text-emerald-700'
+                                        : 'bg-gray-100 text-gray-500'
+                                    }
+                                  >
+                                    {u.estado}
+                                  </Badge>
+                                </td>
+                                <td className="py-2.5">
+                                  {u.two_factor_enabled ? (
+                                    <Badge variant="soft" className="bg-blue-100 text-blue-700">
+                                      Activo
                                     </Badge>
-                                  </td>
-                                  <td className="py-2.5 text-right">
-                                    <div className="flex items-center justify-end gap-1">
+                                  ) : (
+                                    <span className="text-caption text-muted-foreground">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2.5 text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <EditButton onClick={() => setEditingUser(u)} />
+                                    {canPurge && (
+                                      <DeleteButton
+                                        tooltip="Eliminar usuario"
+                                        onClick={() => setPurgingUser(u)}
+                                      />
+                                    )}
+                                    {u.two_factor_enabled && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -511,161 +564,158 @@ export function TenantDetailDrawer({
                                           'Resetear 2FA'
                                         )}
                                       </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        disabled={isLocking}
-                                        className={
-                                          isActive
-                                            ? 'text-red-500 hover:text-red-600 hover:bg-red-50 text-xs'
-                                            : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs'
-                                        }
-                                        onClick={async () => {
-                                          if (!tenant) return;
-                                          setLockingUser(u.uid);
-                                          try {
-                                            if (isActive) {
-                                              await tenantsService.lockUser(tenant.uid, u.uid);
-                                            } else {
-                                              await tenantsService.unlockUser(tenant.uid, u.uid);
-                                            }
-                                            await cargarUsuarios(usersPage);
-                                          } finally {
-                                            setLockingUser(null);
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      disabled={isLocking}
+                                      className={
+                                        isActive
+                                          ? 'text-red-500 hover:text-red-600 hover:bg-red-50 text-xs'
+                                          : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs'
+                                      }
+                                      onClick={async () => {
+                                        if (!tenant) return;
+                                        setLockingUser(u.uid);
+                                        try {
+                                          if (isActive) {
+                                            await tenantsService.lockUser(tenant.uid, u.uid);
+                                          } else {
+                                            await tenantsService.unlockUser(tenant.uid, u.uid);
                                           }
-                                        }}
-                                      >
-                                        {isLocking ? (
-                                          <Icon
-                                            name="Loader2"
-                                            className="h-3.5 w-3.5 animate-spin"
-                                          />
-                                        ) : isActive ? (
-                                          'Bloquear'
-                                        ) : (
-                                          'Desbloquear'
-                                        )}
-                                      </Button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                      {usersTotal > PER_PAGE && (
-                        <PaginationControl
-                          page={usersPage}
-                          totalPages={Math.ceil(usersTotal / PER_PAGE)}
-                          total={usersTotal}
-                          pageSize={PER_PAGE}
-                          onPageChange={cargarUsuarios}
-                        />
-                      )}
-                    </>
-                  )}
+                                          await cargarUsuarios(usersPage);
+                                        } finally {
+                                          setLockingUser(null);
+                                        }
+                                      }}
+                                    >
+                                      {isLocking ? (
+                                        <Icon name="Loader2" className="h-3.5 w-3.5 animate-spin" />
+                                      ) : isActive ? (
+                                        'Bloquear'
+                                      ) : (
+                                        'Desbloquear'
+                                      )}
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    {usersTotal > PER_PAGE && (
+                      <PaginationControl
+                        page={usersPage}
+                        totalPages={Math.ceil(usersTotal / PER_PAGE)}
+                        total={usersTotal}
+                        pageSize={PER_PAGE}
+                        onPageChange={cargarUsuarios}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="facturas" className="px-6 pb-6">
+              {loadingTab === 'facturas' ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Icon name="Loader2" className="h-5 w-5 mr-2 animate-spin" />
+                  Cargando...
                 </div>
-              </TabsContent>
-
-              <TabsContent value="facturas" className="px-6 pb-6">
-                {loadingTab === 'facturas' ? (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
-                    <Icon name="Loader2" className="h-5 w-5 mr-2 animate-spin" />
-                    Cargando...
-                  </div>
-                ) : facturas.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-                    <Icon name="Activity" className="h-8 w-8 opacity-30" />
-                    <p className="text-body2">Sin facturas disponibles</p>
-                    <p className="text-caption">Este tenant aún no tiene facturas registradas.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border/40">
-                          <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                            Periodo
-                          </th>
-                          <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                            Monto
-                          </th>
-                          <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                            Estado
-                          </th>
-                          <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
-                            Vencimiento
-                          </th>
+              ) : facturas.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+                  <Icon name="Activity" className="h-8 w-8 opacity-30" />
+                  <p className="text-body2">Sin facturas disponibles</p>
+                  <p className="text-caption">Este tenant aún no tiene facturas registradas.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto mt-2">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/40">
+                        <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                          Periodo
+                        </th>
+                        <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                          Monto
+                        </th>
+                        <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                          Estado
+                        </th>
+                        <th className="text-left py-2 text-caption font-semibold text-muted-foreground">
+                          Vencimiento
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {facturas.map((f, i) => (
+                        <tr key={i} className="border-b border-border/20">
+                          <td className="py-2.5 text-body2 text-foreground">{f.periodo}</td>
+                          <td className="py-2.5 font-semibold text-foreground">
+                            {formatMoney(f.total, {
+                              scope: 'platform',
+                              maximumFractionDigits: 0,
+                            })}
+                          </td>
+                          <td className="py-2.5">
+                            <Badge
+                              variant="soft"
+                              className={
+                                f.status === 'PAGADA'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : f.status === 'VENCIDA'
+                                    ? 'bg-red-100 text-red-700'
+                                    : f.status === 'PENDIENTE'
+                                      ? 'bg-amber-100 text-amber-700'
+                                      : 'bg-gray-100 text-gray-400'
+                              }
+                            >
+                              {f.status}
+                            </Badge>
+                          </td>
+                          <td className="py-2.5 text-body2 text-muted-foreground">
+                            {f.due_at ? formatDate(f.due_at) : '—'}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {facturas.map((f, i) => (
-                          <tr key={i} className="border-b border-border/20">
-                            <td className="py-2.5 text-body2 text-foreground">{f.periodo}</td>
-                            <td className="py-2.5 font-semibold text-foreground">
-                              {formatMoney(f.total, {
-                                scope: 'platform',
-                                maximumFractionDigits: 0,
-                              })}
-                            </td>
-                            <td className="py-2.5">
-                              <Badge
-                                variant="soft"
-                                className={
-                                  f.status === 'PAGADA'
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : f.status === 'VENCIDA'
-                                      ? 'bg-red-100 text-red-700'
-                                      : f.status === 'PENDIENTE'
-                                        ? 'bg-amber-100 text-amber-700'
-                                        : 'bg-gray-100 text-gray-400'
-                                }
-                              >
-                                {f.status}
-                              </Badge>
-                            </td>
-                            <td className="py-2.5 text-body2 text-muted-foreground">
-                              {f.due_at ? formatDate(f.due_at) : '—'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </TabsContent>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </TabsContent>
 
-              <TabsContent value="actividad" className="px-6 pb-6">
-                {loadingTab === 'actividad' ? (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
-                    <Icon name="Loader2" className="h-5 w-5 mr-2 animate-spin" />
-                    Cargando...
-                  </div>
-                ) : actividad.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-                    <Icon name="Clock" className="h-8 w-8 opacity-30" />
-                    <p className="text-body2">Sin actividad reciente</p>
-                    <p className="text-caption">No se ha registrado actividad para este tenant.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 mt-2">
-                    {actividad.map((ev, i) => (
-                      <div key={i} className="flex gap-3 items-start">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                        <div>
-                          <p className="text-body2 text-foreground">{ev.message}</p>
-                          <p className="text-caption text-muted-foreground font-mono">
-                            {ev.timestamp ? formatDate(ev.timestamp) : ''}
-                          </p>
-                        </div>
+            <TabsContent value="actividad" className="px-6 pb-6">
+              {loadingTab === 'actividad' ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Icon name="Loader2" className="h-5 w-5 mr-2 animate-spin" />
+                  Cargando...
+                </div>
+              ) : actividad.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+                  <Icon name="Clock" className="h-8 w-8 opacity-30" />
+                  <p className="text-body2">Sin actividad reciente</p>
+                  <p className="text-caption">No se ha registrado actividad para este tenant.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 mt-2">
+                  {actividad.map((ev, i) => (
+                    <div key={i} className="flex gap-3 items-start">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
+                      <div>
+                        <p className="text-body2 text-foreground">{ev.message}</p>
+                        <p className="text-caption text-muted-foreground font-mono">
+                          {ev.timestamp ? formatDate(ev.timestamp) : ''}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
         <SheetFooter className="border-t border-border/40 px-6 py-4">
           <Button variant="outline" onClick={handleClose}>
@@ -673,6 +723,126 @@ export function TenantDetailDrawer({
           </Button>
         </SheetFooter>
       </SheetContent>
+
+      <Dialog
+        open={confirmandoSuspension}
+        onOpenChange={(v) => !v && setConfirmandoSuspension(false)}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>¿Suspender a &quot;{tenant.nombre}&quot;?</DialogTitle>
+            <DialogDescription>
+              Esta acción bloqueará el acceso de todos sus usuarios al sistema de forma inmediata.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={textoConfirmacion}
+            onChange={(e) => setTextoConfirmacion(e.target.value)}
+            label='Escribe "SUSPENDER" para confirmar:'
+            placeholder="SUSPENDER"
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmandoSuspension(false)}
+              disabled={isSuspending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={textoConfirmacion !== 'SUSPENDER'}
+              loading={isSuspending}
+              onClick={handleSuspend}
+            >
+              Confirmar Suspensión
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={confirmandoPurga}
+        onOpenChange={(v) => !v && !isPurging && setConfirmandoPurga(false)}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Eliminar definitivamente &quot;{tenant.nombre}&quot;</DialogTitle>
+            <DialogDescription>
+              Esta acción NO se puede deshacer. Se borra el registro del tenant, sus usuarios,
+              roles, tokens y los datos operativos asociados (oportunidades, contactos, cuentas,
+              etc.), incluyendo el schema en la base de datos.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={textoConfirmacionPurga}
+            onChange={(e) => setTextoConfirmacionPurga(e.target.value)}
+            label={`Escribe exactamente "${tenant.nombre}" para confirmar:`}
+            placeholder={tenant.nombre}
+            disabled={isPurging}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmandoPurga(false)}
+              disabled={isPurging}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-red-950 hover:bg-red-900 text-white"
+              disabled={textoConfirmacionPurga !== tenant.nombre}
+              loading={isPurging}
+              onClick={handlePurgeTenant}
+            >
+              Eliminar definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <TenantUserEditDialog
+        tenantUid={tenant.uid}
+        user={editingUser}
+        onClose={() => setEditingUser(null)}
+        onSaved={() => cargarUsuarios(usersPage)}
+      />
+
+      <Dialog
+        open={!!purgingUser}
+        onOpenChange={(v) => !v && !isPurgingUser && setPurgingUser(null)}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Eliminar definitivamente a {purgingUser?.name}</DialogTitle>
+            <DialogDescription>
+              Esta acción NO se puede deshacer. Se borra el registro del usuario, sus tokens y
+              roles. Los datos operativos donde participaba se conservan, pero quedan sin
+              propietario asignado.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={purgeUserConfirmText}
+            onChange={(e) => setPurgeUserConfirmText(e.target.value)}
+            label={`Escribe exactamente el email "${purgingUser?.email}" para confirmar:`}
+            placeholder={purgingUser?.email}
+            disabled={isPurgingUser}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPurgingUser(null)} disabled={isPurgingUser}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-red-950 hover:bg-red-900 text-white"
+              disabled={purgeUserConfirmText !== purgingUser?.email}
+              loading={isPurgingUser}
+              onClick={handlePurgeUser}
+            >
+              Eliminar definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }

@@ -8,6 +8,7 @@ import {
   AlertCircle,
   AlertOctagon,
   AlertTriangle,
+  Archive,
   ArrowLeft,
   ArrowLeftRight,
   ArrowRight,
@@ -308,6 +309,7 @@ const icons = {
   Activity,
   Shield,
   Headphones,
+  Archive,
 
   // Proyectos
   FolderKanban,

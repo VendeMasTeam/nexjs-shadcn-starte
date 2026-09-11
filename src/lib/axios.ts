@@ -152,6 +152,8 @@ export const endpoints = {
       create: '/admin/tenants',
       show: (uid: string) => `/admin/tenants/${uid}`,
       update: (uid: string) => `/admin/tenants/${uid}`,
+      // delete: (uid) => `/admin/tenants/${uid}` — LEGACY, no usar en pantallas nuevas (confunde con purge)
+      purge: (uid: string) => `/admin/tenants/${uid}/purge`,
       suspend: (uid: string) => `/admin/tenants/${uid}/suspend`,
       activate: (uid: string) => `/admin/tenants/${uid}/activate`,
       archive: (uid: string) => `/admin/tenants/${uid}/archive`,
@@ -160,6 +162,8 @@ export const endpoints = {
       unlockUser: (uid: string, userUid: string) => `/admin/tenants/${uid}/users/${userUid}/unlock`,
       createUser: (uid: string) => `/admin/tenants/${uid}/users`,
       users: (uid: string) => `/admin/tenants/${uid}/users`,
+      updateUser: (uid: string, userUid: string) => `/admin/tenants/${uid}/users/${userUid}`,
+      purgeUser: (uid: string, userUid: string) => `/admin/tenants/${uid}/users/${userUid}/purge`,
       resetUserTwoFactor: (tenantUid: string, userUid: string) =>
         `/admin/tenants/${tenantUid}/users/${userUid}/2fa/reset`,
     },

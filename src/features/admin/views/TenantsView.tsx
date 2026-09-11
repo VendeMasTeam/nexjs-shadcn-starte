@@ -29,6 +29,7 @@ export const TenantsView = () => {
     activateTenant,
     archiveTenant,
     restoreTenant,
+    purgeTenant,
     createTenantUser,
     pagination,
   } = useTenants({ search: debouncedSearch, plan_uid: filterPlan, estado: filterEstado });
@@ -38,6 +39,18 @@ export const TenantsView = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [prevTenants, setPrevTenants] = useState(tenants);
+
+  // Mantiene el drawer abierto sincronizado con la lista: cada vez que una acción
+  // (suspender/archivar/eliminar/etc.) refresca `tenants`, el tenant seleccionado
+  // se actualiza con los datos frescos en vez de quedar con el estado viejo.
+  if (tenants !== prevTenants) {
+    setPrevTenants(tenants);
+    if (selectedTenant) {
+      const fresh = tenants.find((t) => t.uid === selectedTenant.uid);
+      if (fresh) setSelectedTenant(fresh);
+    }
+  }
 
   const activeFiltersCount =
     (filterPlan ? 1 : 0) + (filterEstado ? 1 : 0) + (debouncedSearch ? 1 : 0);
@@ -163,6 +176,7 @@ export const TenantsView = () => {
         onActivate={(t) => activateTenant(t.uid)}
         onArchive={(t) => archiveTenant(t.uid)}
         onRestore={(t) => restoreTenant(t.uid)}
+        onPurge={(t, confirmation) => purgeTenant(t.uid, confirmation)}
         onCreateUser={createTenantUser}
       />
     </PageContainer>

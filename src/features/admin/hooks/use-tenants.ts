@@ -126,6 +126,17 @@ export function useTenants(filters: TenantFilters = {}) {
     [fetchTenants]
   );
 
+  // No atrapa errores acá: el caller (drawer) necesita saber si falló para no
+  // cerrar el panel — esta acción es irreversible, no queremos cerrar en falso.
+  const purgeTenant = useCallback(
+    async (uid: string, confirmation: string) => {
+      await tenantsService.purge(uid, confirmation);
+      notify.success('Tenant eliminado definitivamente.');
+      await fetchTenants();
+    },
+    [fetchTenants]
+  );
+
   const createTenantUser = useCallback(
     async (tenantUid: string, data: { name: string; email: string; role: string }) => {
       return tenantsService.createUser(tenantUid, data);
@@ -143,6 +154,7 @@ export function useTenants(filters: TenantFilters = {}) {
     activateTenant,
     archiveTenant,
     restoreTenant,
+    purgeTenant,
     createTenantUser,
     pagination: {
       page: pagination.page,
