@@ -73,6 +73,25 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
   });
 
+  const lockMutation = useMutation({
+    mutationFn: (uid: string) => platformUsersService.lock(uid),
+    meta: { successMessage: 'Usuario desactivado' },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
+  });
+
+  const unlockMutation = useMutation({
+    mutationFn: (uid: string) => platformUsersService.unlock(uid),
+    meta: { successMessage: 'Usuario activado' },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
+  });
+
+  const purgeMutation = useMutation({
+    mutationFn: ({ uid, confirmation }: { uid: string; confirmation: string }) =>
+      platformUsersService.purge(uid, confirmation),
+    meta: { successMessage: 'Usuario eliminado definitivamente' },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
+  });
+
   return {
     users,
     isLoading,
@@ -90,6 +109,15 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     },
     resetTwoFactor: async (uid: string): Promise<void> => {
       await resetTwoFactorMutation.mutateAsync(uid);
+    },
+    lockUser: async (uid: string): Promise<void> => {
+      await lockMutation.mutateAsync(uid);
+    },
+    unlockUser: async (uid: string): Promise<void> => {
+      await unlockMutation.mutateAsync(uid);
+    },
+    purgeUser: async (uid: string, confirmation: string): Promise<void> => {
+      await purgeMutation.mutateAsync({ uid, confirmation });
     },
     pagination: {
       page: pagination.page,

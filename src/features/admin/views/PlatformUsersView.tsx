@@ -3,6 +3,8 @@
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { formatDate } from 'src/lib/date';
+import { useAuthContext } from 'src/shared/auth/hooks/use-auth-context';
+import { usePermissions } from 'src/shared/auth/hooks/use-permissions';
 import {
   PageContainer,
   PageHeader,
@@ -22,6 +24,14 @@ import {
 import { Badge, Button, EditButton, Icon, Input, SelectField } from 'src/shared/components/ui';
 import { MoreActionsMenu } from 'src/shared/components/ui/action-buttons';
 import { ConfirmDialog } from 'src/shared/components/ui/confirm-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from 'src/shared/components/ui/dialog';
 
 import { PlatformUserFormDrawer } from '../components/platform-user-form-drawer';
 import { usePlatformRoles } from '../hooks/use-platform-roles';
@@ -45,9 +55,20 @@ const columnHelper = createColumnHelper<PlatformUser>();
 interface UserColumnHandlers {
   onEdit: (user: PlatformUser) => void;
   onResetTwoFactor: (user: PlatformUser) => void;
+  onToggleLock: (user: PlatformUser) => void;
+  onPurge: (user: PlatformUser) => void;
+  canPurge: boolean;
+  currentUserUid?: string;
 }
 
-function buildUserColumns({ onEdit, onResetTwoFactor }: UserColumnHandlers) {
+function buildUserColumns({
+  onEdit,
+  onResetTwoFactor,
+  onToggleLock,
+  onPurge,
+  canPurge,
+  currentUserUid,
+}: UserColumnHandlers) {
   return [
     columnHelper.accessor('name', {
       header: 'Usuario',
@@ -101,6 +122,9 @@ function buildUserColumns({ onEdit, onResetTwoFactor }: UserColumnHandlers) {
       header: 'Acciones',
       cell: (info) => {
         const user = info.row.original;
+        const isSelf = !!currentUserUid && user.uid === currentUserUid;
+        const isActive = user.status === 'ACTIVO';
+        const toggleLockColor: 'error' | 'default' = isActive ? 'error' : 'default';
         return (
           <div className="flex items-center gap-1">
             <EditButton onClick={() => onEdit(user)} />
@@ -112,6 +136,26 @@ function buildUserColumns({ onEdit, onResetTwoFactor }: UserColumnHandlers) {
                   color: 'warning',
                   onClick: () => onResetTwoFactor(user),
                 },
+                // Desactivar/Activar y Eliminar definitivamente son "acciones críticas"
+                // según el doc — ambas requieren admin.tenants.purge, no solo el purge.
+                ...(canPurge
+                  ? [
+                      {
+                        label: isActive ? 'Desactivar' : 'Activar',
+                        icon: <Icon name={isActive ? 'UserX' : 'UserCheck'} size={14} />,
+                        color: toggleLockColor,
+                        disabled: isActive && isSelf,
+                        onClick: () => onToggleLock(user),
+                      },
+                      {
+                        label: 'Eliminar definitivamente',
+                        icon: <Icon name="Trash2" size={14} />,
+                        color: 'error' as const,
+                        disabled: isSelf,
+                        onClick: () => onPurge(user),
+                      },
+                    ]
+                  : []),
               ]}
             />
           </div>
@@ -127,18 +171,62 @@ export function PlatformUsersView() {
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const { users, isLoading, createUser, updateUser, resetTwoFactor, pagination } = usePlatformUsers(
-    {
-      admin_role_uid: filterRole !== 'all' ? filterRole : undefined,
-      status: filterStatus !== 'all' ? filterStatus : undefined,
-    }
-  );
+  const {
+    users,
+    isLoading,
+    createUser,
+    updateUser,
+    resetTwoFactor,
+    lockUser,
+    unlockUser,
+    purgeUser,
+    pagination,
+  } = usePlatformUsers({
+    admin_role_uid: filterRole !== 'all' ? filterRole : undefined,
+    status: filterStatus !== 'all' ? filterStatus : undefined,
+  });
 
   const { roles } = usePlatformRoles();
+  const { hasPermission } = usePermissions();
+  const { user: currentUser } = useAuthContext();
+  const canPurge = hasPermission('admin.tenants.purge');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
   const [resetTwoFactorTarget, setResetTwoFactorTarget] = useState<PlatformUser | null>(null);
+  const [lockTarget, setLockTarget] = useState<PlatformUser | null>(null);
+  const [purgeTarget, setPurgeTarget] = useState<PlatformUser | null>(null);
+  const [purgeConfirmText, setPurgeConfirmText] = useState('');
+  const [isPurging, setIsPurging] = useState(false);
+
+  const handleConfirmToggleLock = async () => {
+    if (!lockTarget) return;
+    try {
+      if (lockTarget.status === 'ACTIVO') {
+        await lockUser(lockTarget.uid);
+      } else {
+        await unlockUser(lockTarget.uid);
+      }
+      setLockTarget(null);
+    } catch {
+      // toast global ya muestra el error (p.ej. "no podés desactivar tu propio usuario")
+    }
+  };
+
+  const handleConfirmPurge = async () => {
+    if (!purgeTarget) return;
+    setIsPurging(true);
+    try {
+      await purgeUser(purgeTarget.uid, purgeConfirmText);
+      setPurgeTarget(null);
+      setPurgeConfirmText('');
+    } catch {
+      // el toast de error ya lo muestra el mutationCache global — acá solo
+      // evitamos que se cierre el modal para que el usuario pueda reintentar
+    } finally {
+      setIsPurging(false);
+    }
+  };
 
   const COLUMNS = useMemo(
     () =>
@@ -148,8 +236,12 @@ export function PlatformUsersView() {
           setDrawerOpen(true);
         },
         onResetTwoFactor: (user) => setResetTwoFactorTarget(user),
+        onToggleLock: (user) => setLockTarget(user),
+        onPurge: (user) => setPurgeTarget(user),
+        canPurge,
+        currentUserUid: currentUser?.uid,
       }),
-    []
+    [canPurge, currentUser?.uid]
   );
 
   const { table, dense, onChangeDense } = useTable({
@@ -328,6 +420,59 @@ export function PlatformUsersView() {
         confirmLabel="Resetear 2FA"
         variant="warning"
       />
+
+      <ConfirmDialog
+        open={!!lockTarget}
+        onClose={() => setLockTarget(null)}
+        onConfirm={handleConfirmToggleLock}
+        title={lockTarget?.status === 'ACTIVO' ? '¿Desactivar usuario?' : '¿Activar usuario?'}
+        description={
+          lockTarget?.status === 'ACTIVO' ? (
+            <>
+              <strong>{lockTarget?.name}</strong> quedará bloqueado y se le revocarán sus sesiones.
+              No se borran sus datos.
+            </>
+          ) : (
+            <>
+              <strong>{lockTarget?.name}</strong> vuelve a poder iniciar sesión normalmente.
+            </>
+          )
+        }
+        confirmLabel={lockTarget?.status === 'ACTIVO' ? 'Desactivar' : 'Activar'}
+        variant={lockTarget?.status === 'ACTIVO' ? 'error' : 'default'}
+      />
+
+      <Dialog open={!!purgeTarget} onOpenChange={(v) => !v && !isPurging && setPurgeTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Eliminar definitivamente a {purgeTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Se borra el registro del usuario, sus tokens, sus
+              roles/permisos y sus sesiones de soporte asociadas.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={purgeConfirmText}
+            onChange={(e) => setPurgeConfirmText(e.target.value)}
+            label={`Escribe exactamente el email "${purgeTarget?.email}" para confirmar:`}
+            placeholder={purgeTarget?.email}
+            disabled={isPurging}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPurgeTarget(null)} disabled={isPurging}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-red-950 hover:bg-red-900 text-white"
+              disabled={purgeConfirmText !== purgeTarget?.email}
+              loading={isPurging}
+              onClick={handleConfirmPurge}
+            >
+              Eliminar definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }

@@ -33,4 +33,21 @@ export const platformUsersService = {
     const res = await axiosInstance.post(endpoints.admin.platform.users.resetTwoFactor(uid));
     return res.data.data;
   },
+  // POST .../lock — desactiva: bloquea + revoca tokens, no borra datos
+  async lock(uid: string): Promise<PlatformUser> {
+    const res = await axiosInstance.post(endpoints.admin.platform.users.lock(uid));
+    return res.data.data;
+  },
+  // POST .../unlock — reactiva y reinicia intentos fallidos
+  async unlock(uid: string): Promise<PlatformUser> {
+    const res = await axiosInstance.post(endpoints.admin.platform.users.unlock(uid));
+    return res.data.data;
+  },
+  // DELETE .../purge — borrado físico e irreversible, requiere admin.tenants.purge
+  async purge(uid: string, confirmation: string): Promise<unknown> {
+    const res = await axiosInstance.delete(endpoints.admin.platform.users.purge(uid), {
+      data: { confirmation },
+    });
+    return res.data.data;
+  },
 };

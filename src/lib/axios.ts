@@ -132,7 +132,9 @@ export const endpoints = {
         create: '/admin/platform/users',
         show: (uid: string) => `/admin/platform/users/${uid}`,
         update: (uid: string) => `/admin/platform/users/${uid}`,
-        delete: (uid: string) => `/admin/platform/users/${uid}`,
+        lock: (uid: string) => `/admin/platform/users/${uid}/lock`,
+        unlock: (uid: string) => `/admin/platform/users/${uid}/unlock`,
+        purge: (uid: string) => `/admin/platform/users/${uid}/purge`,
         assignRole: (uid: string) => `/admin/platform/users/${uid}/roles`,
         removeRole: (uid: string, roleUid: string) =>
           `/admin/platform/users/${uid}/roles/${roleUid}`,
