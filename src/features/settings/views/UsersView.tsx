@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { usePermissions } from 'src/shared/auth/hooks/use-permissions';
 import {
   PageContainer,
   PageHeader,
@@ -29,15 +30,27 @@ export const UsersView = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SettingsUser | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SettingsUser | null>(null);
+  const [resetTwoFactorTarget, setResetTwoFactorTarget] = useState<SettingsUser | null>(null);
+
+  const { can } = usePermissions();
+  const canManageUsers = can('users.manage');
 
   const [debouncedSearch] = useDebounce(search, 400);
 
-  const { users, isLoading, createUser, updateUser, toggleStatus, deleteUser, pagination } =
-    useSettingsUsers({
-      search: debouncedSearch || undefined,
-      role_uid: filterRole || undefined,
-      estado: filterStatus || undefined,
-    });
+  const {
+    users,
+    isLoading,
+    createUser,
+    updateUser,
+    toggleStatus,
+    deleteUser,
+    resetTwoFactor,
+    pagination,
+  } = useSettingsUsers({
+    search: debouncedSearch || undefined,
+    role_uid: filterRole || undefined,
+    estado: filterStatus || undefined,
+  });
 
   const { roles } = useRoles();
   const { teams } = useTeams();
@@ -152,6 +165,7 @@ export const UsersView = () => {
             onEdit={handleEdit}
             onToggleStatus={(u: SettingsUser) => toggleStatus(u.uid)}
             onDelete={(u: SettingsUser) => setDeleteTarget(u)}
+            onResetTwoFactor={canManageUsers ? (u) => setResetTwoFactorTarget(u) : undefined}
             total={pagination.total}
             pageIndex={pagination.page - 1}
             pageSize={pagination.rowsPerPage}
@@ -186,6 +200,24 @@ export const UsersView = () => {
         }
         confirmLabel="Eliminar"
         variant="error"
+      />
+
+      <ConfirmDialog
+        open={!!resetTwoFactorTarget}
+        onClose={() => setResetTwoFactorTarget(null)}
+        onConfirm={() => {
+          if (resetTwoFactorTarget) resetTwoFactor(resetTwoFactorTarget.uid);
+          setResetTwoFactorTarget(null);
+        }}
+        title="¿Resetear 2FA?"
+        description={
+          <>
+            <strong>{resetTwoFactorTarget?.name}</strong> podrá iniciar sesión solo con email y
+            contraseña, y deberá activar 2FA nuevamente desde su perfil si lo desea.
+          </>
+        }
+        confirmLabel="Resetear 2FA"
+        variant="warning"
       />
     </PageContainer>
   );

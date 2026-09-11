@@ -124,6 +124,12 @@ export function useSettingsUsers(filters: UserFilters = {}) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
   });
 
+  const resetTwoFactorMutation = useMutation({
+    meta: { successMessage: '2FA reseteado correctamente' },
+    mutationFn: (id: string) => usersService.resetTwoFactor(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
+  });
+
   return {
     users,
     isLoading,
@@ -156,6 +162,9 @@ export function useSettingsUsers(filters: UserFilters = {}) {
     },
     deleteUser: async (id: string): Promise<void> => {
       await deleteMutation.mutateAsync(id);
+    },
+    resetTwoFactor: async (id: string): Promise<void> => {
+      await resetTwoFactorMutation.mutateAsync(id);
     },
     refetch: () => queryClient.invalidateQueries({ queryKey: queryKeys.settings.users }),
     pagination: {

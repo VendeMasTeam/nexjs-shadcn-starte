@@ -70,6 +70,8 @@ export const endpoints = {
     twoFactor: {
       setup: '/2fa/setup', // GET → { secret, otpauth_url }
       confirm: '/2fa/confirm', // POST { code } → { token, recovery_codes[] }
+      regenerateRecoveryCodes: '/2fa/recovery-codes/regenerate', // POST → { recovery_codes[] }
+      disable: '/2fa', // DELETE { password }
     },
   },
   users: {
@@ -79,6 +81,7 @@ export const endpoints = {
     update: (uid: string) => `/users/${uid}`,
     delete: (uid: string) => `/users/${uid}`,
     access: (uid: string) => `/users/${uid}/access`,
+    resetTwoFactor: (uid: string) => `/users/${uid}/2fa/reset`,
     assignRole: (uid: string) => `/users/${uid}/roles`,
     removeRole: (uid: string, roleUid: string) => `/users/${uid}/roles/${roleUid}`,
     assignPermission: (uid: string) => `/users/${uid}/permissions`,
@@ -133,6 +136,7 @@ export const endpoints = {
         assignRole: (uid: string) => `/admin/platform/users/${uid}/roles`,
         removeRole: (uid: string, roleUid: string) =>
           `/admin/platform/users/${uid}/roles/${roleUid}`,
+        resetTwoFactor: (uid: string) => `/admin/platform/users/${uid}/2fa/reset`,
       },
       roles: {
         list: '/admin/platform/roles',
@@ -156,6 +160,8 @@ export const endpoints = {
       unlockUser: (uid: string, userUid: string) => `/admin/tenants/${uid}/users/${userUid}/unlock`,
       createUser: (uid: string) => `/admin/tenants/${uid}/users`,
       users: (uid: string) => `/admin/tenants/${uid}/users`,
+      resetUserTwoFactor: (tenantUid: string, userUid: string) =>
+        `/admin/tenants/${tenantUid}/users/${userUid}/2fa/reset`,
     },
     billing: {
       list: '/admin/billing',

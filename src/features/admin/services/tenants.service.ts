@@ -3,6 +3,7 @@ import type {
   Tenant,
   TenantActividadItem,
   TenantFacturaItem,
+  TenantUser,
 } from 'src/features/admin/types/admin.types';
 import axiosInstance, { endpoints } from 'src/lib/axios';
 import { type PaginationParams } from 'src/shared/lib/pagination';
@@ -45,6 +46,12 @@ export const tenantsService = {
   },
   async unlockUser(tenantUid: string, userUid: string): Promise<void> {
     await axiosInstance.post(endpoints.admin.tenants.unlockUser(tenantUid, userUid));
+  },
+  async resetUserTwoFactor(tenantUid: string, userUid: string): Promise<TenantUser> {
+    const res = await axiosInstance.post(
+      endpoints.admin.tenants.resetUserTwoFactor(tenantUid, userUid)
+    );
+    return res.data.data;
   },
   async createUser(
     tenantUid: string,

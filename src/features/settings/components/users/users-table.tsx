@@ -37,6 +37,8 @@ interface UsersTableProps {
   onEdit: (user: SettingsUser) => void;
   onToggleStatus: (user: SettingsUser) => void;
   onDelete: (user: SettingsUser) => void;
+  /** Omitir si el admin actual no tiene el permiso users.manage */
+  onResetTwoFactor?: (user: SettingsUser) => void;
   /** Server-side pagination (optional — falls back to client-side) */
   total?: number;
   pageIndex?: number;
@@ -50,6 +52,7 @@ export function UsersTable({
   onEdit,
   onToggleStatus,
   onDelete,
+  onResetTwoFactor,
   total,
   pageIndex,
   pageSize,
@@ -125,6 +128,16 @@ export function UsersTable({
                     ),
                     onClick: () => onToggleStatus(user),
                   },
+                  ...(onResetTwoFactor
+                    ? [
+                        {
+                          label: 'Resetear 2FA',
+                          icon: <Icon name="ShieldOff" size={14} />,
+                          color: 'warning' as const,
+                          onClick: () => onResetTwoFactor(user),
+                        },
+                      ]
+                    : []),
                   {
                     label: 'Eliminar usuario',
                     icon: <Icon name="Trash2" size={14} />,
@@ -138,7 +151,7 @@ export function UsersTable({
         },
       }),
     ],
-    [onEdit, onToggleStatus, onDelete]
+    [onEdit, onToggleStatus, onDelete, onResetTwoFactor]
   );
 
   const { table, dense, onChangeDense } = useTable({

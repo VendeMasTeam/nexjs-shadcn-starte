@@ -1,14 +1,18 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { extractApiError } from 'src/lib/api-errors';
 import axiosInstance from 'src/lib/axios';
 import { notify } from 'src/lib/notify';
+import { queryKeys } from 'src/lib/query-keys';
 import { PageContainer, PageHeader } from 'src/shared/components/layouts/page';
 import { Button, Input } from 'src/shared/components/ui';
 import { Card, CardContent } from 'src/shared/components/ui/card';
 import { Icon } from 'src/shared/components/ui/icon';
+
+import { TwoFactorSettings } from '../components/TwoFactorSettings';
+import { useMe } from '../hooks/use-me';
 
 export function ProfileView() {
   const queryClient = useQueryClient();
@@ -16,19 +20,7 @@ export function ProfileView() {
   const [email, setEmail] = useState('');
   const [initialized, setInitialized] = useState(false);
 
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['me'],
-    queryFn: async () => {
-      const res = await axiosInstance.get('/me');
-      return (res.data?.data ?? res.data) as {
-        uid: string;
-        name: string;
-        email: string;
-        avatar_url?: string;
-      };
-    },
-    staleTime: 0,
-  });
+  const { data: profile, isLoading } = useMe();
 
   // Initialize form when profile loads
   if (profile && !initialized) {
@@ -43,7 +35,7 @@ export function ProfileView() {
       return res.data?.data ?? res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.me });
       notify.success('Perfil actualizado');
     },
     onError: (error) => notify.error(extractApiError(error)),
@@ -117,6 +109,8 @@ export function ProfileView() {
             </div>
           </CardContent>
         </Card>
+
+        <TwoFactorSettings />
       </div>
     </PageContainer>
   );

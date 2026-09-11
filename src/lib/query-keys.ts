@@ -1,4 +1,7 @@
 export const queryKeys = {
+  profile: {
+    me: ['me'] as const,
+  },
   dashboard: {
     core: ['dashboard', 'core'] as const,
     activities: ['dashboard', 'activities'] as const,

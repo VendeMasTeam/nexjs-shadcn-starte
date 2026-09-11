@@ -29,21 +29,29 @@ export const signInWithPassword = async ({
   return res.data;
 };
 
-// ─── 2FA Setup ────────────────────────────────────────────────────────────────
+// ─── 2FA — gestión propia (requiere sesión autenticada) ───────────────────────
+// La activación/gestión de 2FA ya no depende de un token temporal de login:
+// el backend expone estos endpoints bajo la sesión normal (Bearer del usuario).
 
-export const getTwoFactorSetupData = async (setupToken: string) => {
-  const res = await axiosInstance.get(endpoints.auth.twoFactor.setup, {
-    headers: { Authorization: `Bearer ${setupToken}` },
-  });
+export const getTwoFactorSetupData = async () => {
+  const res = await axiosInstance.get(endpoints.auth.twoFactor.setup);
   return res.data;
 };
 
-export const confirmTwoFactorSetup = async (setupToken: string, code: string) => {
-  const res = await axiosInstance.post(
-    endpoints.auth.twoFactor.confirm,
-    { code },
-    { headers: { Authorization: `Bearer ${setupToken}` } }
-  );
+export const confirmTwoFactorSetup = async (code: string) => {
+  const res = await axiosInstance.post(endpoints.auth.twoFactor.confirm, { code });
+  return res.data;
+};
+
+export const regenerateRecoveryCodes = async () => {
+  const res = await axiosInstance.post(endpoints.auth.twoFactor.regenerateRecoveryCodes);
+  return res.data;
+};
+
+export const disableTwoFactor = async (password: string) => {
+  const res = await axiosInstance.delete(endpoints.auth.twoFactor.disable, {
+    data: { password },
+  });
   return res.data;
 };
 

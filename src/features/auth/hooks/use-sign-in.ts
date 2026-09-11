@@ -19,8 +19,6 @@ type BackendError = Error & { data?: BackendErrorBody };
 export function useSignIn() {
   const { checkUserSession } = useAuthContext();
   const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
-  const [needsTwoFactorSetup, setNeedsTwoFactorSetup] = useState(false);
-  const [setupToken, setSetupToken] = useState<string | null>(null);
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -38,7 +36,7 @@ export function useSignIn() {
 
       // Backend may wrap response in { data: {...} } or return payload directly
       const payload = data?.data ?? data;
-      const { token, user, requires_two_factor_setup } = payload;
+      const { token, user } = payload;
 
       // Account locked check — backend should return 423 but we handle it here defensively
       if (user?.locked_until) {
@@ -49,14 +47,6 @@ export function useSignIn() {
           });
           return;
         }
-      }
-
-      // 2FA setup required — token is temporary, do NOT set as session yet
-      if (requires_two_factor_setup) {
-        setNeedsTwoFactorSetup(true);
-        setSetupToken(token ?? null);
-        form.clearErrors();
-        return;
       }
 
       if (token) {
@@ -90,21 +80,9 @@ export function useSignIn() {
     }
   };
 
-  // Called after 2FA setup confirmed — backend returns the real access token
-  const completeSetup = async (newToken: string) => {
-    setSession(newToken);
-    await checkUserSession?.();
-  };
-
   const resetTwoFactor = () => {
     setNeedsTwoFactor(false);
     form.resetField('twoFactorCode');
-    form.clearErrors();
-  };
-
-  const resetSetup = () => {
-    setNeedsTwoFactorSetup(false);
-    setSetupToken(null);
     form.clearErrors();
   };
 
@@ -114,9 +92,5 @@ export function useSignIn() {
     isSubmitting: form.formState.isSubmitting,
     needsTwoFactor,
     resetTwoFactor,
-    needsTwoFactorSetup,
-    setupToken,
-    completeSetup,
-    resetSetup,
   };
 }

@@ -1,45 +1,35 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
+import { queryKeys } from 'src/lib/query-keys';
+import { setSession } from 'src/shared/auth/context/jwt/utils';
+import { useAuthContext } from 'src/shared/auth/hooks/use-auth-context';
 
 import { confirmTwoFactorSetup, getTwoFactorSetupData } from '../services/auth.service';
 
 type BackendBody = {
-  success?: boolean;
   message?: string;
   errors?: Record<string, string[]>;
 };
 
-// Fatal errors cannot be retried — user must go back to login
-function extractFatalError(err: unknown): string | null {
+function extractError(err: unknown, fallback: string): string {
   const body = err as BackendBody;
-  const errors = body?.errors;
-
-  if (errors?.tenant) return errors.tenant[0];
-  if (errors?.token) return errors.token[0];
-  if (errors?.two_factor) return errors.two_factor[0];
-
-  // Generic non-success with no retriable error key
-  if (body?.success === false && !errors?.code) {
-    return body.message ?? 'Ocurrió un error inesperado.';
-  }
-  return null;
+  const code = body?.errors?.code;
+  return code?.[0] ?? body?.message ?? fallback;
 }
 
-function extractRetriableError(err: unknown): string {
-  const body = err as BackendBody;
-  const errors = body?.errors;
+// Activación propia de 2FA — corre con la sesión autenticada normal (no requiere
+// un setupToken temporal: el backend expone /2fa/setup y /2fa/confirm bajo el Bearer del usuario).
+export function useSetup2FA() {
+  const { checkUserSession } = useAuthContext();
+  const queryClient = useQueryClient();
 
-  if (errors?.code) return errors.code[0];
-  return body?.message ?? 'Código incorrecto. Verificá tu app y volvé a intentar.';
-}
-
-export function useSetup2FA(setupToken: string, onComplete: (newToken: string) => Promise<void>) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [secret, setSecret] = useState<string>('');
+  const [secret, setSecret] = useState('');
   const [isLoadingQR, setIsLoadingQR] = useState(true);
-  const [fatalError, setFatalError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [code, setCode] = useState('');
   const [isConfirming, setIsConfirming] = useState(false);
@@ -48,13 +38,10 @@ export function useSetup2FA(setupToken: string, onComplete: (newToken: string) =
 
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [showRecoveryCodes, setShowRecoveryCodes] = useState(false);
-  const [confirmedToken, setConfirmedToken] = useState<string | null>(null);
-  const [isProceding, setIsProceding] = useState(false);
 
   useEffect(() => {
-    if (!setupToken) return;
     setIsLoadingQR(true);
-    getTwoFactorSetupData(setupToken)
+    getTwoFactorSetupData()
       .then(async (data) => {
         const payload = data?.data ?? data;
         const secretKey = (payload.secret ?? '') as string;
@@ -64,11 +51,10 @@ export function useSetup2FA(setupToken: string, onComplete: (newToken: string) =
         setQrDataUrl(dataUrl);
       })
       .catch((err) => {
-        const fatal = extractFatalError(err);
-        setFatalError(fatal ?? 'No se pudo cargar el código QR. Intentá de nuevo.');
+        setLoadError(extractError(err, 'No se pudo cargar el código QR. Intentá de nuevo.'));
       })
       .finally(() => setIsLoadingQR(false));
-  }, [setupToken]);
+  }, []);
 
   const confirm = async () => {
     if (code.length !== 6) {
@@ -78,37 +64,28 @@ export function useSetup2FA(setupToken: string, onComplete: (newToken: string) =
     setIsConfirming(true);
     setConfirmError(null);
     try {
-      const data = await confirmTwoFactorSetup(setupToken, code);
+      const data = await confirmTwoFactorSetup(code);
       const payload = data?.data ?? data;
-      const token = payload.token as string;
-      const codes = (payload.recovery_codes ?? []) as string[];
-      setConfirmedToken(token);
-      setRecoveryCodes(codes);
+      // Reemplazar el token anterior por el nuevo antes de mostrar los recovery codes
+      setSession(payload.token as string);
+      await checkUserSession();
+      // two_factor_enabled solo viene en GET /me, no en /auth/init
+      await queryClient.invalidateQueries({ queryKey: queryKeys.profile.me });
+      setRecoveryCodes((payload.recovery_codes ?? []) as string[]);
       setShowRecoveryCodes(true);
     } catch (err) {
-      const fatal = extractFatalError(err);
-      if (fatal) {
-        setFatalError(fatal);
-      } else {
-        setConfirmError(extractRetriableError(err));
-        setCode('');
-      }
+      setConfirmError(extractError(err, 'Código incorrecto. Verificá tu app y volvé a intentar.'));
+      setCode('');
     } finally {
       setIsConfirming(false);
     }
-  };
-
-  const proceed = async () => {
-    if (!confirmedToken) return;
-    setIsProceding(true);
-    await onComplete(confirmedToken);
   };
 
   return {
     qrDataUrl,
     secret,
     isLoadingQR,
-    fatalError,
+    loadError,
     code,
     setCode,
     confirm,
@@ -118,7 +95,5 @@ export function useSetup2FA(setupToken: string, onComplete: (newToken: string) =
     setShowSecret,
     showRecoveryCodes,
     recoveryCodes,
-    proceed,
-    isProceding,
   };
 }

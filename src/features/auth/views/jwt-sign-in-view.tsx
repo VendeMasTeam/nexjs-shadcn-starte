@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -9,7 +8,6 @@ import { Logo } from 'src/shared/components/Logo';
 import { Icon } from 'src/shared/components/ui';
 import { Form, FormControl, FormField, FormItem, FormMessage } from 'src/shared/components/ui';
 
-import { useSetup2FA } from '../hooks/use-setup-2fa';
 import { useSignIn } from '../hooks/use-sign-in';
 
 // ─── Shared input component ───────────────────────────────────────────────────
@@ -401,252 +399,6 @@ function TwoFactorStep({
   );
 }
 
-// ─── Step 3: Two-Factor Setup (first time) ────────────────────────────────────
-function TwoFactorSetupStep({
-  setupToken,
-  onComplete,
-  onBack,
-}: {
-  setupToken: string;
-  onComplete: (newToken: string) => Promise<void>;
-  onBack: () => void;
-}) {
-  const {
-    qrDataUrl,
-    secret,
-    isLoadingQR,
-    fatalError,
-    code,
-    setCode,
-    confirm,
-    isConfirming,
-    confirmError,
-    showSecret,
-    setShowSecret,
-    showRecoveryCodes,
-    recoveryCodes,
-    proceed,
-    isProceding,
-  } = useSetup2FA(setupToken, onComplete);
-
-  const codeInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!isLoadingQR && !showRecoveryCodes && !fatalError) codeInputRef.current?.focus();
-  }, [isLoadingQR, showRecoveryCodes, fatalError]);
-
-  // ── Fatal error step (tenant suspendido, token inválido, etc.) ───────────
-  if (fatalError) {
-    return (
-      <>
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-5">
-            <Icon name="Shield" size={30} className="text-red-500" />
-          </div>
-          <h1 className="text-[22px] font-bold text-slate-800 tracking-tight leading-tight text-center">
-            Acceso restringido
-          </h1>
-          <p className="text-sm text-slate-500 mt-2 text-center leading-relaxed max-w-[300px]">
-            Tu cuenta no puede acceder al sistema en este momento. Contactá con soporte para
-            resolver esto.
-          </p>
-        </div>
-
-        <div className="px-4 py-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 text-center mb-6 leading-relaxed">
-          {fatalError}
-        </div>
-
-        <button
-          type="button"
-          onClick={onBack}
-          className="w-full h-11 rounded-xl font-semibold text-sm tracking-wide text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
-        >
-          <Icon name="ChevronLeft" size={16} />
-          Volver al inicio de sesión
-        </button>
-      </>
-    );
-  }
-
-  // ── Recovery codes step ───────────────────────────────────────────────────
-  if (showRecoveryCodes) {
-    return (
-      <>
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
-            <Icon name="ShieldCheck" size={30} className="text-emerald-600" />
-          </div>
-          <h1 className="text-[22px] font-bold text-slate-800 tracking-tight leading-tight text-center">
-            2FA activado correctamente
-          </h1>
-          <p className="text-sm text-slate-500 mt-2 text-center leading-relaxed max-w-[320px]">
-            Guarda estos códigos de recuperación en un lugar seguro. Son de un solo uso y los
-            necesitarás si pierdes acceso a tu app de autenticación.
-          </p>
-        </div>
-
-        <div className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 mb-5">
-          <div className="grid grid-cols-2 gap-2">
-            {recoveryCodes.map((rc) => (
-              <code
-                key={rc}
-                className="text-xs font-mono font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 text-center tracking-widest"
-              >
-                {rc}
-              </code>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100 text-xs text-amber-700 flex items-start gap-2">
-          <Icon name="AlertTriangle" size={14} className="shrink-0 mt-0.5" />
-          <span>No podrás ver estos códigos de nuevo. Guárdalos ahora.</span>
-        </div>
-
-        <button
-          type="button"
-          onClick={proceed}
-          disabled={isProceding}
-          className="w-full h-11 rounded-xl font-semibold text-sm tracking-wide text-white bg-indigo-600 shadow-[0_4px_14px_rgba(67,56,202,0.4)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(67,56,202,0.5)] hover:bg-indigo-500 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isProceding ? (
-            <>
-              <Spinner />
-              Ingresando…
-            </>
-          ) : (
-            'Ya los guardé, ingresar'
-          )}
-        </button>
-      </>
-    );
-  }
-
-  // ── QR scan + code confirmation step ─────────────────────────────────────
-  return (
-    <>
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
-          <Icon name="ShieldCheck" size={30} className="text-indigo-600" />
-        </div>
-        <h1 className="text-[22px] font-bold text-slate-800 tracking-tight leading-tight text-center">
-          Configurar verificación en dos pasos
-        </h1>
-        <p className="text-sm text-slate-500 mt-2 text-center leading-relaxed max-w-[320px]">
-          Escaneá el código QR con Google Authenticator, Authy u otra app compatible.
-        </p>
-      </div>
-
-      {/* QR code */}
-      <div className="flex flex-col items-center gap-3 mb-5">
-        {isLoadingQR ? (
-          <div className="w-48 h-48 rounded-xl bg-slate-100 flex items-center justify-center">
-            <Spinner />
-          </div>
-        ) : qrDataUrl ? (
-          <Image
-            src={qrDataUrl}
-            alt="Código QR para 2FA"
-            width={192}
-            height={192}
-            unoptimized
-            className="rounded-xl border border-slate-200 p-2 bg-white"
-          />
-        ) : null}
-
-        {secret && (
-          <button
-            type="button"
-            onClick={() => setShowSecret(!showSecret)}
-            className="text-[12px] text-indigo-600 hover:underline flex items-center gap-1"
-          >
-            <Icon name={showSecret ? 'EyeOff' : 'Eye'} size={12} />
-            {showSecret ? 'Ocultar clave manual' : 'No puedo escanear, ingresar manualmente'}
-          </button>
-        )}
-
-        {showSecret && secret && (
-          <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 mb-1">
-              Clave secreta
-            </p>
-            <code className="text-sm font-mono font-bold text-slate-700 tracking-[0.15em] break-all select-all">
-              {secret}
-            </code>
-          </div>
-        )}
-      </div>
-
-      {confirmError && (
-        <div className="mb-4">
-          <ErrorBanner message={confirmError} />
-        </div>
-      )}
-
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="setup-2fa-code"
-            className="text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-500"
-          >
-            Código de verificación
-          </label>
-          <input
-            ref={codeInputRef}
-            id="setup-2fa-code"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            autoComplete="one-time-code"
-            placeholder="000000"
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && code.length === 6) confirm();
-            }}
-            disabled={isConfirming || isLoadingQR}
-            className="
-              w-full h-14 text-center text-2xl font-bold tracking-[0.4em]
-              text-slate-800 bg-slate-50 border border-slate-200 rounded-xl
-              outline-none transition-all duration-200
-              placeholder:text-slate-300 placeholder:tracking-[0.4em]
-              hover:border-slate-300 hover:bg-white
-              focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10
-              disabled:opacity-50 disabled:cursor-not-allowed
-            "
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={confirm}
-          disabled={isConfirming || isLoadingQR || code.length !== 6}
-          className="w-full h-11 rounded-xl font-semibold text-sm tracking-wide text-white bg-indigo-600 shadow-[0_4px_14px_rgba(67,56,202,0.4)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(67,56,202,0.5)] hover:bg-indigo-500 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isConfirming ? (
-            <>
-              <Spinner />
-              Verificando…
-            </>
-          ) : (
-            'Activar y continuar'
-          )}
-        </button>
-      </div>
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-4 w-full flex items-center justify-center gap-1.5 text-[13px] text-slate-400 hover:text-indigo-600 transition-colors duration-200"
-      >
-        <Icon name="ChevronLeft" size={14} />
-        Volver al inicio de sesión
-      </button>
-    </>
-  );
-}
-
 // ─── Background shapes (reusable) ────────────────────────────────────────────
 function BgShapes() {
   return (
@@ -679,17 +431,7 @@ function BgShapes() {
 
 // ─── Main view ────────────────────────────────────────────────────────────────
 export function JwtSignInView() {
-  const {
-    form,
-    onSubmit,
-    isSubmitting,
-    needsTwoFactor,
-    resetTwoFactor,
-    needsTwoFactorSetup,
-    setupToken,
-    completeSetup,
-    resetSetup,
-  } = useSignIn();
+  const { form, onSubmit, isSubmitting, needsTwoFactor, resetTwoFactor } = useSignIn();
   const searchParams = useSearchParams();
   const passwordReset = searchParams.get('passwordReset') === '1';
 
@@ -705,13 +447,7 @@ export function JwtSignInView() {
           </div>
         )}
 
-        {needsTwoFactorSetup && setupToken ? (
-          <TwoFactorSetupStep
-            setupToken={setupToken}
-            onComplete={(newToken) => completeSetup(newToken)}
-            onBack={resetSetup}
-          />
-        ) : needsTwoFactor ? (
+        {needsTwoFactor ? (
           <TwoFactorStep
             form={form}
             onSubmit={onSubmit}

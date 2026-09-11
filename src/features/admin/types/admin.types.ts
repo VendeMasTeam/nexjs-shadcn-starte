@@ -31,6 +31,7 @@ export interface TenantUser {
   rol: string;
   ultimo_acceso: string;
   estado: 'Activo' | 'Inactivo';
+  two_factor_enabled?: boolean;
 }
 
 export interface TenantFacturaItem {

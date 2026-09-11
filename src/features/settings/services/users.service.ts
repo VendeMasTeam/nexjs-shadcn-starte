@@ -62,4 +62,10 @@ export const usersService = {
     const res = await axiosInstance.get(endpoints.users.access(userId));
     return res.data;
   },
+
+  // POST /users/{uid}/2fa/reset — requiere permiso users.manage
+  async resetTwoFactor(uid: string) {
+    const res = await axiosInstance.post(endpoints.users.resetTwoFactor(uid));
+    return res.data;
+  },
 };

@@ -76,6 +76,7 @@ export function TenantDetailDrawer({
   const [actividad, setActividad] = useState<TenantActividadItem[]>([]);
   const [loadingTab, setLoadingTab] = useState<string | null>(null);
   const [lockingUser, setLockingUser] = useState<string | null>(null);
+  const [resettingTwoFactor, setResettingTwoFactor] = useState<string | null>(null);
   const [usersPage, setUsersPage] = useState(1);
   const [usersTotal, setUsersTotal] = useState(0);
   const PER_PAGE = 5;
@@ -481,38 +482,71 @@ export function TenantDetailDrawer({
                                     </Badge>
                                   </td>
                                   <td className="py-2.5 text-right">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      disabled={isLocking}
-                                      className={
-                                        isActive
-                                          ? 'text-red-500 hover:text-red-600 hover:bg-red-50 text-xs'
-                                          : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs'
-                                      }
-                                      onClick={async () => {
-                                        if (!tenant) return;
-                                        setLockingUser(u.uid);
-                                        try {
-                                          if (isActive) {
-                                            await tenantsService.lockUser(tenant.uid, u.uid);
-                                          } else {
-                                            await tenantsService.unlockUser(tenant.uid, u.uid);
+                                    <div className="flex items-center justify-end gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        disabled={resettingTwoFactor === u.uid}
+                                        className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 text-xs"
+                                        onClick={async () => {
+                                          if (!tenant) return;
+                                          setResettingTwoFactor(u.uid);
+                                          try {
+                                            await tenantsService.resetUserTwoFactor(
+                                              tenant.uid,
+                                              u.uid
+                                            );
+                                            await cargarUsuarios(usersPage);
+                                          } finally {
+                                            setResettingTwoFactor(null);
                                           }
-                                          await cargarUsuarios(usersPage);
-                                        } finally {
-                                          setLockingUser(null);
+                                        }}
+                                      >
+                                        {resettingTwoFactor === u.uid ? (
+                                          <Icon
+                                            name="Loader2"
+                                            className="h-3.5 w-3.5 animate-spin"
+                                          />
+                                        ) : (
+                                          'Resetear 2FA'
+                                        )}
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        disabled={isLocking}
+                                        className={
+                                          isActive
+                                            ? 'text-red-500 hover:text-red-600 hover:bg-red-50 text-xs'
+                                            : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs'
                                         }
-                                      }}
-                                    >
-                                      {isLocking ? (
-                                        <Icon name="Loader2" className="h-3.5 w-3.5 animate-spin" />
-                                      ) : isActive ? (
-                                        'Bloquear'
-                                      ) : (
-                                        'Desbloquear'
-                                      )}
-                                    </Button>
+                                        onClick={async () => {
+                                          if (!tenant) return;
+                                          setLockingUser(u.uid);
+                                          try {
+                                            if (isActive) {
+                                              await tenantsService.lockUser(tenant.uid, u.uid);
+                                            } else {
+                                              await tenantsService.unlockUser(tenant.uid, u.uid);
+                                            }
+                                            await cargarUsuarios(usersPage);
+                                          } finally {
+                                            setLockingUser(null);
+                                          }
+                                        }}
+                                      >
+                                        {isLocking ? (
+                                          <Icon
+                                            name="Loader2"
+                                            className="h-3.5 w-3.5 animate-spin"
+                                          />
+                                        ) : isActive ? (
+                                          'Bloquear'
+                                        ) : (
+                                          'Desbloquear'
+                                        )}
+                                      </Button>
+                                    </div>
                                   </td>
                                 </tr>
                               );

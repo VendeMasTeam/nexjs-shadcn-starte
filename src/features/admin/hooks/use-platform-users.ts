@@ -67,6 +67,12 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
   });
 
+  const resetTwoFactorMutation = useMutation({
+    mutationFn: (uid: string) => platformUsersService.resetTwoFactor(uid),
+    meta: { successMessage: '2FA reseteado correctamente' },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.platformUsers }),
+  });
+
   return {
     users,
     isLoading,
@@ -81,6 +87,9 @@ export function usePlatformUsers(filters: PlatformUserFilters = {}) {
     },
     removeRole: async (uid: string, roleUid: string): Promise<void> => {
       await removeRoleMutation.mutateAsync({ uid, roleUid });
+    },
+    resetTwoFactor: async (uid: string): Promise<void> => {
+      await resetTwoFactorMutation.mutateAsync(uid);
     },
     pagination: {
       page: pagination.page,

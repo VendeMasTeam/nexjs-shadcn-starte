@@ -20,6 +20,8 @@ import {
   useTable,
 } from 'src/shared/components/table';
 import { Badge, Button, EditButton, Icon, Input, SelectField } from 'src/shared/components/ui';
+import { MoreActionsMenu } from 'src/shared/components/ui/action-buttons';
+import { ConfirmDialog } from 'src/shared/components/ui/confirm-dialog';
 
 import { PlatformUserFormDrawer } from '../components/platform-user-form-drawer';
 import { usePlatformRoles } from '../hooks/use-platform-roles';
@@ -42,9 +44,10 @@ const columnHelper = createColumnHelper<PlatformUser>();
 
 interface UserColumnHandlers {
   onEdit: (user: PlatformUser) => void;
+  onResetTwoFactor: (user: PlatformUser) => void;
 }
 
-function buildUserColumns({ onEdit }: UserColumnHandlers) {
+function buildUserColumns({ onEdit, onResetTwoFactor }: UserColumnHandlers) {
   return [
     columnHelper.accessor('name', {
       header: 'Usuario',
@@ -101,6 +104,16 @@ function buildUserColumns({ onEdit }: UserColumnHandlers) {
         return (
           <div className="flex items-center gap-1">
             <EditButton onClick={() => onEdit(user)} />
+            <MoreActionsMenu
+              items={[
+                {
+                  label: 'Resetear 2FA',
+                  icon: <Icon name="ShieldOff" size={14} />,
+                  color: 'warning',
+                  onClick: () => onResetTwoFactor(user),
+                },
+              ]}
+            />
           </div>
         );
       },
@@ -114,15 +127,18 @@ export function PlatformUsersView() {
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const { users, isLoading, createUser, updateUser, pagination } = usePlatformUsers({
-    admin_role_uid: filterRole !== 'all' ? filterRole : undefined,
-    status: filterStatus !== 'all' ? filterStatus : undefined,
-  });
+  const { users, isLoading, createUser, updateUser, resetTwoFactor, pagination } = usePlatformUsers(
+    {
+      admin_role_uid: filterRole !== 'all' ? filterRole : undefined,
+      status: filterStatus !== 'all' ? filterStatus : undefined,
+    }
+  );
 
   const { roles } = usePlatformRoles();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
+  const [resetTwoFactorTarget, setResetTwoFactorTarget] = useState<PlatformUser | null>(null);
 
   const COLUMNS = useMemo(
     () =>
@@ -131,6 +147,7 @@ export function PlatformUsersView() {
           setSelectedUser(user);
           setDrawerOpen(true);
         },
+        onResetTwoFactor: (user) => setResetTwoFactorTarget(user),
       }),
     []
   );
@@ -292,6 +309,24 @@ export function PlatformUsersView() {
         }}
         onCreate={(data: PlatformUserPayload) => createUser(data)}
         onUpdate={(uid, data) => updateUser(uid, data)}
+      />
+
+      <ConfirmDialog
+        open={!!resetTwoFactorTarget}
+        onClose={() => setResetTwoFactorTarget(null)}
+        onConfirm={() => {
+          if (resetTwoFactorTarget) resetTwoFactor(resetTwoFactorTarget.uid);
+          setResetTwoFactorTarget(null);
+        }}
+        title="¿Resetear 2FA?"
+        description={
+          <>
+            <strong>{resetTwoFactorTarget?.name}</strong> podrá iniciar sesión solo con email y
+            contraseña, y deberá activar 2FA nuevamente si lo desea.
+          </>
+        }
+        confirmLabel="Resetear 2FA"
+        variant="warning"
       />
     </PageContainer>
   );

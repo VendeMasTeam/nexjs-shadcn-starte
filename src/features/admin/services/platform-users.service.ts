@@ -29,4 +29,8 @@ export const platformUsersService = {
     const res = await axiosInstance.delete(endpoints.admin.platform.users.removeRole(uid, roleUid));
     return res.data.data;
   },
+  async resetTwoFactor(uid: string): Promise<{ uid: string; two_factor_enabled: boolean }> {
+    const res = await axiosInstance.post(endpoints.admin.platform.users.resetTwoFactor(uid));
+    return res.data.data;
+  },
 };
