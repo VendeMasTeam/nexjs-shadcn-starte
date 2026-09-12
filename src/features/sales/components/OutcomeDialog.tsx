@@ -27,6 +27,9 @@ interface OutcomeDialogProps {
   open: boolean;
   clientName: string;
   competitors: Competitor[];
+  /** Si ya se sabe el resultado (ej. se clickeó "Ganado"/"Perdido" en el drawer),
+   *  arranca directo en ese paso y se salta la pantalla de selección. */
+  initialStep?: Step;
   onConfirm: (
     outcome: 'ganado' | 'perdido',
     lostReason?: LostReasonInfo,
@@ -42,14 +45,23 @@ export function OutcomeDialog({
   open,
   clientName,
   competitors,
+  initialStep = 'outcome',
   onConfirm,
   onCancel,
 }: OutcomeDialogProps) {
-  const [step, setStep] = useState<Step>('outcome');
+  const [step, setStep] = useState<Step>(initialStep);
   const [lostReason, setLostReason] = useState(DEFAULT_LOST);
   const [wonForm, setWonForm] = useState(DEFAULT_WON);
   const [newCompetitorName, setNewCompetitorName] = useState('');
   const [error, setError] = useState('');
+
+  // Cada vez que el modal pasa de cerrado a abierto, arranca en el paso pedido
+  // (evita tener que elegir Ganado/Perdido de nuevo si ya se eligió afuera).
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) setStep(initialStep);
+  }
 
   const lostReasonCategories = useLostReasonCategories();
 
@@ -71,7 +83,7 @@ export function OutcomeDialog({
   const isNewWon = wonForm.competitor_uid === NEW_COMPETITOR_KEY;
 
   const reset = () => {
-    setStep('outcome');
+    setStep(initialStep);
     setLostReason(DEFAULT_LOST);
     setWonForm(DEFAULT_WON);
     setNewCompetitorName('');

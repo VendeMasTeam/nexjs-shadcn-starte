@@ -31,7 +31,13 @@ export function usePipeline() {
   } = useQuery<Opportunity[]>({
     queryKey: [...queryKeys.sales.board, search, origin, product],
     queryFn: async () => {
-      const params: { search?: string; origin?: string; product?: string } = {};
+      const params: {
+        search?: string;
+        origin?: string;
+        product?: string;
+        closed_days?: number;
+        include_closed?: boolean;
+      } = { closed_days: 7, include_closed: true };
       if (search) params.search = search;
       if (origin) params.origin = origin;
       if (product) params.product = product;
@@ -83,6 +89,9 @@ export function usePipeline() {
       const list = map.get(opp.stage_uid);
       if (list) list.push(opp);
     });
+    // Orden explícito por kanban_position — necesario para que el reorder
+    // (drag and drop dentro de la columna) se refleje apenas se actualiza el cache.
+    map.forEach((list) => list.sort((a, b) => (a.kanban_position ?? 0) - (b.kanban_position ?? 0)));
     return map;
   }, [scoredOpportunities, stages]);
 

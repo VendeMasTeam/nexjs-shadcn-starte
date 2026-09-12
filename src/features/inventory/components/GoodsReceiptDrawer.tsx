@@ -150,21 +150,15 @@ export function GoodsReceiptDrawer({ open, onClose, onSuccess }: GoodsReceiptDra
     if (!validate()) return;
     setLoading(true);
     try {
-      await Promise.all(
-        items
+      await inventoryStockService.adjustBulk({
+        warehouse_uid: warehouseUid,
+        comment:
+          [orderRef ? `OC: ${orderRef}` : null, notes || null].filter(Boolean).join(' — ') ||
+          undefined,
+        items: items
           .filter((i) => i.product_uid)
-          .map((i) =>
-            inventoryStockService.adjust({
-              product_uid: i.product_uid,
-              warehouse_uid: warehouseUid,
-              operation: 'in',
-              quantity: i.quantity,
-              comment:
-                [orderRef ? `OC: ${orderRef}` : null, notes || null].filter(Boolean).join(' — ') ||
-                undefined,
-            })
-          )
-      );
+          .map((i) => ({ product_uid: i.product_uid, quantity: i.quantity })),
+      });
       notify.success('Entrada registrada correctamente');
       onSuccess?.();
       handleClose();

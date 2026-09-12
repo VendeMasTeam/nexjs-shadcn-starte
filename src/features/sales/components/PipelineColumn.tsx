@@ -13,6 +13,7 @@ interface PipelineColumnProps {
   opportunities: Opportunity[];
   onCardDrop: (oppUid: string, targetStageUid: string) => void;
   onOpenPanel: (uid: string) => void;
+  onReorder: (stageUid: string, orderedUids: string[]) => void;
 }
 
 export function PipelineColumn({
@@ -21,6 +22,7 @@ export function PipelineColumn({
   opportunities,
   onCardDrop,
   onOpenPanel,
+  onReorder,
 }: PipelineColumnProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const isTerminal = stage.is_won || stage.is_lost;
@@ -30,6 +32,28 @@ export function PipelineColumn({
     (sum, o) => sum + (Number(o.amount) || 0) * probability,
     0
   );
+
+  // Se dispara al soltar una card ENCIMA de otra: si son de la misma etapa, reordena
+  // insertando la arrastrada justo antes de la que recibió el drop. Si viene de otra
+  // etapa, delega en onCardDrop (cambio de etapa) — reordenar ahí no aplica todavía.
+  const handleDropBefore = (draggedUid: string, targetUid: string) => {
+    const draggedOpp = opportunities.find((o) => o.uid === draggedUid);
+    if (!draggedOpp) {
+      onCardDrop(draggedUid, stage.uid);
+      return;
+    }
+    const withoutDragged = opportunities.filter((o) => o.uid !== draggedUid);
+    const targetIndex = withoutDragged.findIndex((o) => o.uid === targetUid);
+    const newOrder = [
+      ...withoutDragged.slice(0, targetIndex),
+      draggedOpp,
+      ...withoutDragged.slice(targetIndex),
+    ];
+    onReorder(
+      stage.uid,
+      newOrder.map((o) => o.uid)
+    );
+  };
 
   return (
     <div className="flex flex-col flex-1 min-w-[260px]">
@@ -92,6 +116,7 @@ export function PipelineColumn({
               stages={stages}
               stageColor={stage.color ?? '#6B7280'}
               onOpenPanel={onOpenPanel}
+              onDropBefore={handleDropBefore}
             />
           ))
         )}

@@ -13,6 +13,11 @@ export interface Opportunity {
   description?: string;
   won_at?: string;
   lost_at?: string;
+  /** Campos explícitos del board — usar en vez de inferir del stage */
+  is_closed?: boolean;
+  closed_status?: 'won' | 'lost' | null;
+  closed_at?: string | null;
+  kanban_position?: number;
   opportunityable_type: string;
   opportunityable_uid: string;
   owner_user_uid: string;

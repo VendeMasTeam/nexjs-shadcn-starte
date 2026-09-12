@@ -343,7 +343,6 @@ export function QuotationView(props: QuotationViewProps) {
     setIsConverting(true);
     try {
       const invoice = await convertQuotationToInvoice(quotation.uid);
-      saveQuotation({ ...quotation, status: 'cancelled' });
       if (invoice) {
         router.push(paths.sales.invoice(invoice.uid));
       }

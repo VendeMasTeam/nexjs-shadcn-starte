@@ -1,7 +1,6 @@
 export interface InventoryCategory {
   uid: string;
   name: string;
-  key: string;
   description: string | null;
 }
 
@@ -64,6 +63,9 @@ export interface InventoryMasterItem {
 export interface WarehouseListSummary {
   total_warehouses: number;
   active_warehouses: number;
+  stock_physical_total: number;
+  stock_available_total: number;
+  stock_value_total: number;
 }
 
 export interface InventoryMasterSummary {

@@ -61,9 +61,11 @@ export function WarehousesView() {
 
   const maxPhysical = Math.max(...warehouses.map((w) => w.summary?.total_physical ?? 0), 1);
 
-  const totalPhysical = warehouses.reduce((sum, w) => sum + (w.summary?.total_physical ?? 0), 0);
-  const totalAvailable = warehouses.reduce((sum, w) => sum + (w.summary?.total_available ?? 0), 0);
-  const totalValue = warehouses.reduce((sum, w) => sum + (w.summary?.total_value ?? 0), 0);
+  // Totales globales del backend (summary a nivel de respuesta) — NO calcular sumando
+  // `warehouses`, que es solo la página actual: da un total recortado si hay más páginas.
+  const totalPhysical = warehousesSummary?.stock_physical_total ?? 0;
+  const totalAvailable = warehousesSummary?.stock_available_total ?? 0;
+  const totalValue = warehousesSummary?.stock_value_total ?? 0;
 
   const statsCards = warehousesSummary
     ? [

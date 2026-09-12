@@ -42,14 +42,6 @@ const COLUMNS = (
     header: 'Nombre',
     cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
   }),
-  columnHelper.accessor('key', {
-    header: 'Key',
-    cell: (info) => (
-      <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-        {info.getValue()}
-      </span>
-    ),
-  }),
   columnHelper.accessor('description', {
     header: 'Descripción',
     cell: (info) => <span className="text-sm text-muted-foreground">{info.getValue() || '—'}</span>,
@@ -154,7 +146,7 @@ export function CategoriesView() {
           <div className="w-full max-w-sm">
             <Input
               label="Buscar"
-              placeholder="Buscar por nombre o key..."
+              placeholder="Buscar por nombre..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Icon name="Search" size={15} />}

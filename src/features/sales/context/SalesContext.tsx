@@ -25,6 +25,7 @@ interface SalesContextValue {
   addOpportunity: (data: Partial<Opportunity>) => Promise<Opportunity>;
   updateOpportunity: (uid: string, data: Partial<Opportunity>) => Promise<Opportunity>;
   moveOpportunity: (uid: string, stageUid: string) => Promise<void>;
+  reorderOpportunities: (stageUid: string, orderedUids: string[]) => Promise<void>;
 
   saveQuotation: (data: Partial<Quotation>) => Promise<unknown>;
   convertQuotationToInvoice: (quotationUid: string) => Promise<Invoice>;
@@ -197,6 +198,34 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     [queryClient, refreshOpportunities]
   );
 
+  const reorderOpportunities = useCallback(
+    async (stageUid: string, orderedUids: string[]) => {
+      // Optimista: reasignar kanban_position según el nuevo orden antes de que
+      // responda el backend — el usuario ve el cambio al instante.
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.sales.board, exact: false },
+        (old: Opportunity[] | undefined) => {
+          if (!Array.isArray(old)) return old;
+          const positionByUid = new Map(orderedUids.map((uid, i) => [uid, i]));
+          return old.map((opp) =>
+            positionByUid.has(opp.uid)
+              ? { ...opp, kanban_position: positionByUid.get(opp.uid) }
+              : opp
+          );
+        }
+      );
+      try {
+        await opportunityService.reorderBoard(stageUid, orderedUids);
+      } catch (error) {
+        // Revertir trayendo el orden real del backend
+        await refreshOpportunities();
+        notify.error(extractApiError(error));
+        throw error;
+      }
+    },
+    [queryClient, refreshOpportunities]
+  );
+
   // ─── Quotation mutations ────────────────────────────────────────────────────
 
   const saveQuotation = useCallback(
@@ -228,6 +257,9 @@ export function SalesProvider({ children }: { children: ReactNode }) {
           currency: quotation.currency,
         } as Partial<Invoice>)) as Invoice;
         await refreshInvoices();
+        // La cotización pasa a `invoiced` en backend al crear la factura — refrescar
+        // para que la UI deje de mostrar su estado anterior (draft/sent/approved).
+        await refreshQuotations();
         await refreshOpportunities();
         return created;
       } catch (error) {
@@ -235,7 +267,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    [quotations, refreshInvoices, refreshOpportunities]
+    [quotations, refreshInvoices, refreshQuotations, refreshOpportunities]
   );
 
   // ─── Invoice mutations ──────────────────────────────────────────────────────
@@ -264,6 +296,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
         addOpportunity,
         updateOpportunity,
         moveOpportunity,
+        reorderOpportunities,
         saveQuotation,
         convertQuotationToInvoice,
         registerPayment,

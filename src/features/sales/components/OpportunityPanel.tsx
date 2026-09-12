@@ -16,8 +16,11 @@ import { paths } from 'src/routes/paths';
 import { Badge } from 'src/shared/components/ui/badge';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
+import { PaginationControl } from 'src/shared/components/ui/pagination-control';
 import { Sheet, SheetContent, SheetTitle } from 'src/shared/components/ui/sheet';
+import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
+import { getStageColor } from '../config/pipeline.config';
 import { useSalesContext } from '../context/SalesContext';
 import type { AgingLevel } from '../hooks/useOpportunityPanel';
 import { invoiceService } from '../services/invoice.service';
@@ -30,7 +33,7 @@ import { NewOpportunityDrawer } from './NewOpportunityDrawer';
 import { OpportunityChecklist } from './OpportunityChecklist';
 import { OpportunityQuotationsTab } from './OpportunityQuotationsTab';
 import { OpportunityTimeline } from './OpportunityTimeline';
-import { OutcomeSheet } from './OutcomeSheet';
+import { OutcomeDialog } from './OutcomeDialog';
 import { StageProgressBar } from './StageProgressBar';
 
 type TabId = 'resumen' | 'actividades' | 'cotizaciones' | 'factura' | 'tareas';
@@ -63,40 +66,43 @@ interface InvoiceTabProps {
   stages: PipelineStage[];
 }
 
+const INVOICE_STATUS_COLOR: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
+  paid: 'success',
+  partial: 'warning',
+  issued: 'default',
+  draft: 'default',
+  overdue: 'error',
+};
+
+const INVOICES_PER_PAGE = 20;
+
 function InvoiceTab({ opportunity, stages: _stages }: InvoiceTabProps) {
   const router = useRouter();
+  const [page, setPage] = useState(1);
 
-  // Fetch quotations linked to this opportunity
-  const { data: linkedQuotations = [] } = useQuery<Quotation[]>({
-    queryKey: queryKeys.sales.quotationsByOpportunity(opportunity.uid),
-    queryFn: () => quotationService.getByOpportunity(opportunity.uid),
+  // Todas las facturas de la oportunidad, sin importar de qué cotización vengan
+  const { data: result, isLoading } = useQuery({
+    queryKey: [...queryKeys.sales.invoicesByOpportunity(opportunity.uid), page],
+    queryFn: () =>
+      invoiceService.getByOpportunity(opportunity.uid, { page, per_page: INVOICES_PER_PAGE }),
     staleTime: 0,
   });
 
-  // Fetch invoices for the first linked quotation
-  const firstQuotationUid = linkedQuotations[0]?.uid;
-
-  const { data: quotationInvoices = [], isLoading } = useQuery<Invoice[]>({
-    queryKey: queryKeys.sales.invoicesByQuotation(firstQuotationUid ?? ''),
-    queryFn: () => invoiceService.getByQuotation(firstQuotationUid!),
-    enabled: !!firstQuotationUid,
-    staleTime: 0,
-  });
-
-  const invoice = quotationInvoices[0];
+  const invoices = ((result as Record<string, unknown>)?.data as Invoice[]) ?? [];
+  const meta = extractPaginationMeta(result);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <p className="text-body2 text-muted-foreground">Cargando factura…</p>
+        <p className="text-body2 text-muted-foreground">Cargando facturas…</p>
       </div>
     );
   }
 
-  if (!invoice) {
+  if (invoices.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center">
-        <p className="text-body2 text-muted-foreground">Sin factura generada</p>
+        <p className="text-body2 text-muted-foreground">Sin facturas generadas</p>
         <p className="text-caption text-muted-foreground/60">
           Convierte una cotización aprobada para generar la factura.
         </p>
@@ -104,66 +110,79 @@ function InvoiceTab({ opportunity, stages: _stages }: InvoiceTabProps) {
     );
   }
 
-  const statusLabel = STATUS_LABELS[invoice.status] ?? invoice.status;
-  const STATUS_COLOR: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
-    paid: 'success',
-    partial: 'warning',
-    issued: 'default',
-    draft: 'default',
-    overdue: 'error',
-  };
-
-  const pending = invoice.outstanding_total;
-  const progress = invoice.total > 0 ? Math.round((invoice.paid_total / invoice.total) * 100) : 0;
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <p className="text-body2 font-bold text-foreground font-mono">{invoice.invoice_number}</p>
-          <p className="text-caption text-muted-foreground">{formatDate(invoice.issued_at)}</p>
-        </div>
-        <Badge variant="soft" color={STATUS_COLOR[invoice.status] ?? 'default'}>
-          {statusLabel}
-        </Badge>
-      </div>
+    <div className="space-y-3">
+      {invoices.map((invoice) => {
+        const statusLabel = STATUS_LABELS[invoice.status] ?? invoice.status;
+        const pending = invoice.outstanding_total;
+        const progress =
+          invoice.total > 0 ? Math.round((invoice.paid_total / invoice.total) * 100) : 0;
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-muted/30 p-3">
-          <p className="text-caption text-muted-foreground mb-0.5">Total</p>
-          <p className="text-body2 font-bold text-foreground">
-            {formatMoney(invoice.total, { scope: 'tenant', maximumFractionDigits: 0 })}
-          </p>
-        </div>
-        <div className="rounded-xl bg-muted/30 p-3">
-          <p className="text-caption text-muted-foreground mb-0.5">Pendiente</p>
-          <p className="text-body2 font-bold text-destructive">
-            {formatMoney(pending, { scope: 'tenant', maximumFractionDigits: 0 })}
-          </p>
-        </div>
-      </div>
+        return (
+          <div key={invoice.uid} className="space-y-4 rounded-xl border border-border/50 p-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-body2 font-bold text-foreground font-mono">
+                  {invoice.invoice_number}
+                </p>
+                <p className="text-caption text-muted-foreground">
+                  {formatDate(invoice.issued_at)}
+                </p>
+              </div>
+              <Badge variant="soft" color={INVOICE_STATUS_COLOR[invoice.status] ?? 'default'}>
+                {statusLabel}
+              </Badge>
+            </div>
 
-      <div className="space-y-1">
-        <div className="flex justify-between text-caption text-muted-foreground">
-          <span>Pagado</span>
-          <span>{progress}%</span>
-        </div>
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full bg-success transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-muted/30 p-3">
+                <p className="text-caption text-muted-foreground mb-0.5">Total</p>
+                <p className="text-body2 font-bold text-foreground">
+                  {formatMoney(invoice.total, { scope: 'tenant', maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/30 p-3">
+                <p className="text-caption text-muted-foreground mb-0.5">Pendiente</p>
+                <p className="text-body2 font-bold text-destructive">
+                  {formatMoney(pending, { scope: 'tenant', maximumFractionDigits: 0 })}
+                </p>
+              </div>
+            </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => router.push(paths.sales.invoice(invoice.uid))}
-      >
-        Ver factura completa
-      </Button>
+            <div className="space-y-1">
+              <div className="flex justify-between text-caption text-muted-foreground">
+                <span>Pagado</span>
+                <span>{progress}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-success transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => router.push(paths.sales.invoice(invoice.uid))}
+            >
+              Ver factura completa
+            </Button>
+          </div>
+        );
+      })}
+
+      {meta && meta.last_page > 1 && (
+        <PaginationControl
+          page={page}
+          totalPages={meta.last_page}
+          total={meta.total}
+          pageSize={INVOICES_PER_PAGE}
+          onPageChange={setPage}
+        />
+      )}
     </div>
   );
 }
@@ -172,7 +191,7 @@ interface ResumenTabProps {
   opportunity: Opportunity;
   stages: PipelineStage[];
   onEdit: (opportunity: Opportunity) => void;
-  onOutcome: () => void;
+  onOutcome: (outcome: 'ganado' | 'perdido') => void;
 }
 
 function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps) {
@@ -426,7 +445,7 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
             <Button
               color="primary"
               className="w-full"
-              onClick={() => router.push(paths.sales.quotation(opportunity.uid))}
+              onClick={() => router.push(paths.sales.quotationNew(opportunity.uid))}
             >
               <Icon name="Plus" size={14} />
               Crear cotización
@@ -437,7 +456,7 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
               variant="outline"
               size="sm"
               className="w-full text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:border-emerald-500/50"
-              onClick={onOutcome}
+              onClick={() => onOutcome('ganado')}
             >
               <Icon name="Trophy" size={13} />
               Ganado
@@ -446,7 +465,7 @@ function ResumenTab({ opportunity, stages, onEdit, onOutcome }: ResumenTabProps)
               variant="outline"
               size="sm"
               className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-              onClick={onOutcome}
+              onClick={() => onOutcome('perdido')}
             >
               <Icon name="XCircle" size={13} />
               Perdido
@@ -486,12 +505,17 @@ export function OpportunityPanel({
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
+  const [outcomeInitialStep, setOutcomeInitialStep] = useState<'won' | 'reason'>('won');
 
   const agingStyle = AGING_STYLES[agingLevel];
-  const currentStage = opportunity
-    ? stages.find((s) => s.uid === opportunity.stage_uid)
-    : undefined;
+  const currentStageIndex = opportunity
+    ? stages.findIndex((s) => s.uid === opportunity.stage_uid)
+    : -1;
+  const currentStage = currentStageIndex >= 0 ? stages[currentStageIndex] : undefined;
   const stageLabel = currentStage?.name ?? opportunity?.stage_name;
+  const stageColor = currentStage
+    ? getStageColor(currentStage, currentStageIndex)
+    : { accent: '#6B7280', bg: '#6B7280', text: '#6B7280' };
 
   const displayName = opportunity?.title || opportunity?.uid || '';
 
@@ -518,7 +542,17 @@ export function OpportunityPanel({
                         maximumFractionDigits: 0,
                       })}
                     </span>
-                    {stageLabel && <span className="text-muted-foreground"> · {stageLabel}</span>}
+                    {stageLabel && (
+                      <span
+                        className="ml-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold align-middle"
+                        style={{
+                          backgroundColor: `${stageColor.accent}20`,
+                          color: stageColor.accent,
+                        }}
+                      >
+                        {stageLabel}
+                      </span>
+                    )}
                   </p>
                   {agingLevel !== 'normal' && daysInStage > 0 && (
                     <span
@@ -571,7 +605,10 @@ export function OpportunityPanel({
                       .then(setEditingOpportunity)
                       .catch(() => {});
                   }}
-                  onOutcome={() => setOutcomeDialogOpen(true)}
+                  onOutcome={(outcome) => {
+                    setOutcomeInitialStep(outcome === 'ganado' ? 'won' : 'reason');
+                    setOutcomeDialogOpen(true);
+                  }}
                 />
               )}
               {activeTab === 'actividades' && <OpportunityTimeline opportunity={opportunity} />}
@@ -621,12 +658,13 @@ export function OpportunityPanel({
         }
       />
 
-      {/* Outcome sheet — ganado / perdido */}
+      {/* Outcome dialog — ganado / perdido (mismo modal que el flujo de drag and drop) */}
       {opportunity && (
-        <OutcomeSheet
+        <OutcomeDialog
           open={outcomeDialogOpen}
           clientName={opportunity.title}
           competitors={competitors}
+          initialStep={outcomeInitialStep}
           onConfirm={async (outcome, lostReason, wonInfo) => {
             try {
               if (outcome === 'ganado') {
@@ -636,10 +674,10 @@ export function OpportunityPanel({
                 await opportunityService.markLost(opportunity.uid, lostReason ? [lostReason] : []);
                 notify.success('Oportunidad marcada como perdida');
               }
-              queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-              await refreshOpportunities();
               setOutcomeDialogOpen(false);
               onClose();
+              queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+              refreshOpportunities(); // fire and forget — board se actualiza en background
             } catch {
               notify.error('Error al registrar el resultado');
             }

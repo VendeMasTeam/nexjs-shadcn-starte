@@ -1,5 +1,6 @@
 'use client';
 
+import { getStageColor } from '../config/pipeline.config';
 import type { PipelineStage } from '../types/sales.types';
 
 interface PipelineChevronProps {
@@ -10,18 +11,6 @@ export function PipelineChevron({ stages }: PipelineChevronProps) {
   const N = stages.length;
   const D = 24; // arrow depth in px
 
-  // Provide default colors if stage doesn't have one
-  const CHEVRON_FALLBACKS = [
-    { bg: '#93C5FD', accent: '#2563EB', text: '#1E3A8A' },
-    { bg: '#7DD3FC', accent: '#0284C7', text: '#0C4A6E' },
-    { bg: '#FCD34D', accent: '#D97706', text: '#78350F' },
-    { bg: '#86EFAC', accent: '#16A34A', text: '#14532D' },
-    { bg: '#C4B5FD', accent: '#7C3AED', text: '#4C1D95' },
-    { bg: '#FDA4AF', accent: '#E11D48', text: '#881337' },
-    { bg: '#FDBA74', accent: '#EA580C', text: '#7C2D12' },
-    { bg: '#A7F3D0', accent: '#059669', text: '#064E3B' },
-  ];
-
   return (
     <div className="relative mb-5" style={{ height: 88 }}>
       {stages.map((stage, idx) => {
@@ -30,10 +19,7 @@ export function PipelineChevron({ stages }: PipelineChevronProps) {
         const prob = Math.round(stage.probability_percent);
         const slotPct = 100 / N;
 
-        const fallback = CHEVRON_FALLBACKS[idx % CHEVRON_FALLBACKS.length];
-        const accentColor = stage.color ?? fallback.accent;
-        const textColor = fallback.text;
-        const bgColor = stage.color ?? fallback.bg;
+        const { accent: accentColor, bg: bgColor, text: textColor } = getStageColor(stage, idx);
 
         const clipPath = isFirst
           ? `polygon(0 0, calc(100% - ${D}px) 0, 100% 50%, calc(100% - ${D}px) 100%, 0 100%)`

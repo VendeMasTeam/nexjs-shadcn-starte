@@ -15,9 +15,41 @@ export const opportunityService = {
     return res.data.data;
   },
 
-  async getBoard(params?: { search?: string; origin?: string; product?: string }) {
+  async getBoard(params?: {
+    search?: string;
+    origin?: string;
+    product?: string;
+    closed_days?: number;
+    include_closed?: boolean;
+  }) {
     const res = await axiosInstance.get(endpoints.sales.board, { params });
     return res.data.data;
+  },
+
+  // Reordenar oportunidades DENTRO de la misma etapa (drag and drop en el kanban)
+  async reorderBoard(stageUid: string, orderedOpportunityUids: string[]): Promise<void> {
+    await axiosInstance.post(endpoints.sales.boardReorder, {
+      stage_uid: stageUid,
+      ordered_opportunity_uids: orderedOpportunityUids,
+    });
+  },
+
+  // Historial paginado — no reconstruir esto a partir del board
+  async getHistory(params?: {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    stage_uid?: string;
+    owner_user_uid?: string;
+    origin?: string;
+    status?: 'active' | 'open' | 'closed' | 'won' | 'lost';
+    created_from?: string;
+    created_to?: string;
+    closed_from?: string;
+    closed_to?: string;
+  }): Promise<unknown> {
+    const res = await axiosInstance.get(endpoints.sales.history, { params });
+    return res.data;
   },
 
   async getList(): Promise<Opportunity[]> {

@@ -2,6 +2,30 @@ import { daysUntil, diffDays } from 'src/lib/date';
 
 import type { Opportunity, PipelineStage } from '../types/sales.types';
 
+// ─── Stage colors (fallback palette cuando el backend no manda `stage.color`) ───
+// Usado por el chevron del board y por cualquier otro lugar que muestre el
+// nombre/badge de una etapa — para que el color sea siempre el mismo por etapa.
+
+export const STAGE_COLOR_PALETTE = [
+  { bg: '#93C5FD', accent: '#2563EB', text: '#1E3A8A' },
+  { bg: '#7DD3FC', accent: '#0284C7', text: '#0C4A6E' },
+  { bg: '#FCD34D', accent: '#D97706', text: '#78350F' },
+  { bg: '#86EFAC', accent: '#16A34A', text: '#14532D' },
+  { bg: '#C4B5FD', accent: '#7C3AED', text: '#4C1D95' },
+  { bg: '#FDA4AF', accent: '#E11D48', text: '#881337' },
+  { bg: '#FDBA74', accent: '#EA580C', text: '#7C2D12' },
+  { bg: '#A7F3D0', accent: '#059669', text: '#064E3B' },
+] as const;
+
+export function getStageColor(stage: PipelineStage, index: number) {
+  const fallback = STAGE_COLOR_PALETTE[index % STAGE_COLOR_PALETTE.length];
+  return {
+    accent: stage.color ?? fallback.accent,
+    bg: stage.color ?? fallback.bg,
+    text: fallback.text,
+  };
+}
+
 // ─── Lead Scoring (client-side computation using API data) ─────────────────────
 
 export function computeLeadScore(

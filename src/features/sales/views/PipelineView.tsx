@@ -1,8 +1,10 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useIntelligence } from 'src/features/intelligence/hooks/useIntelligence';
 import type { LostReasonInfo, WonInfo } from 'src/features/sales/types/sales.types';
+import { paths } from 'src/routes/paths';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import { Button } from 'src/shared/components/ui/button';
 import { Icon } from 'src/shared/components/ui/icon';
@@ -25,6 +27,7 @@ import { usePipeline } from '../hooks/usePipeline';
 import { opportunityService } from '../services/opportunity.service';
 
 export function PipelineView() {
+  const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [importDrawerOpen, setImportDrawerOpen] = useState(false);
   const [pendingMove, setPendingMove] = useState<{ oppUid: string } | null>(null);
@@ -40,8 +43,13 @@ export function PipelineView() {
     setOrigin,
     refresh,
   } = usePipeline();
-  const { addOpportunity, moveOpportunity, refreshOpportunities, opportunities } =
-    useSalesContext();
+  const {
+    addOpportunity,
+    moveOpportunity,
+    reorderOpportunities,
+    refreshOpportunities,
+    opportunities,
+  } = useSalesContext();
   const { competitors = [] } = useIntelligence();
   const leadOrigins = useLeadOrigins();
   const originOptions = [
@@ -108,6 +116,10 @@ export function PipelineView() {
         subtitle="Gestiona y visualiza el avance de tus oportunidades de venta"
         action={
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => router.push(paths.sales.pipelineHistory)}>
+              <Icon name="History" size={16} />
+              Ver historial
+            </Button>
             <Button variant="outline" onClick={() => setImportDrawerOpen(true)}>
               <Icon name="Upload" size={16} />
               Importar
@@ -158,6 +170,7 @@ export function PipelineView() {
                 opportunities={opportunitiesByStage.get(stage.uid) ?? []}
                 onCardDrop={handleColumnDrop}
                 onOpenPanel={openPanel}
+                onReorder={reorderOpportunities}
               />
             ))}
           </div>

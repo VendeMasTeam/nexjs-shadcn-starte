@@ -69,14 +69,14 @@ export function ConvertToProjectDrawer({ open, onClose, invoice }: ConvertToProj
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="right" className="sm:max-w-[440px] flex flex-col">
-        <SheetHeader>
+        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/40">
           <SheetTitle className="flex items-center gap-2">
             <Icon name="FolderKanban" size={18} />
             Convertir a Proyecto
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto py-6 space-y-5">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar">
           {checking ? (
             <div className="flex items-center justify-center py-8">
               <p className="text-sm text-muted-foreground">Verificando…</p>
@@ -147,7 +147,7 @@ export function ConvertToProjectDrawer({ open, onClose, invoice }: ConvertToProj
         </div>
 
         {!existingProject && !checking && (
-          <SheetFooter className="gap-2">
+          <SheetFooter className="px-6 py-4 gap-2 border-t border-border/40">
             <Button variant="outline" onClick={onClose} disabled={isPending}>
               Cancelar
             </Button>

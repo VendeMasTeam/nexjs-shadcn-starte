@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from 'src/lib/utils';
 
+import { getStageColor } from '../config/pipeline.config';
 import type { PipelineStage } from '../types/sales.types';
 
 interface StageProgressBarProps {
@@ -18,10 +19,7 @@ export function StageProgressBar({ stages, currentStageUid }: StageProgressBarPr
         {stages.map((stage, i) => (
           <React.Fragment key={stage.uid}>
             <div className="flex flex-col items-center gap-1 shrink-0">
-              <div
-                className="w-2.5 h-2.5 rounded-full opacity-30"
-                style={{ backgroundColor: stage.color ?? '#6B7280' }}
-              />
+              <div className="w-2.5 h-2.5 rounded-full opacity-30 bg-muted-foreground" />
               <span className="text-[9px] text-muted-foreground/40 font-medium truncate w-14 text-center hidden sm:block">
                 {stage.name}
               </span>
@@ -45,6 +43,9 @@ export function StageProgressBar({ stages, currentStageUid }: StageProgressBarPr
       {stages.map((stage, i) => {
         const isDone = currentIndex >= 0 && i < currentIndex;
         const isCurrent = i === currentIndex;
+        // Solo la etapa activa se pinta con su color — el resto (hecho o pendiente)
+        // queda en gris neutro, para que el color resalte únicamente dónde está hoy.
+        const dotColor = isCurrent ? getStageColor(stage, i).accent : '#9CA3AF';
 
         return (
           <React.Fragment key={stage.uid}>
@@ -56,8 +57,8 @@ export function StageProgressBar({ stages, currentStageUid }: StageProgressBarPr
                   isDone || isCurrent ? 'opacity-100' : 'opacity-25'
                 )}
                 style={{
-                  backgroundColor: stage.color ?? '#6B7280',
-                  ...(isCurrent ? { boxShadow: `0 0 0 2px ${stage.color ?? '#6B7280'}40` } : {}),
+                  backgroundColor: dotColor,
+                  ...(isCurrent ? { boxShadow: `0 0 0 2px ${dotColor}40` } : {}),
                 }}
               />
               <span
@@ -75,7 +76,7 @@ export function StageProgressBar({ stages, currentStageUid }: StageProgressBarPr
                   'h-px flex-1 transition-all mb-4',
                   isDone ? 'opacity-70' : 'opacity-15'
                 )}
-                style={{ backgroundColor: stage.color ?? '#6B7280' }}
+                style={{ backgroundColor: '#9CA3AF' }}
               />
             )}
           </React.Fragment>

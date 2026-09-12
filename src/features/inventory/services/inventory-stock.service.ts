@@ -24,6 +24,16 @@ export const inventoryStockService = {
     await axiosInstance.post(endpoints.inventory.adjust, payload);
   },
 
+  // Para múltiples productos en una sola operación (ej: registrar entrada de mercancía).
+  // No usar en loop con adjust() singular — un solo request para todos los items.
+  async adjustBulk(payload: {
+    warehouse_uid: string;
+    comment?: string;
+    items: { product_uid: string; quantity: number }[];
+  }): Promise<void> {
+    await axiosInstance.post(endpoints.inventory.adjustBulk, payload);
+  },
+
   async transfer(payload: TransferStockPayload): Promise<void> {
     await axiosInstance.post(endpoints.inventory.transfer, payload);
   },
@@ -47,7 +57,7 @@ export const inventoryStockService = {
 
   async updateCategory(
     uid: string,
-    payload: { name?: string; key?: string; description?: string }
+    payload: { name?: string; description?: string }
   ): Promise<InventoryCategory> {
     const res = await axiosInstance.put(`${endpoints.inventory.categories}/${uid}`, payload);
     return res.data.data;

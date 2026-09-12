@@ -26,11 +26,12 @@ export const queryKeys = {
     opportunityDetail: (uid: string) => ['sales', 'opportunities', uid] as const,
     opportunityActivities: (uid: string) => ['sales', 'opportunities', uid, 'activities'] as const,
     board: ['sales', 'board'] as const,
+    opportunityHistory: ['sales', 'opportunities', 'history'] as const,
     quotations: ['sales', 'quotations'] as const,
     quotationsByOpportunity: (uid: string) =>
       ['sales', 'quotations', 'by-opportunity', uid] as const,
     invoices: ['sales', 'invoices'] as const,
-    invoicesByQuotation: (uid: string) => ['sales', 'invoices', 'by-quotation', uid] as const,
+    invoicesByOpportunity: (uid: string) => ['sales', 'invoices', 'by-opportunity', uid] as const,
     creditRules: ['sales', 'credit-rules'] as const,
     creditExceptions: ['sales', 'credit-exceptions'] as const,
     currencyRates: ['sales', 'currency-rates'] as const,

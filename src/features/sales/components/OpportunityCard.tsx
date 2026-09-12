@@ -14,6 +14,8 @@ interface OpportunityCardProps {
   stages: PipelineStage[];
   stageColor: string;
   onOpenPanel: (uid: string) => void;
+  /** Se dispara cuando se suelta OTRA card sobre esta — insertarla antes de esta */
+  onDropBefore?: (draggedUid: string, targetUid: string) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -52,11 +54,14 @@ export function OpportunityCard({
   stages,
   stageColor,
   onOpenPanel,
+  onDropBefore,
 }: OpportunityCardProps) {
   const currentStage = stages.find((s) => s.uid === opportunity.stage_uid);
-  const isWon = !!opportunity.won_at;
-  const isLost = !!opportunity.lost_at;
-  const isTerminal = isWon || isLost;
+  // Campos explícitos del board (is_closed/closed_status) — con fallback a
+  // won_at/lost_at por si el backend todavía no los manda en algún ambiente.
+  const isWon = opportunity.closed_status === 'won' || !!opportunity.won_at;
+  const isLost = opportunity.closed_status === 'lost' || !!opportunity.lost_at;
+  const isTerminal = opportunity.is_closed ?? (isWon || isLost);
   const probability = currentStage?.probability_percent ?? 0;
 
   const activityIndicator = getActivityStatus(opportunity.updated_at, opportunity.created_at);
@@ -80,6 +85,21 @@ export function OpportunityCard({
       }}
       onDragEnd={(e) => {
         (e.currentTarget as HTMLElement).style.opacity = '';
+      }}
+      onDragOver={(e) => {
+        if (!onDropBefore) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+      }}
+      onDrop={(e) => {
+        if (!onDropBefore) return;
+        e.preventDefault();
+        e.stopPropagation(); // no burbujear al onDrop de la columna (movería de etapa)
+        const draggedUid = e.dataTransfer.getData('text/plain');
+        if (draggedUid && draggedUid !== opportunity.uid) {
+          onDropBefore(draggedUid, opportunity.uid);
+        }
       }}
       className={cn(
         'group relative bg-card rounded-2xl border border-border/60 p-4 select-none',

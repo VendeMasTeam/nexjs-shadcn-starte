@@ -44,13 +44,13 @@ export const projectsService = {
     return (res.data?.data ?? res.data) as Project;
   },
 
-  /** Returns the project linked to a given invoice, or undefined if none */
-  getByInvoice: async (invoiceUid: string): Promise<Project | undefined> => {
+  /** Returns the project linked to a given invoice, or null if none */
+  getByInvoice: async (invoiceUid: string): Promise<Project | null> => {
     const res = await axiosInstance.get(endpoints.projects.list, {
       params: { invoice_uid: invoiceUid },
     });
     const items: Project[] = res.data?.data ?? [];
-    return items[0];
+    return items[0] ?? null;
   },
 
   /** Deletes a project */
