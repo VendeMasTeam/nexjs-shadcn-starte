@@ -3,7 +3,7 @@
 import { ReactNode, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
 
-import { Spinner } from '../../components/feedback/Spinner';
+import { BrandLoader } from '../../components/feedback/BrandLoader';
 import { useAuthContext } from '../hooks/use-auth-context';
 import { getFirstAccessibleRoute } from '../route-access';
 
@@ -23,11 +23,7 @@ export function GuestGuard({ children }: Props) {
   }, [authenticated, loading, modules, user?.role, router, searchParams]);
 
   if (loading || authenticated) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner />
-      </div>
-    );
+    return <BrandLoader />;
   }
 
   return <>{children}</>;

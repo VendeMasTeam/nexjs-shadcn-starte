@@ -2,6 +2,9 @@ export const queryKeys = {
   profile: {
     me: ['me'] as const,
   },
+  branding: {
+    public: ['branding', 'public'] as const,
+  },
   dashboard: {
     core: ['dashboard', 'core'] as const,
     activities: ['dashboard', 'activities'] as const,

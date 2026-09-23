@@ -1,9 +1,5 @@
-import { Spinner } from 'src/shared/components/feedback/Spinner';
+import { BrandLoader } from 'src/shared/components/feedback/BrandLoader';
 
 export default function Loading() {
-  return (
-    <div className="flex justify-center items-center h-screen w-full">
-      <Spinner />
-    </div>
-  );
+  return <BrandLoader />;
 }

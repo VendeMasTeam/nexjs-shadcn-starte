@@ -6,16 +6,19 @@ import { extractApiError } from 'src/lib/api-errors';
 import axiosInstance from 'src/lib/axios';
 import { notify } from 'src/lib/notify';
 import { queryKeys } from 'src/lib/query-keys';
+import { useAuthContext } from 'src/shared/auth/hooks/use-auth-context';
 import { PageContainer, PageHeader } from 'src/shared/components/layouts/page';
 import { Button, Input } from 'src/shared/components/ui';
 import { Card, CardContent } from 'src/shared/components/ui/card';
 import { Icon } from 'src/shared/components/ui/icon';
 
+import { PlatformBrandingSettings } from '../components/PlatformBrandingSettings';
 import { TwoFactorSettings } from '../components/TwoFactorSettings';
 import { useMe } from '../hooks/use-me';
 
 export function ProfileView() {
   const queryClient = useQueryClient();
+  const { hasAdminPermission } = useAuthContext();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [initialized, setInitialized] = useState(false);
@@ -111,6 +114,8 @@ export function ProfileView() {
         </Card>
 
         <TwoFactorSettings />
+
+        {hasAdminPermission('admin.tenants.manage') && <PlatformBrandingSettings />}
       </div>
     </PageContainer>
   );

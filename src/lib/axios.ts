@@ -127,6 +127,12 @@ export const endpoints = {
     movementsSummary: '/inventory/movements/summary',
     report: '/inventory/report',
   },
+  branding: {
+    // Público — usado en login (sin sesión) y en el resto de la app
+    public: '/platform/branding',
+    // Protegido — requiere admin.tenants.manage
+    update: '/admin/branding',
+  },
   admin: {
     dashboard: '/admin/dashboard',
     planModules: '/admin/plan-modules',

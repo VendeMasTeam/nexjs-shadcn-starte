@@ -13,6 +13,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'CRM',
   description: 'Sistema de gestión empresarial',
+  // URL estable — la ruta resuelve el branding actual en cada request (ver route.ts)
+  icons: { icon: '/api/favicon' },
 };
 
 import { QueryProvider } from 'src/lib/query-provider';
@@ -22,13 +24,14 @@ import { AuthProvider } from 'src/shared/auth/context/jwt';
 import { ProgressBar } from 'src/shared/components/ProgressBar';
 import { ThemeProvider } from 'src/shared/components/ThemeProvider';
 import { ToasterProvider } from 'src/shared/components/ToasterProvider';
+import { fetchPublicBranding } from 'src/shared/lib/branding';
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const lang = await detectLanguage();
+  const [lang, initialBranding] = await Promise.all([detectLanguage(), fetchPublicBranding()]);
 
   const SETTINGS_SCRIPT = `
   try {
@@ -64,7 +67,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <ProgressBar />
           <I18nProvider lang={lang}>
-            <QueryProvider>
+            <QueryProvider initialBranding={initialBranding}>
               <AuthProvider>{children}</AuthProvider>
             </QueryProvider>
           </I18nProvider>

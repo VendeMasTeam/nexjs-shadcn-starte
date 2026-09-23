@@ -3,7 +3,7 @@
 import { ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'src/routes/hooks';
 
-import { Spinner } from '../../components/feedback/Spinner';
+import { BrandLoader } from '../../components/feedback/BrandLoader';
 import { useAuthContext } from '../hooks/use-auth-context';
 import { canAccessPath, getFirstAccessibleRoute } from '../route-access';
 
@@ -40,11 +40,7 @@ export function RouteGuard({ children }: Props) {
   }, [loading, authenticated, modules, pathname, router, user?.role]);
 
   if (loading || !authenticated) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner />
-      </div>
-    );
+    return <BrandLoader />;
   }
 
   // Block render synchronously — useEffect redirect fires after paint, causing skeleton flash
