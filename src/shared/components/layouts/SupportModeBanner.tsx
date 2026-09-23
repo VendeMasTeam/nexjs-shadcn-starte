@@ -30,7 +30,10 @@ export function SupportModeBanner() {
       <Button
         size="sm"
         variant="outline"
-        className="border-amber-950/40 text-amber-950 hover:bg-amber-600"
+        // Overrides repetidos en dark: a propósito — el variant "outline" trae dark:bg-input/30
+        // y hover:text-accent-foreground, que sin esto ganan y funden el botón (o el texto) contra
+        // el bg-amber-500 fijo del banner, que no sigue el theme
+        className="border-amber-950/40 bg-white/40 text-amber-950 hover:bg-white/60 hover:text-amber-950 dark:bg-white/40 dark:hover:bg-white/60"
         onClick={exit}
         loading={isExiting}
       >
