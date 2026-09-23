@@ -183,8 +183,8 @@
   /* ── sidebar (superficie) ───────────────────────────── */
   --sidebar: oklch(0.233 0.022 261);
   /* #141a21 - igual que el fondo */
-  --sidebar-foreground: oklch(0.67 0.032 258);
-  /* #919eab */
+  --sidebar-foreground: oklch(0.76 0.028 258);
+  /* un poco más blanco que #919eab, pero por debajo del hover (0.985) */
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(1 0 0 / 8%);
@@ -568,8 +568,8 @@
 .sidebar-dark {
   /* Mismo background que el dark mode: #141a21 */
   --sidebar: oklch(0.233 0.022 261);
-  --sidebar-foreground: oklch(0.67 0.032 258);
-  /* #919eab */
+  --sidebar-foreground: oklch(0.76 0.028 258);
+  /* un poco más blanco que #919eab, pero por debajo del hover (0.985) */
   --sidebar-primary: oklch(0.985 0 0);
   --sidebar-primary-foreground: oklch(0.233 0.022 261);
   --sidebar-accent: oklch(1 0 0 / 8%);
