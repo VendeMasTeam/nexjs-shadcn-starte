@@ -95,6 +95,16 @@ export interface Project {
   updated_at?: string;
 }
 
+// ─── Summary (agregado global del backend, no depende de la página actual) ─────
+
+export interface ProjectsSummary {
+  total_projects: number;
+  active_projects: number;
+  completed_projects: number;
+  paused_projects: number;
+  overdue_milestones: number;
+}
+
 // ─── Payload types (for create/update operations) ──────────────────────────────
 
 export interface ProjectPayload {

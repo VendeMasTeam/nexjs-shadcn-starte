@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { usePermissions } from 'src/shared/auth/hooks/use-permissions';
 import {
   PageContainer,
@@ -20,12 +20,14 @@ import { UserDrawer } from '../components/users/user-drawer';
 import { UsersTable } from '../components/users/users-table';
 import { useRoles } from '../hooks/use-roles';
 import { useSettingsUsers, useUser } from '../hooks/use-settings-users';
-import { useTeams } from '../hooks/use-teams';
 import type { SettingsUser } from '../types/settings.types';
 
 export const UsersView = () => {
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('');
+  const [filterRoleLabel, setFilterRoleLabel] = useState('');
+  const [roleFilterSearch, setRoleFilterSearch] = useState('');
+  const [debouncedRoleFilterSearch] = useDebounce(roleFilterSearch, 400);
   const [filterStatus, setFilterStatus] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SettingsUser | null>(null);
@@ -39,6 +41,7 @@ export const UsersView = () => {
 
   const {
     users,
+    summary,
     isLoading,
     createUser,
     updateUser,
@@ -52,22 +55,19 @@ export const UsersView = () => {
     estado: filterStatus || undefined,
   });
 
-  const { roles } = useRoles();
-  const { teams } = useTeams();
+  const { roles } = useRoles({ search: debouncedRoleFilterSearch || undefined });
   const { data: userStatuses = [] } = useUserStatusOptions();
 
   // Fetch fresh user data (with role_uid/team_uid) when editing
   const { data: editingUser } = useUser(selectedUser?.uid);
   const effectiveUser = editingUser ?? selectedUser;
 
-  const stats = useMemo(
-    () => ({
-      total: pagination.total,
-      activos: users.filter((u) => u.status === 'ACTIVO').length,
-      inactivos: users.filter((u) => u.status === 'INACTIVO').length,
-    }),
-    [users, pagination.total]
-  );
+  // Agregado del backend sobre TODOS los usuarios del tenant — no depende de la página actual.
+  const stats = {
+    total: summary?.total_users ?? pagination.total,
+    activos: summary?.active_users ?? 0,
+    inactivos: summary?.inactive_users ?? 0,
+  };
 
   const handleOpenNew = () => {
     setSelectedUser(null);
@@ -138,12 +138,24 @@ export const UsersView = () => {
             <SelectField
               label="Rol"
               searchable
-              options={[
-                { value: '', label: 'Todos los roles' },
-                ...roles.map((r) => ({ value: r.uid, label: r.name })),
-              ]}
+              onSearch={setRoleFilterSearch}
+              options={(() => {
+                const base = [
+                  { value: '', label: 'Todos los roles' },
+                  ...roles.map((r) => ({ value: r.uid, label: r.name })),
+                ];
+                if (filterRole && filterRoleLabel && !base.find((o) => o.value === filterRole)) {
+                  return [{ value: filterRole, label: filterRoleLabel }, ...base];
+                }
+                return base;
+              })()}
               value={filterRole}
-              onChange={(v) => setFilterRole(v as string)}
+              onChange={(v) => {
+                const r = roles.find((role) => role.uid === v);
+                if (r) setFilterRoleLabel(r.name);
+                setRoleFilterSearch('');
+                setFilterRole(v as string);
+              }}
             />
             <SelectField
               label="Estado"
@@ -179,8 +191,6 @@ export const UsersView = () => {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         user={effectiveUser}
-        roles={roles}
-        equipos={teams}
         onSave={handleSave}
       />
 

@@ -126,11 +126,8 @@ function CredentialsStep({
     <>
       <div className="flex flex-col items-center mb-8">
         <div className="mb-6">
-          <Logo variant="full" height={120} />
+          <Logo variant="full" height={68} background="light" />
         </div>
-        <h1 className="text-[28px] font-bold text-slate-800 tracking-tight leading-tight text-center">
-          Bienvenido de nuevo
-        </h1>
         <p className="text-sm text-slate-500 mt-1 text-center">
           Ingresa tus credenciales para continuar
         </p>

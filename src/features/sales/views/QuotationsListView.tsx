@@ -2,7 +2,7 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatMoney } from 'src/lib/currency';
 import { paths } from 'src/routes/paths';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
@@ -22,6 +22,7 @@ import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import { useQuotationStatusOptions } from 'src/shared/hooks/use-status-options';
+import { useDebounce } from 'use-debounce';
 
 import { SalesPageSkeleton } from '../components/SalesPageSkeleton';
 import { useSalesContext } from '../context/SalesContext';
@@ -49,7 +50,6 @@ export function QuotationsListView() {
   const {
     quotations,
     convertQuotationToInvoice,
-    saveQuotation,
     isLoading,
     quotationSearch,
     onChangeQuotationSearch,
@@ -59,6 +59,10 @@ export function QuotationsListView() {
   } = useSalesContext();
 
   const { data: quotationStatuses = [] } = useQuotationStatusOptions();
+
+  const [search, setSearch] = useState(quotationSearch);
+  const [debouncedSearch] = useDebounce(search, 400);
+  if (debouncedSearch !== quotationSearch) onChangeQuotationSearch(debouncedSearch);
 
   const columns = useMemo(
     () => [
@@ -142,7 +146,6 @@ export function QuotationsListView() {
                   onClick={async (e) => {
                     e.stopPropagation();
                     const invoice = await convertQuotationToInvoice(q.uid);
-                    saveQuotation({ ...q, status: 'cancelled' });
                     if (invoice) {
                       router.push(paths.sales.invoice(invoice.uid));
                     }
@@ -157,7 +160,7 @@ export function QuotationsListView() {
         },
       }),
     ],
-    [router, convertQuotationToInvoice, saveQuotation]
+    [router, convertQuotationToInvoice]
   );
 
   const { table, dense, onChangeDense } = useTable({
@@ -193,8 +196,8 @@ export function QuotationsListView() {
         <Input
           label="Buscar"
           placeholder="Buscar por número, título o referencia..."
-          value={quotationSearch}
-          onChange={(e) => onChangeQuotationSearch(e.target.value)}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           leftIcon={<Icon name="Search" size={15} />}
           className="sm:max-w-xs"
         />
@@ -219,7 +222,7 @@ export function QuotationsListView() {
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Icon name="FileText" size={32} className="opacity-30" />
                       <span className="text-sm">
-                        {quotationSearch || quotationStatus
+                        {search || quotationStatus
                           ? 'Sin resultados para los filtros aplicados'
                           : 'Aún no hay cotizaciones'}
                       </span>

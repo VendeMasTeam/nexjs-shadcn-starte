@@ -45,9 +45,10 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
   const [name, setName] = useState(init ? project.name : '');
   const [clientId, setClientId] = useState(init ? project.client_uid : '');
   const [clientSearch, setClientSearch] = useState('');
+  const [debouncedClientSearch] = useDebounce(clientSearch, 400);
   const [manager, setManager] = useState(init ? project.manager : '');
   const [managerSearch, setManagerSearch] = useState('');
-  const [debouncedManagerSearch] = useDebounce(managerSearch, 300);
+  const [debouncedManagerSearch] = useDebounce(managerSearch, 400);
   const [status, setStatus] = useState<ProjectStatus>(init ? project.status : 'planning');
   const { data: statusOptions = [] } = useProjectStatusOptions();
   const [startDate, setStartDate] = useState(init ? project.start_date : '');
@@ -59,12 +60,12 @@ function ProjectForm({ project, isEdit, onClose, onCreate, onUpdate, onCancel }:
 
   // ── Account search (GET /accounts?search=) ─────────────────────────────
   const { data: accountsData } = useQuery({
-    queryKey: ['accounts', 'search', clientSearch],
+    queryKey: ['accounts', 'search', debouncedClientSearch],
     queryFn: async () => {
       const res = await contactsService.accounts.list({
         page: 1,
         per_page: 20,
-        search: clientSearch || undefined,
+        search: debouncedClientSearch || undefined,
       });
       return (res as Record<string, unknown>).data as Array<{ uid: string; name: string }>;
     },

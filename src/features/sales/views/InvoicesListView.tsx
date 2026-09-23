@@ -2,7 +2,7 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { endpoints } from 'src/lib/axios';
 import { formatMoney } from 'src/lib/currency';
 import { formatDate } from 'src/lib/date';
@@ -26,6 +26,7 @@ import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
 import { useInvoiceStatusOptions } from 'src/shared/hooks/use-status-options';
+import { useDebounce } from 'use-debounce';
 
 import { SalesPageSkeleton } from '../components/SalesPageSkeleton';
 import { useSalesContext } from '../context/SalesContext';
@@ -82,6 +83,10 @@ export function InvoicesListView() {
   } = useSalesContext();
 
   const { data: invoiceStatuses = [] } = useInvoiceStatusOptions();
+
+  const [search, setSearch] = useState(invoiceSearch);
+  const [debouncedSearch] = useDebounce(search, 400);
+  if (debouncedSearch !== invoiceSearch) onChangeInvoiceSearch(debouncedSearch);
 
   const overdueCount = useMemo(() => invoices.filter(isOverdue).length, [invoices]);
   const pendingBalance = useMemo(
@@ -248,8 +253,8 @@ export function InvoicesListView() {
         <Input
           label="Buscar"
           placeholder="Buscar por número, cotización o referencia..."
-          value={invoiceSearch}
-          onChange={(e) => onChangeInvoiceSearch(e.target.value)}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           leftIcon={<Icon name="Search" size={15} />}
           className="sm:max-w-xs"
         />

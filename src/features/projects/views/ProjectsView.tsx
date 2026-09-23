@@ -23,6 +23,7 @@ import {
   useTable,
 } from 'src/shared/components/table';
 import { Button, Icon, Input, SelectField } from 'src/shared/components/ui';
+import { useDebounce } from 'use-debounce';
 
 import { ProjectDrawer } from '../components/ProjectDrawer';
 import { ProjectStatusBadge } from '../components/ProjectStatusBadge';
@@ -60,6 +61,10 @@ export function ProjectsView() {
     useProjects({
       status: filterStatus !== 'all' ? filterStatus : undefined,
     });
+
+  const [searchInput, setSearchInput] = useState(search);
+  const [debouncedSearchInput] = useDebounce(searchInput, 400);
+  if (debouncedSearchInput !== search) onChangeSearch(debouncedSearchInput);
 
   const COLUMNS = useMemo(
     () => [
@@ -236,8 +241,8 @@ export function ProjectsView() {
             <Input
               label="Buscar"
               placeholder="Buscar por proyecto o cliente..."
-              value={search}
-              onChange={(e) => onChangeSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               leftIcon={<Icon name="Search" size={15} />}
             />
           </div>

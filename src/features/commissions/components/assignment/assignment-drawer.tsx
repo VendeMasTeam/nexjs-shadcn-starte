@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { usersService } from 'src/features/settings/services/users.service';
 import { Button } from 'src/shared/components/ui/button';
@@ -17,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
+import { useDebounce } from 'use-debounce';
 
 import { type AssignmentForm, assignmentSchema } from '../../schemas/assignment.schema';
 import type { CommissionAssignment, CommissionPlan } from '../../types/commissions.types';
@@ -26,6 +27,7 @@ interface AssignmentDrawerProps {
   onClose: () => void;
   asignacion: CommissionAssignment | null;
   planesDisponibles: CommissionPlan[];
+  onPlanSearch: (term: string) => void;
   onSave: (data: AssignmentForm) => Promise<boolean>;
 }
 
@@ -40,6 +42,7 @@ export const AssignmentDrawer: React.FC<AssignmentDrawerProps> = ({
   onClose,
   asignacion,
   planesDisponibles,
+  onPlanSearch,
   onSave,
 }) => {
   const {
@@ -56,10 +59,17 @@ export const AssignmentDrawer: React.FC<AssignmentDrawerProps> = ({
   const watchPlanId = useWatch({ control, name: 'plan_uid' });
   const planInfo = planesDisponibles.find((p) => p.uid === watchPlanId);
 
+  const [userSearch, setUserSearch] = useState('');
+  const [debouncedUserSearch] = useDebounce(userSearch, 400);
+  const [selectedUserLabel, setSelectedUserLabel] = useState('');
+
   const { data: userOptions = [] } = useQuery({
-    queryKey: ['users', 'list'],
+    queryKey: ['users', 'search', debouncedUserSearch],
     queryFn: async () => {
-      const res = await usersService.getAll({ per_page: 500 });
+      const res = await usersService.getAll({
+        search: debouncedUserSearch || undefined,
+        per_page: 25,
+      });
       return (
         ((res as Record<string, unknown>).data ?? []) as Array<{ uid: string; name: string }>
       ).map((u) => ({ value: u.uid, label: u.name }));
@@ -99,9 +109,11 @@ export const AssignmentDrawer: React.FC<AssignmentDrawerProps> = ({
       <SheetContent side="right" className="sm:max-w-[480px] flex flex-col p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/40 bg-muted/30">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
-              {asignacion?.user_name.charAt(0)}
-            </div>
+            {asignacion && (
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
+                {asignacion.user_name.charAt(0)}
+              </div>
+            )}
             <div>
               <SheetTitle>{asignacion?.user_name}</SheetTitle>
               <SheetDescription>Asignación de plan de comisión</SheetDescription>
@@ -116,9 +128,24 @@ export const AssignmentDrawer: React.FC<AssignmentDrawerProps> = ({
                 label="Vendedor"
                 required
                 searchable
+                onSearch={setUserSearch}
                 value={watchUserUid ?? ''}
-                options={userOptions}
-                onChange={(v) => setValue('user_uid', v as string, { shouldValidate: true })}
+                options={(() => {
+                  if (
+                    watchUserUid &&
+                    selectedUserLabel &&
+                    !userOptions.find((o) => o.value === watchUserUid)
+                  ) {
+                    return [{ value: watchUserUid, label: selectedUserLabel }, ...userOptions];
+                  }
+                  return userOptions;
+                })()}
+                onChange={(v) => {
+                  const u = userOptions.find((o) => o.value === v);
+                  if (u) setSelectedUserLabel(u.label);
+                  setUserSearch('');
+                  setValue('user_uid', v as string, { shouldValidate: true });
+                }}
               />
             )}
             <FormSelectField
@@ -126,6 +153,8 @@ export const AssignmentDrawer: React.FC<AssignmentDrawerProps> = ({
               name="plan_uid"
               label="Plan de Comisión"
               required
+              searchable
+              onSearch={onPlanSearch}
               options={planOptions}
             />
 

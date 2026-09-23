@@ -13,10 +13,12 @@ import { Button } from 'src/shared/components/ui/button';
 import { ConfirmDialog } from 'src/shared/components/ui/confirm-dialog';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
+import { useDebounce } from 'use-debounce';
 
 export const AssignmentView = () => {
   // States for filters
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 400);
 
   const {
     assignments,
@@ -25,9 +27,14 @@ export const AssignmentView = () => {
     updateAssignment,
     pagination,
   } = useAssignment({
-    search: searchTerm || undefined,
+    search: debouncedSearchTerm || undefined,
   });
-  const { plans } = usePlans();
+
+  // Búsqueda server-side de planes, compartida entre el drawer de alta individual
+  // y el de carga masiva (los dos consumen el mismo `usePlans`).
+  const [planSearch, setPlanSearch] = useState('');
+  const [debouncedPlanSearch] = useDebounce(planSearch, 400);
+  const { plans } = usePlans({ search: debouncedPlanSearch || undefined });
 
   const [selectedAsignacion, setSelectedAsignacion] = useState<CommissionAssignment | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -132,6 +139,7 @@ export const AssignmentView = () => {
         onClose={() => setIsDrawerOpen(false)}
         asignacion={selectedAsignacion}
         planesDisponibles={plans}
+        onPlanSearch={setPlanSearch}
         onSave={handleSave}
       />
 
@@ -139,6 +147,7 @@ export const AssignmentView = () => {
         isOpen={isMasivaOpen}
         onClose={() => setIsMasivaOpen(false)}
         planesDisponibles={plans}
+        onPlanSearch={setPlanSearch}
       />
 
       <ConfirmDialog

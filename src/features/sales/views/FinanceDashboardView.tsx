@@ -17,7 +17,6 @@ import {
   TableBody,
   TableCell,
   TableHeadCustom,
-  TablePaginationCustom,
   TableRow,
   useTable,
 } from 'src/shared/components/table';
@@ -151,10 +150,13 @@ export function FinanceDashboardView() {
     [router]
   );
 
-  const { table, dense, onChangeDense } = useTable({
+  // Sin paginación: `recent_invoices` es un preview fijo embebido en el dashboard
+  // (una sola llamada a GET /finance/dashboard), no un listado paginable. El 100
+  // es solo para que nunca corte la lista — el tamaño real lo limita el backend.
+  const { table, dense } = useTable({
     data: recent_invoices,
     columns,
-    defaultRowsPerPage: 5,
+    defaultRowsPerPage: 100,
   });
 
   if (isLoading)
@@ -274,10 +276,6 @@ export function FinanceDashboardView() {
               )}
             </TableBody>
           </Table>
-        </div>
-
-        <div className="border-t border-border/40">
-          <TablePaginationCustom table={table} dense={dense} onChangeDense={onChangeDense} />
         </div>
       </SectionCard>
     </PageContainer>

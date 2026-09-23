@@ -14,9 +14,4 @@ export const reportsService = {
     // Unwrap { success, data } wrapper from backend
     return res.data?.data ?? res.data;
   },
-
-  async getFilterOptions() {
-    const res = await axiosInstance.get(endpoints.reports.filters);
-    return res.data;
-  },
 };

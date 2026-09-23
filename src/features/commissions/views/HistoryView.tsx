@@ -35,6 +35,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
+import { useDebounce } from 'use-debounce';
 
 type RunRow = CommissionRun;
 const columnHelper = createColumnHelper<RunRow>();
@@ -49,14 +50,18 @@ export const HistoryView = () => {
 
   // States for filters
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 400);
   const [periodoFilter, setPeriodoFilter] = useState('');
   const [estadoFilter, setEstadoFilter] = useState('');
 
   const { runs, isLoading, bulkApprove, bulkPay, pagination } = useHistory({
     status: estadoFilter || undefined,
-    search: searchTerm || undefined,
+    search: debouncedSearchTerm || undefined,
     period: periodoFilter || undefined,
   });
+
+  const activeFiltersCount =
+    (searchTerm ? 1 : 0) + (periodoFilter ? 1 : 0) + (estadoFilter ? 1 : 0);
 
   // Fetch available periods from backend instead of hardcoded array
   const { data: availablePeriods = [] } = useQuery({
@@ -367,18 +372,21 @@ export const HistoryView = () => {
               { value: 'PAID', label: 'Pagado' },
             ]}
           />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              setSearchTerm('');
-              setPeriodoFilter('');
-              setEstadoFilter('');
-            }}
-          >
-            Limpiar Filtros
-          </Button>
+          {activeFiltersCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setSearchTerm('');
+                setPeriodoFilter('');
+                setEstadoFilter('');
+              }}
+            >
+              <Icon name="Filter" className="h-4 w-4 mr-2" />
+              Limpiar <span className="ml-1 opacity-70">({activeFiltersCount})</span>
+            </Button>
+          )}
         </div>
 
         {/* Tabla */}

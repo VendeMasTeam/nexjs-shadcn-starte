@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { queryKeys } from 'src/lib/query-keys';
+import { useDebounce } from 'use-debounce';
 
 import { computeLeadScore } from '../config/pipeline.config';
 import { opportunityService } from '../services/opportunity.service';
@@ -11,6 +12,7 @@ import type { Opportunity, PipelineStage } from '../types/sales.types';
 export function usePipeline() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebounce(search, 400);
   const [origin, setOrigin] = useState<string | undefined>(undefined);
   const [product, setProduct] = useState<string | undefined>(undefined);
 
@@ -29,7 +31,7 @@ export function usePipeline() {
     isLoading: oppsLoading,
     error: oppsError,
   } = useQuery<Opportunity[]>({
-    queryKey: [...queryKeys.sales.board, search, origin, product],
+    queryKey: [...queryKeys.sales.board, debouncedSearch, origin, product],
     queryFn: async () => {
       const params: {
         search?: string;
@@ -38,7 +40,7 @@ export function usePipeline() {
         closed_days?: number;
         include_closed?: boolean;
       } = { closed_days: 7, include_closed: true };
-      if (search) params.search = search;
+      if (debouncedSearch) params.search = debouncedSearch;
       if (origin) params.origin = origin;
       if (product) params.product = product;
       const boardData = await opportunityService.getBoard(params);

@@ -5,14 +5,11 @@ import { queryKeys } from 'src/lib/query-keys';
 
 import { reportsService } from '../services/reports.service';
 import type {
-  CategoryOption,
   InventoryReport,
   InventoryReportTab,
-  ReportFilterOptions,
   ReportFilterParams,
   SalesReport,
   SalesReportTab,
-  WarehouseOption,
 } from '../types';
 
 // ─── Sales Report ──────────────────────────────────────────────────────────────
@@ -67,38 +64,4 @@ export function useInventoryReport(tab: InventoryReportTab, filters: ReportFilte
   });
 
   return { data, isLoading, isError, refetch };
-}
-
-// ─── Filter Options ────────────────────────────────────────────────────────────
-
-export function useReportFilters() {
-  const { data, isLoading } = useQuery<ReportFilterOptions>({
-    queryKey: queryKeys.reports.filters,
-    queryFn: async () => {
-      const res = await reportsService.getFilterOptions();
-      const payload: Record<string, unknown> = ((res as Record<string, unknown>)?.data ??
-        res) as Record<string, unknown>;
-      return {
-        warehouses: ((payload.warehouses as Record<string, unknown>[]) ?? []).map(
-          (w): WarehouseOption => ({
-            value: w.value as string,
-            label: w.label as string,
-          })
-        ),
-        categories: ((payload.categories as Record<string, unknown>[]) ?? []).map(
-          (c): CategoryOption => ({
-            value: c.value as string,
-            label: c.label as string,
-          })
-        ),
-      };
-    },
-    staleTime: 0,
-    placeholderData: keepPreviousData,
-  });
-
-  return {
-    filterOptions: data ?? { warehouses: [], categories: [] },
-    isLoading,
-  };
 }

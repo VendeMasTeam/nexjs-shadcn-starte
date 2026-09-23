@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 import { notify } from 'src/lib/notify';
+import { queryKeys } from 'src/lib/query-keys';
 import { Button } from 'src/shared/components/ui/button';
 import { Checkbox } from 'src/shared/components/ui/checkbox';
 import { Icon } from 'src/shared/components/ui/icon';
@@ -16,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
+import { useDebounce } from 'use-debounce';
 
 import { teamsService } from '../../../settings/services/teams.service';
 import { usersService } from '../../../settings/services/users.service';
@@ -26,6 +28,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   planesDisponibles: CommissionPlan[];
+  onPlanSearch: (term: string) => void;
 }
 
 interface TeamOption {
@@ -39,21 +42,30 @@ interface VendedorOption {
   team_uid?: string;
 }
 
-export const BulkAssignmentDrawer: React.FC<Props> = ({ isOpen, onClose, planesDisponibles }) => {
+export const BulkAssignmentDrawer: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  planesDisponibles,
+  onPlanSearch,
+}) => {
+  const queryClient = useQueryClient();
   const [paso, setPaso] = useState<1 | 2 | 3>(1);
   const [equipoFiltro, setEquipoFiltro] = useState('');
+  const [teamSearch, setTeamSearch] = useState('');
+  const [debouncedTeamSearch] = useDebounce(teamSearch, 400);
   const [userSearch, setUserSearch] = useState('');
+  const [debouncedUserSearch] = useDebounce(userSearch, 400);
   const [selectedVendedores, setSelectedVendedores] = useState<string[]>([]);
   const [planId, setPlanId] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  // ─── Teams (GET /teams) ─────────────────────────────────────────────────
+  // ─── Teams (GET /teams) — búsqueda server-side ──────────────────────────
   const { data: teamsData } = useQuery({
-    queryKey: ['teams'],
+    queryKey: ['teams', debouncedTeamSearch],
     queryFn: async () => {
-      const res = await teamsService.getAll();
+      const res = await teamsService.getAll({ search: debouncedTeamSearch || undefined });
       return (res as Record<string, unknown>).data as TeamOption[];
     },
     staleTime: 0,
@@ -65,11 +77,11 @@ export const BulkAssignmentDrawer: React.FC<Props> = ({ isOpen, onClose, planesD
 
   // ─── Users with server-side search ───────────────────────────────────────
   const { data: allUsers } = useQuery({
-    queryKey: ['users', equipoFiltro, userSearch],
+    queryKey: ['users', equipoFiltro, debouncedUserSearch],
     queryFn: async () => {
       const params: Record<string, unknown> = { per_page: 25 };
       if (equipoFiltro) params.team_uid = equipoFiltro;
-      if (userSearch) params.search = userSearch;
+      if (debouncedUserSearch) params.search = debouncedUserSearch;
       const res = await usersService.getAll(params);
       return (res as Record<string, unknown>).data as VendedorOption[];
     },
@@ -115,6 +127,7 @@ export const BulkAssignmentDrawer: React.FC<Props> = ({ isOpen, onClose, planesD
         ends_at: fechaFin || undefined,
       });
       notify.success(`Plan asignado a ${selectedVendedores.length} vendedor(es).`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.commissions.assignments });
       handleClose();
     } catch {
       notify.error('Error al realizar la asignación masiva');
@@ -125,6 +138,8 @@ export const BulkAssignmentDrawer: React.FC<Props> = ({ isOpen, onClose, planesD
   const handleClose = () => {
     setPaso(1);
     setEquipoFiltro('');
+    setTeamSearch('');
+    setUserSearch('');
     setSelectedVendedores([]);
     setPlanId('');
     setFechaInicio('');
@@ -193,6 +208,8 @@ export const BulkAssignmentDrawer: React.FC<Props> = ({ isOpen, onClose, planesD
                 value={equipoFiltro}
                 onChange={(val) => setEquipoFiltro(val as string)}
                 label="Filtrar por equipo"
+                searchable
+                onSearch={setTeamSearch}
                 options={equipos}
               />
 
@@ -269,6 +286,8 @@ export const BulkAssignmentDrawer: React.FC<Props> = ({ isOpen, onClose, planesD
                 onChange={(val) => setPlanId(val as string)}
                 label="Plan de Comisión"
                 required
+                searchable
+                onSearch={onPlanSearch}
                 options={planOptions}
               />
 

@@ -212,7 +212,12 @@ const NAV_CONFIG: StaticSection[] = [
         itemKey: 'localization',
       },
       { title: 'Etiquetas (Tags)', path: paths.settings.tags, icon: 'Tag', itemKey: 'tags' },
-      { title: 'Tipos de Documento', path: paths.settings.documentTypes, icon: 'FileText' },
+      {
+        title: 'Tipos de Documento',
+        path: paths.settings.documentTypes,
+        icon: 'FileText',
+        itemKey: 'document-types',
+      },
     ],
   },
   {

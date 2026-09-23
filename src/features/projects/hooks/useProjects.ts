@@ -1,13 +1,18 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import { queryKeys } from 'src/lib/query-keys';
 import { usePaginationParams } from 'src/shared/hooks/use-pagination';
 import { extractPaginationMeta } from 'src/shared/lib/pagination';
 
 import { projectsService } from '../services/projects.service';
-import type { MilestonePayload, Project, ProjectPayload, ProjectResourcePayload } from '../types';
+import type {
+  MilestonePayload,
+  Project,
+  ProjectPayload,
+  ProjectResourcePayload,
+  ProjectsSummary,
+} from '../types';
 
 function normalizeProject(raw: Record<string, unknown>): Project {
   return {
@@ -49,7 +54,7 @@ export function useProjects(params?: UseProjectsParams) {
     ...(params?.status ? { status: params.status } : {}),
   };
 
-  const { data: projects = [], isLoading } = useQuery({
+  const { data: result, isLoading } = useQuery({
     queryKey: [...queryKeys.projects.list, queryParams],
     queryFn: async () => {
       const res = await projectsService.list(queryParams);
@@ -59,26 +64,26 @@ export function useProjects(params?: UseProjectsParams) {
         string,
         unknown
       >[];
-      return raw.map(normalizeProject);
+      return {
+        projects: raw.map(normalizeProject),
+        summary: (res as unknown as { summary?: ProjectsSummary }).summary,
+      };
     },
     staleTime: 0,
     placeholderData: keepPreviousData,
   });
 
-  // ─── Stats (derived) ────────────────────────────────────────────────────
+  const projects = result?.projects ?? [];
 
-  const stats = useMemo(() => {
-    const active = projects.filter(
-      (p) => p.status === 'in_progress' || p.status === 'planning'
-    ).length;
-    const completed = projects.filter((p) => p.status === 'completed').length;
-    const onHold = projects.filter((p) => p.status === 'on_hold').length;
-    const delayedMilestones = projects.reduce(
-      (acc, p) => acc + (p.milestones?.filter((m) => m.status === 'delayed').length ?? 0),
-      0
-    );
-    return { active, completed, onHold, delayedMilestones };
-  }, [projects]);
+  // ─── Stats (agregado del backend — sobre TODOS los proyectos, no solo la
+  // página actual) ─────────────────────────────────────────────────────────
+
+  const stats = {
+    active: result?.summary?.active_projects ?? 0,
+    completed: result?.summary?.completed_projects ?? 0,
+    onHold: result?.summary?.paused_projects ?? 0,
+    delayedMilestones: result?.summary?.overdue_milestones ?? 0,
+  };
 
   // ─── CRUD: Projects ────────────────────────────────────────────────────
 

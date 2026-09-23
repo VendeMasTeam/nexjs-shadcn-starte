@@ -61,19 +61,13 @@ export const TeamsView = () => {
         subtitle="Organiza vendedores en equipos y controla qué clientes puede ver cada uno"
         action={
           <div className="flex items-center gap-3">
-            <div className="relative w-52">
-              <Icon
-                name="Search"
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-              />
-              <Input
-                placeholder="Buscar equipo..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
+            <Input
+              placeholder="Buscar equipo..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              leftIcon={<Icon name="Search" size={15} />}
+              className="w-52"
+            />
             <Button color="primary" onClick={handleOpenNew} className="gap-2">
               <Icon name="Plus" size={16} />
               Nuevo equipo

@@ -71,11 +71,8 @@ export function JwtForgotPasswordView() {
           <>
             <div className="flex flex-col items-center mb-8">
               <div className="mb-6">
-                <Logo variant="full" height={120} />
+                <Logo variant="full" height={68} background="light" />
               </div>
-              <h1 className="text-[26px] font-bold text-slate-800 tracking-tight leading-tight text-center">
-                ¿Olvidaste tu contraseña?
-              </h1>
               <p className="text-sm text-slate-500 mt-1 text-center leading-relaxed max-w-[300px]">
                 Ingresa tu correo y te enviamos un enlace para recuperarla.
               </p>

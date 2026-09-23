@@ -51,9 +51,11 @@ export function NavVertical({ navData, onClose }: Props) {
 
       {/* Logo Area */}
       <div
-        className={`h-[72px] flex items-center shrink-0 pt-4 ${isMini ? 'justify-center px-2' : 'justify-between px-4'}`}
+        className={`h-[72px] flex items-center shrink-0 pt-4 ${
+          isMini ? 'justify-center px-2' : onClose ? 'justify-between px-4' : 'justify-center px-4'
+        }`}
       >
-        <Logo variant={isMini ? 'logo' : 'full'} height={isMini ? 80 : 110} />
+        <Logo variant={isMini ? 'logo' : 'full'} height={40} className="gap-1" />
 
         {/* Botón cerrar (solo mobile) */}
         {onClose && (

@@ -16,6 +16,8 @@ import {
 import { EditButton } from 'src/shared/components/ui/action-buttons';
 import { Avatar, AvatarFallback } from 'src/shared/components/ui/avatar';
 import { Badge } from 'src/shared/components/ui/badge';
+import { Button } from 'src/shared/components/ui/button';
+import { Icon } from 'src/shared/components/ui/icon';
 
 import type { CommissionAssignment } from '../../types/commissions.types';
 
@@ -116,16 +118,19 @@ export const AssignmentsTable: React.FC<AssignmentsTableProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <EditButton onClick={() => onEdit(asg)} />
-              <button
-                onClick={() => onToggleStatus(asg.uid, asg.status !== 'active')}
-                className={`px-3 py-1 rounded-md text-xs border transition-colors ${
+              <Button
+                variant="outline"
+                size="sm"
+                className={
                   asg.status === 'active'
-                    ? 'text-red-600 border-red-200 hover:bg-red-50'
-                    : 'text-green-600 border-green-200 hover:bg-green-50'
-                }`}
+                    ? 'text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300'
+                    : 'text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300'
+                }
+                onClick={() => onToggleStatus(asg.uid, asg.status !== 'active')}
               >
+                <Icon name={asg.status === 'active' ? 'UserX' : 'UserCheck'} size={14} />
                 {asg.status === 'active' ? 'Desactivar' : 'Activar'}
-              </button>
+              </Button>
             </div>
           );
         },

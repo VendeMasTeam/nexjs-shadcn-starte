@@ -99,7 +99,6 @@ export const queryKeys = {
       ['reports', 'sales', tab, ...(filters ? [JSON.stringify(filters)] : [])] as const,
     inventory: (tab: string, filters?: Record<string, string>) =>
       ['reports', 'inventory', tab, ...(filters ? [JSON.stringify(filters)] : [])] as const,
-    filters: ['reports', 'filters'] as const,
   },
   admin: {
     platformUsers: ['admin', 'platform-users'] as const,

@@ -10,6 +10,12 @@ import type { SettingsUser } from '../types/settings.types';
 
 const EMPTY_USERS: SettingsUser[] = [];
 
+export interface UsersSummary {
+  total_users: number;
+  active_users: number;
+  inactive_users: number;
+}
+
 const generatePassword = () => Math.random().toString(36).slice(-10) + 'A1!';
 
 // ─── Business logic moved from users.service ───────────────────────────────
@@ -53,6 +59,7 @@ export function useSettingsUsers(filters: UserFilters = {}) {
 
   const users: SettingsUser[] = ((rawData as unknown as { data?: SettingsUser[] })?.data ??
     EMPTY_USERS) as SettingsUser[];
+  const summary = (rawData as unknown as { summary?: UsersSummary })?.summary;
 
   const createMutation = useMutation({
     meta: { successMessage: 'Usuario creado' },
@@ -132,6 +139,7 @@ export function useSettingsUsers(filters: UserFilters = {}) {
 
   return {
     users,
+    summary,
     isLoading,
     createUser: async (
       data: Omit<SettingsUser, 'uid' | 'created_at' | 'last_login_at'> & {

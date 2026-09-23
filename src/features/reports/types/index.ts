@@ -47,21 +47,6 @@ export interface ReportFilterParams {
   search?: string;
 }
 
-export interface WarehouseOption {
-  value: string;
-  label: string;
-}
-
-export interface CategoryOption {
-  value: string;
-  label: string;
-}
-
-export interface ReportFilterOptions {
-  warehouses: WarehouseOption[];
-  categories: CategoryOption[];
-}
-
 // ─── Tab Identifiers ───────────────────────────────────────────────────────────
 
 export type SalesReportTab = 'status' | 'products' | 'distributors' | 'vs';

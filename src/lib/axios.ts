@@ -499,7 +499,6 @@ export const endpoints = {
   reports: {
     sales: '/reports/sales',
     inventory: '/reports/inventory',
-    filters: '/reports/filters',
     salesExport: '/reports/sales/export',
     inventoryExport: '/reports/inventory/export',
   },

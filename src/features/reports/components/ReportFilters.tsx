@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useCategories } from 'src/features/inventory/hooks/use-categories';
+import { useWarehouses } from 'src/features/inventory/hooks/use-warehouses';
 import { cn } from 'src/lib/utils';
 import { SectionCard } from 'src/shared/components/layouts/page';
 import { Button, Icon, Input, SelectField } from 'src/shared/components/ui';
+import { useDebounce } from 'use-debounce';
 
-import { useReportFilters } from '../hooks/use-reports';
 import type { ReportFilterParams } from '../types';
 
 interface ReportFiltersProps {
@@ -14,11 +16,45 @@ export function ReportFilters({ onFiltersChange }: ReportFiltersProps) {
   const [expanded, setExpanded] = useState(true);
   const [period, setPeriod] = useState('Este mes');
   const [warehouse, setWarehouse] = useState('all');
+  const [warehouseLabel, setWarehouseLabel] = useState('');
   const [category, setCategory] = useState('all');
+  const [categoryLabel, setCategoryLabel] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const { filterOptions, isLoading: filtersLoading } = useReportFilters();
+  // Búsqueda server-side de bodegas/categorías (endpoints ya probados en
+  // WarehousesView/ProductsView) — no dependemos de reportsService.getFilterOptions(),
+  // que no soporta search ni paginación.
+  const [warehouseSearch, setWarehouseSearch] = useState('');
+  const [debouncedWarehouseSearch] = useDebounce(warehouseSearch, 400);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [debouncedCategorySearch] = useDebounce(categorySearch, 400);
+
+  const { items: warehouseItems, isLoading: warehousesLoading } = useWarehouses({
+    search: debouncedWarehouseSearch || undefined,
+    per_page: 15,
+  });
+  const { categories: categoryItems, isLoading: categoriesLoading } = useCategories({
+    search: debouncedCategorySearch || undefined,
+    per_page: 15,
+  });
+  const filtersLoading = warehousesLoading || categoriesLoading;
+
+  const getWarehouseOptions = () => {
+    const base = warehouseItems.map((w) => ({ value: w.uid, label: w.name }));
+    if (warehouse !== 'all' && warehouseLabel && !base.find((o) => o.value === warehouse)) {
+      return [{ value: warehouse, label: warehouseLabel }, ...base];
+    }
+    return base;
+  };
+
+  const getCategoryOptions = () => {
+    const base = categoryItems.map((c) => ({ value: c.uid, label: c.name }));
+    if (category !== 'all' && categoryLabel && !base.find((o) => o.value === category)) {
+      return [{ value: category, label: categoryLabel }, ...base];
+    }
+    return base;
+  };
 
   const showCustomDate = period === 'Personalizado';
   const hasFilters = period !== 'Este mes' || warehouse !== 'all' || category !== 'all';
@@ -50,11 +86,17 @@ export function ReportFilters({ onFiltersChange }: ReportFiltersProps) {
   };
 
   const handleWarehouseChange = (v: string) => {
+    const w = warehouseItems.find((x) => x.uid === v);
+    if (w) setWarehouseLabel(w.name);
+    setWarehouseSearch('');
     setWarehouse(v);
     emitFilters(period, v, category, startDate, endDate);
   };
 
   const handleCategoryChange = (v: string) => {
+    const c = categoryItems.find((x) => x.uid === v);
+    if (c) setCategoryLabel(c.name);
+    setCategorySearch('');
     setCategory(v);
     emitFilters(period, warehouse, v, startDate, endDate);
   };
@@ -151,8 +193,9 @@ export function ReportFilters({ onFiltersChange }: ReportFiltersProps) {
           <SelectField
             label="Bodega"
             searchable
+            onSearch={setWarehouseSearch}
             disabled={filtersLoading}
-            options={[{ value: 'all', label: 'Todas' }, ...filterOptions.warehouses]}
+            options={[{ value: 'all', label: 'Todas' }, ...getWarehouseOptions()]}
             value={warehouse}
             onChange={(v) => handleWarehouseChange(v as string)}
           />
@@ -163,8 +206,9 @@ export function ReportFilters({ onFiltersChange }: ReportFiltersProps) {
           <SelectField
             label="Categoría"
             searchable
+            onSearch={setCategorySearch}
             disabled={filtersLoading}
-            options={[{ value: 'all', label: 'Todas las categorías' }, ...filterOptions.categories]}
+            options={[{ value: 'all', label: 'Todas las categorías' }, ...getCategoryOptions()]}
             value={category}
             onChange={(v) => handleCategoryChange(v as string)}
           />

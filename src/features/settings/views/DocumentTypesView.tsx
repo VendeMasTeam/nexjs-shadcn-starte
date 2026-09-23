@@ -2,6 +2,7 @@
 
 import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
+import { usePermissions } from 'src/shared/auth/hooks/use-permissions';
 import { PageContainer, PageHeader, SectionCard } from 'src/shared/components/layouts/page';
 import {
   Table,
@@ -36,7 +37,11 @@ import type { DocumentType } from '../types/document-type.types';
 
 const columnHelper = createColumnHelper<DocumentType>();
 
-const COLUMNS = (onEdit: (dt: DocumentType) => void, onDelete: (dt: DocumentType) => void) => [
+const COLUMNS = (
+  canManage: boolean,
+  onEdit: (dt: DocumentType) => void,
+  onDelete: (dt: DocumentType) => void
+) => [
   columnHelper.accessor('name', {
     header: 'Nombre',
     cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
@@ -88,16 +93,20 @@ const COLUMNS = (onEdit: (dt: DocumentType) => void, onDelete: (dt: DocumentType
   columnHelper.display({
     id: 'acciones',
     header: () => <div className="text-right w-full">Acciones</div>,
-    cell: (info) => (
-      <div className="flex items-center justify-end gap-1">
-        <EditButton onClick={() => onEdit(info.row.original)} />
-        <DeleteButton onClick={() => onDelete(info.row.original)} />
-      </div>
-    ),
+    cell: (info) =>
+      canManage ? (
+        <div className="flex items-center justify-end gap-1">
+          <EditButton onClick={() => onEdit(info.row.original)} />
+          <DeleteButton onClick={() => onDelete(info.row.original)} />
+        </div>
+      ) : null,
   }),
 ];
 
 export function DocumentTypesView() {
+  const { can } = usePermissions();
+  const canManage = can('documents.manage');
+
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search, 400);
 
@@ -131,9 +140,8 @@ export function DocumentTypesView() {
   }
 
   const columns = useMemo(
-    () => COLUMNS(handleEdit, (dt) => setDeleteTarget(dt)),
-
-    []
+    () => COLUMNS(canManage, handleEdit, (dt) => setDeleteTarget(dt)),
+    [canManage]
   );
 
   const { table, dense, onChangeDense } = useTable({
@@ -180,10 +188,12 @@ export function DocumentTypesView() {
         title="Tipos de Documento"
         subtitle="Configurá los tipos de documentos requeridos para cuentas y contactos."
         action={
-          <Button color="primary" onClick={openCreate} className="gap-2">
-            <Icon name="Plus" size={16} />
-            Nuevo Tipo
-          </Button>
+          canManage ? (
+            <Button color="primary" onClick={openCreate} className="gap-2">
+              <Icon name="Plus" size={16} />
+              Nuevo Tipo
+            </Button>
+          ) : undefined
         }
       />
 

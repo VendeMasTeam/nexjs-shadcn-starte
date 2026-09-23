@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { catalogService } from 'src/features/sales/services/catalog.service';
 import { quotationService } from 'src/features/sales/services/quotation.service';
+import type { CatalogProduct } from 'src/features/sales/types/catalog.types';
 import type { Quotation, QuotationItem } from 'src/features/sales/types/sales.types';
 import { localizationService } from 'src/features/settings/services/localization.service';
 import { formatMoney, getCurrencyPreferences } from 'src/lib/currency';
@@ -19,6 +20,7 @@ import { DateInput } from 'src/shared/components/ui/date-input';
 import { Icon } from 'src/shared/components/ui/icon';
 import { Input } from 'src/shared/components/ui/input';
 import { SelectField } from 'src/shared/components/ui/select-field';
+import { useDebounce } from 'use-debounce';
 
 import { OpportunityTimeline } from '../components/OpportunityTimeline';
 import { useSalesContext } from '../context/SalesContext';
@@ -114,11 +116,26 @@ export function QuotationView(props: QuotationViewProps) {
 
   const quotation = localQuotation;
 
-  const { data: catalogProducts = [] } = useQuery({
-    queryKey: ['catalog', 'products'],
-    queryFn: () => catalogService.getList({ status: 'active' }),
+  // Búsqueda server-side con debounce — no cargar todo el catálogo de una vez.
+  const [productSearch, setProductSearch] = useState('');
+  const [debouncedProductSearch] = useDebounce(productSearch, 400);
+  // Cachea el producto elegido por línea para que su label sobreviva a un
+  // cambio de búsqueda que ya no lo incluya en `catalogProducts`.
+  const [productItemCache, setProductItemCache] = useState<Record<number, CatalogProduct>>({});
+
+  const { data: catalogResult } = useQuery({
+    queryKey: ['catalog', 'products', debouncedProductSearch],
+    queryFn: () =>
+      catalogService.getPaginated({
+        status: 'active',
+        search: debouncedProductSearch || undefined,
+        page: 1,
+        per_page: 20,
+      }),
     staleTime: 0,
   });
+  const catalogProducts =
+    ((catalogResult as Record<string, unknown>)?.data as CatalogProduct[]) ?? [];
 
   const { data: currencyOptions = [] } = useQuery({
     queryKey: ['settings', 'localization', 'options', 'currencies'],
@@ -219,6 +236,15 @@ export function QuotationView(props: QuotationViewProps) {
     setLocalQuotation((prev) => {
       if (!prev) return prev;
       return { ...prev, items: prev.items.filter((_, i) => i !== index) };
+    });
+    setProductItemCache((prev) => {
+      const next: Record<number, CatalogProduct> = {};
+      Object.entries(prev).forEach(([key, val]) => {
+        const k = Number(key);
+        if (k < index) next[k] = val;
+        else if (k > index) next[k - 1] = val;
+      });
+      return next;
     });
   }, []);
 
@@ -652,6 +678,7 @@ export function QuotationView(props: QuotationViewProps) {
                               clearLineError(i, 'sku');
                               const product = catalogProducts.find((p) => p.sku === val);
                               if (product) {
+                                setProductItemCache((prev) => ({ ...prev, [i]: product }));
                                 updateLine(i, 'description', product.name);
                                 updateLine(i, 'sku', product.sku);
                                 const price =
@@ -666,25 +693,39 @@ export function QuotationView(props: QuotationViewProps) {
                                   updateLine(i, 'discount_percent', String(discount));
                                 }
                               }
+                              setProductSearch('');
                             }}
-                            options={catalogProducts.map((p) => {
-                              const missingInventory =
-                                p.type === 'product' && !p.inventory_product_uid;
-                              const alreadyAdded = quotation.items.some(
-                                (it, idx) => idx !== i && it.sku === p.sku
-                              );
-                              return {
-                                value: p.sku,
-                                label: missingInventory
-                                  ? `${p.name} (${p.sku}) — Sin inventario vinculado`
-                                  : alreadyAdded
-                                    ? `${p.name} (${p.sku}) — Ya agregado`
-                                    : `${p.name} (${p.sku})`,
-                                disabled: missingInventory || alreadyAdded,
-                              };
-                            })}
+                            options={(() => {
+                              const base = catalogProducts.map((p) => {
+                                const missingInventory =
+                                  p.type === 'product' && !p.inventory_product_uid;
+                                const alreadyAdded = quotation.items.some(
+                                  (it, idx) => idx !== i && it.sku === p.sku
+                                );
+                                return {
+                                  value: p.sku,
+                                  label: missingInventory
+                                    ? `${p.name} (${p.sku}) — Sin inventario vinculado`
+                                    : alreadyAdded
+                                      ? `${p.name} (${p.sku}) — Ya agregado`
+                                      : `${p.name} (${p.sku})`,
+                                  disabled: missingInventory || alreadyAdded,
+                                };
+                              });
+                              // Si el producto ya elegido en esta línea quedó afuera de la
+                              // búsqueda actual, lo agregamos igual para no perder el label.
+                              const cached = productItemCache[i];
+                              if (cached && item.sku && !base.find((o) => o.value === item.sku)) {
+                                return [
+                                  { value: cached.sku, label: `${cached.name} (${cached.sku})` },
+                                  ...base,
+                                ];
+                              }
+                              return base;
+                            })()}
                             placeholder="Seleccionar producto..."
                             searchable
+                            onSearch={setProductSearch}
                             disabled={!isEditable}
                             error={lineErrors[i]?.sku}
                           />
