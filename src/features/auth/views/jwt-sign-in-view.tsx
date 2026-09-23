@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { paths } from 'src/routes/paths';
 import { Logo } from 'src/shared/components/Logo';
+import { ThemeToggle } from 'src/shared/components/ThemeToggle';
 import { Icon } from 'src/shared/components/ui';
 import { Form, FormControl, FormField, FormItem, FormMessage } from 'src/shared/components/ui';
 
@@ -38,12 +39,12 @@ function AuthInput({
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-500"
+        className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground"
       >
         {label}
       </label>
       <div className="relative group">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-indigo-500 pointer-events-none">
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors duration-200 group-focus-within:text-indigo-500 pointer-events-none">
           {icon}
         </span>
         <input
@@ -54,21 +55,20 @@ function AuthInput({
           placeholder={placeholder}
           autoFocus={autoFocus}
           className="
-            w-full h-11 pl-10 pr-10 text-sm text-slate-800
-            bg-slate-50 border border-slate-200 rounded-xl
+            w-full h-11 pl-10 pr-10 text-sm text-foreground
+            bg-muted/40 border border-border rounded-xl
             outline-none transition-all duration-200
-            placeholder:text-slate-400
-            hover:border-slate-300 hover:bg-white
-            focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10
+            placeholder:text-muted-foreground/60
+            hover:border-muted-foreground/30 hover:bg-background
+            focus:border-indigo-500 focus:bg-background focus:ring-2 focus:ring-indigo-500/10
             disabled:opacity-50 disabled:cursor-not-allowed
-            autofill:bg-white
           "
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPass((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-indigo-500 transition-colors"
             tabIndex={-1}
             aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           >
@@ -97,7 +97,7 @@ function Spinner() {
 // ─── Error banner ─────────────────────────────────────────────────────────────
 function ErrorBanner({ message }: { message: string }) {
   return (
-    <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600 flex items-center gap-2">
+    <div className="px-4 py-3 rounded-xl bg-error/10 border border-error/20 text-sm text-error flex items-center gap-2">
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
         <circle cx="7.5" cy="7.5" r="7" stroke="currentColor" />
         <path
@@ -126,9 +126,9 @@ function CredentialsStep({
     <>
       <div className="flex flex-col items-center mb-8">
         <div className="mb-6">
-          <Logo variant="full" height={68} background="light" />
+          <Logo variant="full" height={68} />
         </div>
-        <p className="text-sm text-slate-500 mt-1 text-center">
+        <p className="text-sm text-muted-foreground mt-1 text-center">
           Ingresa tus credenciales para continuar
         </p>
       </div>
@@ -186,7 +186,7 @@ function CredentialsStep({
           <div className="-mt-2 text-right">
             <Link
               href={paths.auth.jwt.forgotPassword}
-              className="text-[12px] text-slate-400 hover:text-indigo-600 transition-colors duration-200"
+              className="text-[12px] text-muted-foreground hover:text-indigo-600 transition-colors duration-200"
             >
               ¿Olvidaste tu contraseña?
             </Link>
@@ -210,7 +210,7 @@ function CredentialsStep({
       </Form>
 
       <div className="mt-5 text-center">
-        <span className="text-[13px] text-slate-500">
+        <span className="text-[13px] text-muted-foreground">
           La creación de cuentas es gestionada por el administrador.
         </span>
       </div>
@@ -253,13 +253,13 @@ function TwoFactorStep({
   return (
     <>
       <div className="flex flex-col items-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
-          <Icon name="ShieldCheck" size={30} className="text-indigo-600" />
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+          <Icon name="ShieldCheck" size={30} className="text-primary" />
         </div>
-        <h1 className="text-[24px] font-bold text-slate-800 tracking-tight leading-tight text-center">
+        <h1 className="text-[24px] font-bold text-foreground tracking-tight leading-tight text-center">
           Verificación en dos pasos
         </h1>
-        <p className="text-sm text-slate-500 mt-2 text-center leading-relaxed max-w-[300px]">
+        <p className="text-sm text-muted-foreground mt-2 text-center leading-relaxed max-w-[300px]">
           {useRecovery
             ? 'Ingresa uno de tus códigos de recuperación de un solo uso'
             : 'Ingresa el código de 6 dígitos de tu app de autenticación'}
@@ -284,7 +284,7 @@ function TwoFactorStep({
                     <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="login-recovery"
-                        className="text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-500"
+                        className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground"
                       >
                         Código de recuperación
                       </label>
@@ -298,11 +298,11 @@ function TwoFactorStep({
                         disabled={isSubmitting}
                         className="
                           w-full h-14 text-center text-lg font-mono font-bold tracking-widest
-                          text-slate-800 bg-slate-50 border border-slate-200 rounded-xl
+                          text-foreground bg-muted/40 border border-border rounded-xl
                           outline-none transition-all duration-200
-                          placeholder:text-slate-300 placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:font-normal
-                          hover:border-slate-300 hover:bg-white
-                          focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10
+                          placeholder:text-muted-foreground/50 placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:font-normal
+                          hover:border-muted-foreground/30 hover:bg-background
+                          focus:border-indigo-500 focus:bg-background focus:ring-2 focus:ring-indigo-500/10
                           disabled:opacity-50 disabled:cursor-not-allowed
                         "
                       />
@@ -322,7 +322,7 @@ function TwoFactorStep({
                     <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="login-2fa"
-                        className="text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-500"
+                        className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground"
                       >
                         Código de verificación
                       </label>
@@ -339,11 +339,11 @@ function TwoFactorStep({
                         disabled={isSubmitting}
                         className="
                           w-full h-14 text-center text-2xl font-bold tracking-[0.4em]
-                          text-slate-800 bg-slate-50 border border-slate-200 rounded-xl
+                          text-foreground bg-muted/40 border border-border rounded-xl
                           outline-none transition-all duration-200
-                          placeholder:text-slate-300 placeholder:tracking-[0.4em]
-                          hover:border-slate-300 hover:bg-white
-                          focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10
+                          placeholder:text-muted-foreground/50 placeholder:tracking-[0.4em]
+                          hover:border-muted-foreground/30 hover:bg-background
+                          focus:border-indigo-500 focus:bg-background focus:ring-2 focus:ring-indigo-500/10
                           disabled:opacity-50 disabled:cursor-not-allowed
                         "
                       />
@@ -387,7 +387,7 @@ function TwoFactorStep({
       <button
         type="button"
         onClick={onBack}
-        className="mt-2 w-full flex items-center justify-center gap-1.5 text-[13px] text-slate-400 hover:text-indigo-600 transition-colors duration-200"
+        className="mt-2 w-full flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground hover:text-indigo-600 transition-colors duration-200"
       >
         <Icon name="ChevronLeft" size={14} />
         Volver al inicio de sesión
@@ -436,9 +436,11 @@ export function JwtSignInView() {
     <div className="relative w-full min-h-screen flex flex-col items-center justify-center py-12 px-4 auth-bg-mesh overflow-hidden animate-auth-bg-appear">
       <BgShapes />
 
-      <div className="relative z-10 w-full max-w-[420px] bg-white rounded-2xl px-8 py-10 sm:px-10 auth-floating-shadow animate-auth-form-drop">
+      <ThemeToggle className="absolute top-5 right-5 z-20" />
+
+      <div className="relative z-10 w-full max-w-[420px] bg-card border border-border/60 rounded-2xl px-8 py-10 sm:px-10 auth-floating-shadow animate-auth-form-drop">
         {passwordReset && (
-          <div className="mb-5 px-4 py-3 rounded-xl bg-green-50 border border-green-100 text-sm text-green-700 flex items-center gap-2">
+          <div className="mb-5 px-4 py-3 rounded-xl bg-success/10 border border-success/20 text-sm text-success flex items-center gap-2">
             <Icon name="CheckCircle" size={15} className="shrink-0" />
             Contraseña restablecida. Ya puedes iniciar sesión.
           </div>
@@ -456,18 +458,18 @@ export function JwtSignInView() {
         )}
 
         {/* Trust badges — always visible */}
-        <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-3 sm:gap-6 whitespace-nowrap">
-          <div className="flex items-center gap-1 sm:gap-1.5 text-slate-400 cursor-default">
+        <div className="mt-6 pt-5 border-t border-border flex items-center justify-center gap-3 sm:gap-6 whitespace-nowrap">
+          <div className="flex items-center gap-1 sm:gap-1.5 text-muted-foreground cursor-default">
             <Icon name="ShieldCheck" size={13} />
             <span className="text-[10px] sm:text-[11px] font-medium">Seguridad SSL</span>
           </div>
-          <div className="w-px h-3 bg-slate-200" />
-          <div className="flex items-center gap-1 sm:gap-1.5 text-slate-400 cursor-default">
+          <div className="w-px h-3 bg-border" />
+          <div className="flex items-center gap-1 sm:gap-1.5 text-muted-foreground cursor-default">
             <Icon name="Globe" size={13} />
             <span className="text-[10px] sm:text-[11px] font-medium">Red Empresarial</span>
           </div>
-          <div className="w-px h-3 bg-slate-200" />
-          <div className="flex items-center gap-1 sm:gap-1.5 text-slate-400 cursor-default">
+          <div className="w-px h-3 bg-border" />
+          <div className="flex items-center gap-1 sm:gap-1.5 text-muted-foreground cursor-default">
             <Icon name="Cloud" size={13} />
             <span className="text-[10px] sm:text-[11px] font-medium">Nube</span>
           </div>

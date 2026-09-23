@@ -312,6 +312,24 @@
       /* Capa 2: se expande más hacia abajo-derecha */ 32px 50px 70px rgba(0, 0, 0, 0.08),
       /* Capa 3: cono largo y difuso que se pierde */ 55px 80px 120px rgba(0, 0, 0, 0.05);
   }
+
+  /* Fondo oscuro tenue en vez de los gradientes claros de arriba */
+  .dark .auth-bg-mesh {
+    background-color: oklch(0.16 0.015 261);
+    background-image:
+      radial-gradient(at 0% 0%, oklch(0.26 0.03 264 / 60%) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, oklch(0.24 0.03 264 / 50%) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, oklch(0.22 0.015 261 / 60%) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, oklch(0.24 0.025 261 / 50%) 0px, transparent 50%);
+  }
+
+  /* Sombras negras casi no se ven sobre fondo oscuro — más profundidad, menos difusas */
+  .dark .auth-floating-shadow {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04),
+      0 20px 40px rgba(0, 0, 0, 0.45),
+      0 40px 80px rgba(0, 0, 0, 0.35);
+  }
 }
 
 @keyframes auth-form-drop {

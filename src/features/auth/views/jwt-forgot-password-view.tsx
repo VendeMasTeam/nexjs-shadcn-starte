@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { paths } from 'src/routes/paths';
 import { Logo } from 'src/shared/components/Logo';
+import { ThemeToggle } from 'src/shared/components/ThemeToggle';
 import { Icon } from 'src/shared/components/ui';
 import { Form, FormControl, FormField, FormItem, FormMessage } from 'src/shared/components/ui';
 
@@ -44,24 +45,26 @@ export function JwtForgotPasswordView() {
     <div className="relative w-full min-h-screen flex flex-col items-center justify-center py-12 px-4 auth-bg-mesh overflow-hidden animate-auth-bg-appear">
       <BgShapes />
 
-      <div className="relative z-10 w-full max-w-[420px] bg-white rounded-2xl px-8 py-10 sm:px-10 auth-floating-shadow animate-auth-form-drop">
+      <ThemeToggle className="absolute top-5 right-5 z-20" />
+
+      <div className="relative z-10 w-full max-w-[420px] bg-card border border-border/60 rounded-2xl px-8 py-10 sm:px-10 auth-floating-shadow animate-auth-form-drop">
         {emailSent ? (
           <div className="flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center">
-              <Icon name="CheckCircle" size={30} className="text-green-500" />
+            <div className="w-16 h-16 rounded-2xl bg-success/10 flex items-center justify-center">
+              <Icon name="CheckCircle" size={30} className="text-success" />
             </div>
             <div>
-              <h1 className="text-[24px] font-bold text-slate-800 tracking-tight">
+              <h1 className="text-[24px] font-bold text-foreground tracking-tight">
                 Revisa tu correo
               </h1>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-[300px]">
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-[300px]">
                 Si el correo existe en nuestro sistema, recibirás un enlace para restablecer tu
                 contraseña.
               </p>
             </div>
             <Link
               href={paths.auth.jwt.signIn}
-              className="mt-2 flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-indigo-600 transition-colors"
+              className="mt-2 flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-indigo-600 transition-colors"
             >
               <Icon name="ChevronLeft" size={14} />
               Volver al inicio de sesión
@@ -71,15 +74,15 @@ export function JwtForgotPasswordView() {
           <>
             <div className="flex flex-col items-center mb-8">
               <div className="mb-6">
-                <Logo variant="full" height={68} background="light" />
+                <Logo variant="full" height={68} />
               </div>
-              <p className="text-sm text-slate-500 mt-1 text-center leading-relaxed max-w-[300px]">
+              <p className="text-sm text-muted-foreground mt-1 text-center leading-relaxed max-w-[300px]">
                 Ingresa tu correo y te enviamos un enlace para recuperarla.
               </p>
             </div>
 
             {!!form.formState.errors.root && (
-              <div className="mb-5 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600 flex items-center gap-2">
+              <div className="mb-5 px-4 py-3 rounded-xl bg-error/10 border border-error/20 text-sm text-error flex items-center gap-2">
                 <Icon name="AlertCircle" size={15} className="shrink-0" />
                 {form.formState.errors.root.message}
               </div>
@@ -96,12 +99,12 @@ export function JwtForgotPasswordView() {
                         <div className="flex flex-col gap-1.5">
                           <label
                             htmlFor="forgot-email"
-                            className="text-[11px] font-semibold tracking-[0.08em] uppercase text-slate-500"
+                            className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground"
                           >
                             Correo electrónico
                           </label>
                           <div className="relative group">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-indigo-500 pointer-events-none">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors duration-200 group-focus-within:text-indigo-500 pointer-events-none">
                               <Icon name="Mail" size={16} />
                             </span>
                             <input
@@ -111,7 +114,7 @@ export function JwtForgotPasswordView() {
                               placeholder="admin@empresa.com"
                               disabled={isSubmitting}
                               autoFocus
-                              className="w-full h-11 pl-10 pr-4 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-300 hover:bg-white focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full h-11 pl-10 pr-4 text-sm text-foreground bg-muted/40 border border-border rounded-xl outline-none transition-all duration-200 placeholder:text-muted-foreground/60 hover:border-muted-foreground/30 hover:bg-background focus:border-indigo-500 focus:bg-background focus:ring-2 focus:ring-indigo-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
@@ -155,7 +158,7 @@ export function JwtForgotPasswordView() {
             <div className="mt-5 text-center">
               <Link
                 href={paths.auth.jwt.signIn}
-                className="flex items-center justify-center gap-1.5 text-[13px] text-slate-400 hover:text-indigo-600 transition-colors"
+                className="flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground hover:text-indigo-600 transition-colors"
               >
                 <Icon name="ChevronLeft" size={14} />
                 Volver al inicio de sesión
