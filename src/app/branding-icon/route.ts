@@ -10,6 +10,10 @@ export const dynamic = 'force-dynamic';
  * branding.favicon_url si existe; si no, redirige al ícono estático bundleado
  * (public/branding/default-favicon.png).
  *
+ * Fuera de /api/ a propósito: en prod, ese prefijo lo captura el proxy hacia
+ * el backend Laravel (ver traefik labels del docker-compose), así que una ruta
+ * propia de Next.js ahí nunca llega a este server — 404 solo en producción.
+ *
  * El default vive en public/, NO en app/icon.png a propósito: si existiera un
  * app/icon.png, Next generaría su PROPIO <link rel="icon"> por convención de
  * archivo, compitiendo con este endpoint — el estático (instantáneo) gana la

@@ -15,7 +15,7 @@ type Props = {
    * Siembra la caché ANTES del primer render, así useBranding() (Logo, etc.)
    * arranca con el dato real — sin flash "default → real". Único lugar donde
    * se configura esto; el resto de la app solo usa el hook. El favicon no
-   * pasa por acá — tiene su propia ruta dinámica (app/api/favicon/route.ts).
+   * pasa por acá — tiene su propia ruta dinámica (app/branding-icon/route.ts).
    */
   initialBranding?: PlatformBranding | null;
 };

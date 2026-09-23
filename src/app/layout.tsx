@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   title: 'CRM',
   description: 'Sistema de gestión empresarial',
   // URL estable — la ruta resuelve el branding actual en cada request (ver route.ts)
-  icons: { icon: '/api/favicon' },
+  // Fuera de /api/: ese prefijo en prod lo captura el proxy hacia el backend Laravel
+  icons: { icon: '/branding-icon' },
 };
 
 import { QueryProvider } from 'src/lib/query-provider';
