@@ -1,9 +1,6 @@
 'use client';
 
 // Fallback bundleado — se usa mientras carga el branding remoto o si la plataforma no configuró logos propios
-// Tipografía propia del wordmark (independiente de la fuente configurable de la UI en ui.store)
-import '@fontsource/sora/800.css';
-
 import logoDarkImg from 'src/assets/logos/logo-dark.webp';
 import logoWhiteImg from 'src/assets/logos/logo-white.webp';
 import { cn } from 'src/lib/utils';
@@ -110,14 +107,10 @@ export function Logo({ variant = 'logo', height = 80, background = 'auto', class
       {showText && (
         <span
           className={cn(
-            'min-w-0 max-w-[18ch] truncate tracking-tight leading-none',
+            'min-w-0 max-w-[18ch] truncate font-extrabold tracking-tight leading-none',
             baseTextColorClass
           )}
-          style={{
-            fontSize: `${height * 0.48}px`,
-            fontFamily: '"Sora", sans-serif',
-            fontWeight: 800,
-          }}
+          style={{ fontSize: `${height * 0.48}px` }}
           title={displayName}
         >
           {displayName}

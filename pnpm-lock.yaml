@@ -23,9 +23,6 @@ importers:
       '@fontsource/barlow':
         specifier: ^5.2.8
         version: 5.2.8
-      '@fontsource/sora':
-        specifier: ^5.3.0
-        version: 5.3.0
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.2(react@19.2.3))
@@ -395,9 +392,6 @@ packages:
 
   '@fontsource/barlow@5.2.8':
     resolution: {integrity: sha512-iuFOnY4OI2cd1STrJ3NdJNzWjhcwv6JarmqfdoZzAmz9g0jTVjES86MNbuBxqVR3ydbTEjo4opEl24GXScRM7w==}
-
-  '@fontsource/sora@5.3.0':
-    resolution: {integrity: sha512-SqW3OpKxxfKvxDLPlbdrWf2KooPfbd+W3jaYn483o+Y/JrmU87vjFPNptDqwP428c3vY+gnranLhjcbRaXB0Jw==}
 
   '@hono/node-server@1.19.9':
     resolution: {integrity: sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==}
@@ -4518,8 +4512,6 @@ snapshots:
   '@fontsource-variable/public-sans@5.2.7': {}
 
   '@fontsource/barlow@5.2.8': {}
-
-  '@fontsource/sora@5.3.0': {}
 
   '@hono/node-server@1.19.9(hono@4.12.2)':
     dependencies:

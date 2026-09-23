@@ -51,7 +51,7 @@ export function NavVertical({ navData, onClose }: Props) {
 
       {/* Logo Area */}
       <div
-        className={`h-[72px] flex items-center shrink-0 pt-4 ${
+        className={`h-[72px] flex items-center shrink-0 pt-2 pb-2 ${
           isMini ? 'justify-center px-2' : onClose ? 'justify-between px-4' : 'justify-center px-4'
         }`}
       >
