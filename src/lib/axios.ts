@@ -157,7 +157,9 @@ export const endpoints = {
         update: (uid: string) => `/admin/platform/roles/${uid}`,
         delete: (uid: string) => `/admin/platform/roles/${uid}`,
       },
-      permissions: '/admin/platform/roles/permissions',
+      // Canónica: filtra scope=platform server-side. La vieja /admin/platform/roles/permissions
+      // se mantiene solo por compatibilidad hacia atrás, no garantizado que filtre igual.
+      permissions: '/admin/platform/permissions',
     },
     tenants: {
       list: '/admin/tenants',

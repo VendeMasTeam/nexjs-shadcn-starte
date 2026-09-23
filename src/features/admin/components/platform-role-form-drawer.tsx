@@ -240,14 +240,15 @@ export function PlatformRoleFormDrawer({
                                     className="mt-0.5 shrink-0"
                                   />
                                   <div className="flex-1 min-w-0">
-                                    <span className="text-sm font-medium text-foreground capitalize block">
-                                      {perm.action}
+                                    {/* description es el texto humano que manda backend (ej: "Administrar
+                                        alertas globales") — perm.action solo no alcanza como label: para
+                                        plans.manage, action es literalmente "manage", sin contexto */}
+                                    <span className="text-sm font-medium text-foreground block">
+                                      {perm.description || perm.key}
                                     </span>
-                                    {perm.description && (
-                                      <p className="text-xs text-muted-foreground line-clamp-1">
-                                        {perm.description}
-                                      </p>
-                                    )}
+                                    <p className="text-xs text-muted-foreground line-clamp-1 font-mono">
+                                      {perm.key}
+                                    </p>
                                   </div>
                                 </label>
                               );

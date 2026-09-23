@@ -42,7 +42,7 @@ export function ThemeToggle({ className }: Props) {
       aria-label={isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
       title={isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
       className={cn(
-        'inline-flex size-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:text-primary hover:border-primary/50',
+        'inline-flex size-9 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:text-primary hover:border-primary/50',
         className
       )}
     >
