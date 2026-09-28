@@ -13,6 +13,7 @@ import { HeaderSection } from './dashboard/header-section';
 import { HeaderTenantButton } from './dashboard/header-tenant-button';
 import { HeaderUserButton } from './dashboard/header-user-button';
 import { NavMobile } from './dashboard/nav-mobile';
+import { NavSearch } from './dashboard/nav-search';
 import { NavVertical } from './dashboard/nav-vertical';
 import { SupportModeBanner } from './SupportModeBanner';
 
@@ -42,7 +43,12 @@ export function AppLayout({ children }: Props) {
       headerSection={
         <HeaderSection
           slots={{
-            left: <HeaderTenantButton tenant={tenant} />,
+            left: (
+              <div className="flex items-center gap-2">
+                <HeaderTenantButton tenant={tenant} />
+                <NavSearch navData={navData} />
+              </div>
+            ),
             right: (
               <div className="flex items-center gap-2">
                 <SettingsDrawer />
