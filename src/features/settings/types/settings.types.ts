@@ -28,6 +28,7 @@ export interface Permission {
   module: string;
   action: string;
   description: string;
+  scope: 'platform' | 'tenant';
 }
 
 /** @deprecated Use Permission instead — backend expects per-permission UIDs */

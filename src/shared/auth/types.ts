@@ -31,6 +31,15 @@ export type Module = {
   enabled: boolean;
   permissions: string[];
   items?: ModuleItem[];
+  /**
+   * Módulos RBAC reales que cubre esta área del plan (ej: "sales" cubre
+   * ["opportunities","quotations","products","finance","price-books"]).
+   * `modules[].key` es un nombre de producto/plan; `permission.module` es el
+   * nombre RBAC real — no coinciden 1:1, por eso backend manda este mapeo
+   * explícito. Ver role-drawer.tsx: filtra por permission_modules.includes(...),
+   * NO reconstruyendo "${module.key}.${accion}" contra permission.key.
+   */
+  permission_modules: string[];
 };
 
 export type TenantInfo = {

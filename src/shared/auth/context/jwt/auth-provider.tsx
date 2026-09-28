@@ -16,9 +16,24 @@ import { isValidToken, setSession } from './utils';
 
 type Props = { children: ReactNode };
 
-/** Fallback: derive permissions from modules when backend doesn't return them yet */
+/**
+ * Fallback: deriva permisos de modules[] cuando /auth/init no manda permissions.effective
+ * (backend viejo sin desplegar). Best-effort, no exacto: modules[].permissions es una lista
+ * de acciones AGREGADA a nivel de área de producto (ej: sales → ["read","manage"]), no por
+ * submódulo RBAC real — así que el cruce con permission_modules puede generar combinaciones
+ * que no son permisos reales (ej: "quotations.manage" si el real es "quotations.create").
+ * Es inofensivo: un permiso inventado que nadie chequea no otorga nada de más, y el checker
+ * (hasPermission) hace substring/includes contra keys reales, no al revés — pero SÍ puede
+ * faltar algún permiso granular que el agregado no refleja. permission_modules (en vez del
+ * viejo m.key crudo) al menos evita el mismatch total que tenía antes para sales/crm/
+ * incentives/intelligence, donde ANTES no matcheaba nada nunca.
+ */
 function derivePermissions(modules: Module[]): string[] {
-  return modules.flatMap((m) => m.permissions.map((p) => `${m.key}.${p}`));
+  return modules.flatMap((m) =>
+    (m.permission_modules?.length ? m.permission_modules : [m.key]).flatMap((rbacModule) =>
+      m.permissions.map((p) => `${rbacModule}.${p}`)
+    )
+  );
 }
 
 const FEATURES_FALLBACK: PlanFeatures = {

@@ -42,6 +42,7 @@ export const rolesService = {
       module: p.module as string,
       action: p.action as string,
       description: (p.description as string) ?? '',
+      scope: (p.scope as 'platform' | 'tenant') ?? 'tenant',
     }));
   },
 };

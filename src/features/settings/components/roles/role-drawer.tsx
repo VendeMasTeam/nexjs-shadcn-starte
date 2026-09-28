@@ -18,7 +18,6 @@ import {
   SheetTitle,
 } from 'src/shared/components/ui/sheet';
 import { Textarea } from 'src/shared/components/ui/textarea';
-import { MODULE_LABELS } from 'src/shared/constants/module-labels';
 
 import { usePermissions } from '../../hooks/use-roles';
 import type { Permission, Role } from '../../types/settings.types';
@@ -36,30 +35,38 @@ interface RoleDrawerProps {
   onSave: (data: RoleSavePayload) => Promise<boolean>;
 }
 
-function groupByModule(permissions: Permission[]): Map<string, Permission[]> {
-  const groups = new Map<string, Permission[]>();
-  for (const p of permissions) {
-    const existing = groups.get(p.module);
-    if (existing) {
-      existing.push(p);
-    } else {
-      groups.set(p.module, [p]);
-    }
-  }
-  return groups;
-}
+type AreaGroup = { key: string; label: string; perms: Permission[] };
 
 export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, onSave }) => {
   const { modules } = useAuthContext();
   const { data: permissions = [], isLoading: isLoadingPerms } = usePermissions();
 
-  // Filter permissions by tenant plan modules
-  const allowedPermissions = useMemo(() => {
-    if (!modules || modules.length === 0) return permissions;
-    const allowedKeys = new Set<string>();
-    modules.forEach((m) => m.permissions.forEach((p) => allowedKeys.add(`${m.key}.${p}`)));
-    return permissions.filter((p) => allowedKeys.has(p.key));
+  // Agrupamos por ÁREA DE PRODUCTO (Ventas, CRM...), no por módulo RBAC crudo
+  // (quotations, contacts...) — el usuario de negocio piensa en "dame todo Ventas",
+  // no en entidades técnicas. permission_modules (mandado por backend) es el mapeo
+  // área → módulos RBAC reales que cubre, porque modules[].key (ej: "sales") y
+  // permission.module (ej: "quotations") son vocabularios distintos, no matchean 1:1.
+  // scope 'tenant': defensa en profundidad, backend ya filtra /rbac/permissions.
+  const areaGroups = useMemo<AreaGroup[]>(() => {
+    const tenantScoped = permissions.filter((p) => p.scope !== 'platform');
+    return (modules ?? [])
+      .filter((m) => m.enabled)
+      .map((m) => ({
+        key: m.key,
+        label: m.label,
+        perms: tenantScoped.filter((p) => (m.permission_modules ?? []).includes(p.module)),
+      }))
+      .filter((g) => g.perms.length > 0);
   }, [permissions, modules]);
+
+  // Un mismo permiso puede aparecer en más de un área (ej: products.read vive tanto
+  // en Inventario como en Ventas) — se lista en las dos, pero para "Todos"/el contador
+  // global cuenta una sola vez.
+  const allowedPermissions = useMemo<Permission[]>(() => {
+    const seen = new Map<string, Permission>();
+    areaGroups.forEach((g) => g.perms.forEach((p) => seen.set(p.uid, p)));
+    return [...seen.values()];
+  }, [areaGroups]);
 
   const [name, setName] = useState(role?.name ?? '');
   const [description, setDescription] = useState(role?.description ?? '');
@@ -73,8 +80,6 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
       setSelectedUids(role?.permission_uids ?? []);
     }
   }, [isOpen, role]);
-
-  const grouped = useMemo(() => groupByModule(allowedPermissions), [allowedPermissions]);
 
   const toggleUid = (uid: string) => {
     setSelectedUids((prev) =>
@@ -159,23 +164,22 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
                   type="multiple"
                   className="border border-border rounded-lg divide-y divide-border/60"
                 >
-                  {[...grouped.entries()].map(([module, modulePerms]) => {
-                    const selectedCount = modulePerms.filter((p) =>
+                  {areaGroups.map(({ key, label, perms: areaPerms }) => {
+                    const selectedCount = areaPerms.filter((p) =>
                       selectedUids.includes(p.uid)
                     ).length;
-                    const totalCount = modulePerms.length;
+                    const totalCount = areaPerms.length;
                     const allSelected = selectedCount === totalCount;
-                    const moduleLabel = MODULE_LABELS[module] ?? module;
 
                     return (
-                      <AccordionItem key={module} value={module} className="border-0">
+                      <AccordionItem key={key} value={key} className="border-0">
                         <AccordionPrimitive.Header className="flex items-center px-4 hover:bg-muted/30 transition-colors">
                           <AccordionPrimitive.Trigger className="flex flex-1 items-center gap-2 py-3 text-left outline-none [&[data-state=open]>svg]:rotate-180">
                             <Icon
                               name="ChevronDown"
                               className="size-4 shrink-0 text-muted-foreground transition-transform duration-200"
                             />
-                            <span className="text-sm font-medium">{moduleLabel}</span>
+                            <span className="text-sm font-medium">{label}</span>
                             <span
                               className={cn(
                                 'text-xs rounded-full px-2 py-0.5 font-medium',
@@ -193,7 +197,7 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
                                 allSelected ? true : selectedCount > 0 ? 'indeterminate' : false
                               }
                               onCheckedChange={() =>
-                                toggleModule(modulePerms, selectedCount, totalCount)
+                                toggleModule(areaPerms, selectedCount, totalCount)
                               }
                             />
                           </div>
@@ -201,7 +205,7 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
 
                         <AccordionContent className="pb-0">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 px-4 pb-3">
-                            {modulePerms.map((perm) => {
+                            {areaPerms.map((perm) => {
                               const isChecked = selectedUids.includes(perm.uid);
                               return (
                                 <label
@@ -217,14 +221,14 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({ isOpen, onClose, role, o
                                     className="mt-0.5 shrink-0"
                                   />
                                   <div className="flex-1 min-w-0">
-                                    <span className="text-sm font-medium text-foreground capitalize block">
-                                      {perm.action}
+                                    {/* description es el texto humano de backend; key completo abajo
+                                        para desambiguar (ej: acciones "manage" sueltas sin contexto) */}
+                                    <span className="text-sm font-medium text-foreground block">
+                                      {perm.description || perm.key}
                                     </span>
-                                    {perm.description && (
-                                      <p className="text-xs text-muted-foreground line-clamp-1">
-                                        {perm.description}
-                                      </p>
-                                    )}
+                                    <p className="text-xs text-muted-foreground line-clamp-1 font-mono">
+                                      {perm.key}
+                                    </p>
                                   </div>
                                 </label>
                               );
