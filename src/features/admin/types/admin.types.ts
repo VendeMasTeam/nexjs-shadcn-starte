@@ -62,6 +62,10 @@ export interface PlanSaaS {
   name: string;
   tier: TierPlan;
   price: number;
+  /** Moneda global de plataforma, devuelta por GET /plans. No se envía al crear/editar. */
+  currency_code?: string;
+  currency_name?: string;
+  currency_symbol?: string;
   billing_interval: 'MENSUAL' | 'ANUAL';
   status: 'ACTIVO' | 'INACTIVO' | 'LEGADO';
   max_users: number | null;

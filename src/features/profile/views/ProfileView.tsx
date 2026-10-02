@@ -13,6 +13,7 @@ import { Card, CardContent } from 'src/shared/components/ui/card';
 import { Icon } from 'src/shared/components/ui/icon';
 
 import { PlatformBrandingSettings } from '../components/PlatformBrandingSettings';
+import { PlatformLocalizationSettings } from '../components/PlatformLocalizationSettings';
 import { TwoFactorSettings } from '../components/TwoFactorSettings';
 import { useMe } from '../hooks/use-me';
 
@@ -116,6 +117,7 @@ export function ProfileView() {
         <TwoFactorSettings />
 
         {hasAdminPermission('admin.tenants.manage') && <PlatformBrandingSettings />}
+        {hasAdminPermission('admin.tenants.manage') && <PlatformLocalizationSettings />}
       </div>
     </PageContainer>
   );

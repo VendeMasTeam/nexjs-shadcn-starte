@@ -81,7 +81,8 @@ export function AuthProvider({ children }: Props) {
           if (loc?.currency && loc?.locale) {
             const prefs = { currency: loc.currency, locale: loc.locale };
             setCurrencyPreferences(prefs, 'tenant');
-            setCurrencyPreferences(prefs, 'platform');
+            // Platform scope: only the locale; its currency comes from branding (billing currency)
+            setCurrencyPreferences({ locale: prefs.locale }, 'platform');
           }
 
           // Prefer backend-provided permissions (GET /auth/init now includes them).

@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { getCurrencyPreferences, setCurrencyPreferences } from 'src/lib/currency';
 import { queryKeys } from 'src/lib/query-keys';
 import { fetchPublicBranding, type PlatformBranding } from 'src/shared/lib/branding';
 
@@ -18,6 +19,20 @@ export type { PlatformBranding };
  * al guardar cambios (ver branding.service.ts).
  */
 export function useBranding() {
+  const query = useBrandingQuery();
+  const billingCurrency = query.data?.billing_currency_code;
+
+  // El scope 'platform' de formatMoney (planes, billing, MRR) sale de la moneda de
+  // facturación SaaS, nunca de la `localization` del tenant. Escritura idempotente
+  // y síncrona para que los consumidores del mismo render ya la lean.
+  if (billingCurrency && getCurrencyPreferences('platform').currency !== billingCurrency) {
+    setCurrencyPreferences({ currency: billingCurrency }, 'platform');
+  }
+
+  return query;
+}
+
+function useBrandingQuery() {
   return useQuery({
     queryKey: queryKeys.branding.public,
     queryFn: async (): Promise<PlatformBranding> => {

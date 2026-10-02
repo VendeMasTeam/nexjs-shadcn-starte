@@ -21,9 +21,9 @@ export function useLocalization() {
           currency: (payload as Record<string, unknown>).currency as string,
           locale: (payload as Record<string, unknown>).locale as string,
         };
-        // Set both scopes so platform views (plans, billing) also have currency info
+        // Platform currency comes from branding (billing currency), not from the tenant
         setCurrencyPreferences(prefs, 'tenant');
-        setCurrencyPreferences(prefs, 'platform');
+        setCurrencyPreferences({ locale: prefs.locale }, 'platform');
       }
       return payload as LocalizationConfig;
     },
@@ -40,7 +40,7 @@ export function useLocalization() {
           locale: (payload as Record<string, unknown>).locale as string,
         };
         setCurrencyPreferences(prefs, 'tenant');
-        setCurrencyPreferences(prefs, 'platform');
+        setCurrencyPreferences({ locale: prefs.locale }, 'platform');
       }
       return payload as LocalizationConfig;
     },

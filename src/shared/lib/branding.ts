@@ -5,6 +5,10 @@ export type PlatformBranding = {
   logo_light_url: string | null;
   logo_dark_url: string | null;
   favicon_url: string | null;
+  /** Moneda global de facturación SaaS (independiente de la moneda del tenant). */
+  billing_currency_code: string;
+  billing_currency_name: string;
+  billing_currency_symbol: string;
 };
 
 /**

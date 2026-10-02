@@ -115,7 +115,11 @@ export function PlanCard({ plan, onEdit, onDelete }: PlanCardProps) {
         <h3 className="text-h6 font-bold text-foreground">{plan.name}</h3>
         <p className="text-body2 text-muted-foreground mb-4">
           <span className="text-2xl font-bold text-foreground">
-            {formatMoney(plan.price, { scope: 'platform', maximumFractionDigits: 0 })}
+            {formatMoney(plan.price, {
+              scope: 'platform',
+              currency: plan.currency_code,
+              maximumFractionDigits: 0,
+            })}
           </span>{' '}
           / mes por cliente
         </p>
